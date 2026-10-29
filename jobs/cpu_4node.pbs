@@ -1,0 +1,42 @@
+#!/bin/bash
+# Multi-node CPU experiments on 4 nodes x 16 cores (64 cores): E1/E2 at 32 and 64 cores, E3 design comparison.
+# Writes to separate CSVs (e1_multi, e2_multi) so it can run at the same time as cpu_1node.pbs.
+#PBS -N p3cpu4
+#PBS -q auto_free
+#PBS -l select=4:ncpus=16:mpiprocs=16:mem=32gb
+#PBS -l place=scatter
+#PBS -l walltime=02:00:00
+#PBS -j oe
+source $PBS_O_WORKDIR/../scripts/env.sh
+source $P3_ROOT/scripts/run_lib.sh
+cd "$P3_ROOT"
+BIN=$P3_ROOT/bin
+LJ=$P3_DATA/soc-LiveJournal1.bin
+PERF="--iters 50 --tol 0 --reps 5"
+echo "nodes: ${NODES[*]}"
+
+# --- E1 (32, 64 cores) ---
+for c in 32 64; do
+  for mode in mpi hybrid; do
+    read n rpn th <<< "$(layout $c $mode)"
+    run_mpi $n $rpn $th $P3_RESULTS/e1_multi.csv $BIN/pagerank_mpi_omp --graph $LJ --part edge --comm ghost $PERF \
+      --exp E1_$mode
+  done
+  echo "E1 $c cores done $(date)"
+done
+
+# --- E3: design comparison at 64 cores (4 nodes x 16 ranks), 2x2 partition x communication ---
+for part in vertex edge; do
+  for comm in allgather ghost; do
+    run_mpi 4 16 1 $P3_RESULTS/e3.csv $BIN/pagerank_mpi_omp --graph $LJ --part $part --comm $comm $PERF --exp E3
+  done
+done
+echo "E3 done $(date)"
+
+# --- E2 (32, 64 cores) ---
+for c in 32 64; do
+  read n rpn th <<< "$(layout $c hybrid)"
+  run_mpi $n $rpn $th $P3_RESULTS/e2_multi.csv $BIN/pagerank_mpi_omp --graph $P3_DATA/rmat_p$c.bin --part edge \
+    --comm ghost $PERF --exp E2
+done
+echo "multi-node CPU experiments done $(date)"

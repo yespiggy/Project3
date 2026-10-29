@@ -1,0 +1,122 @@
+[
+{
+"rank": 1,
+"node": 597621,
+"pagerank": 0.0009237249379314135,
+"indeg": 5354,
+"outdeg": 22,
+"indeg_rank": 2
+},
+{
+"rank": 2,
+"node": 41909,
+"pagerank": 0.0009211312330518576,
+"indeg": 4219,
+"outdeg": 10,
+"indeg_rank": 12
+},
+{
+"rank": 3,
+"node": 163075,
+"pagerank": 0.0009040044194851719,
+"indeg": 4731,
+"outdeg": 36,
+"indeg_rank": 7
+},
+{
+"rank": 4,
+"node": 537039,
+"pagerank": 0.0008988317958129914,
+"indeg": 6326,
+"outdeg": 27,
+"indeg_rank": 1
+},
+{
+"rank": 5,
+"node": 384666,
+"pagerank": 0.0007868924341328859,
+"indeg": 4010,
+"outdeg": 20,
+"indeg_rank": 18
+},
+{
+"rank": 6,
+"node": 504140,
+"pagerank": 0.0007651160445531654,
+"indeg": 5271,
+"outdeg": 19,
+"indeg_rank": 3
+},
+{
+"rank": 7,
+"node": 486980,
+"pagerank": 0.0007249402986635973,
+"indeg": 3908,
+"outdeg": 6,
+"indeg_rank": 23
+},
+{
+"rank": 8,
+"node": 605856,
+"pagerank": 0.0007179552583284985,
+"indeg": 4550,
+"outdeg": 22,
+"indeg_rank": 9
+},
+{
+"rank": 9,
+"node": 32163,
+"pagerank": 0.0007125718419557336,
+"indeg": 5097,
+"outdeg": 32,
+"indeg_rank": 5
+},
+{
+"rank": 10,
+"node": 558791,
+"pagerank": 0.0007091859285184756,
+"indeg": 4206,
+"outdeg": 22,
+"indeg_rank": 13
+},
+{
+"rank": 11,
+"node": 551829,
+"pagerank": 0.00070202429179712,
+"indeg": 4220,
+"outdeg": 13,
+"indeg_rank": 11
+},
+{
+"rank": 12,
+"node": 765334,
+"pagerank": 0.0006829883365286284,
+"indeg": 4015,
+"outdeg": 4,
+"indeg_rank": 17
+},
+{
+"rank": 13,
+"node": 751384,
+"pagerank": 0.0006612009062929491,
+"indeg": 5182,
+"outdeg": 68,
+"indeg_rank": 4
+},
+{
+"rank": 14,
+"node": 425770,
+"pagerank": 0.000623015105263549,
+"indeg": 3940,
+"outdeg": 28,
+"indeg_rank": 21
+},
+{
+"rank": 15,
+"node": 908351,
+"pagerank": 0.0006207669006827404,
+"indeg": 3810,
+"outdeg": 24,
+"indeg_rank": 25
+}
+]

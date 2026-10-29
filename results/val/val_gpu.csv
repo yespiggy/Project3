@@ -1,0 +1,5 @@
+exp,impl,graph,N,M,nodes,ranks,threads,cores,part,comm,rep,iters,t_total,t_iter,t_comp,t_comm,imbalance,comm_bytes_iter,resid,sumr,t_load,t_h2d,t_d2h,gbps
+val,cuda_thread,web-Google,875713,5105039,1,1,1,1,none,none,0,118,0.093697,7.940382e-04,0.093697,0,1,0,8.806e-11,1.000000000002650,1.218,0.0049,0.0030,121.26
+val,cuda_warp,web-Google,875713,5105039,1,1,1,1,none,none,0,118,0.475953,4.033502e-03,0.475953,0,1,0,8.806e-11,1.000000000002649,1.218,0.0049,0.0015,23.87
+val,cuda_hybrid,web-Google,875713,5105039,1,1,1,1,none,none,0,118,0.070503,5.974867e-04,0.070503,0,1,0,8.806e-11,1.000000000002650,1.218,0.0049,0.0013,161.16
+val,cuda_cusparse,web-Google,875713,5105039,1,1,1,1,none,none,0,118,0.060890,5.160190e-04,0.060890,0,1,0,8.806e-11,1.000000000002649,1.218,0.0049,0.0013,186.60

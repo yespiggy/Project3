@@ -1,0 +1,214 @@
+{
+  "graph": "web-Google.bin",
+  "N": 875713,
+  "M": 5105039,
+  "implementations": {
+    "cuda_cusparse": {
+      "l1": 3.470305313966538e-15,
+      "linf": 9.053088140253962e-18,
+      "sum": 0.9999999999999998,
+      "top100_same_order": true,
+      "top1000_overlap": 1000
+    },
+    "cuda_hybrid": {
+      "l1": 3.4129936353872136e-15,
+      "linf": 8.998878031629687e-18,
+      "sum": 0.9999999999999998,
+      "top100_same_order": true,
+      "top1000_overlap": 1000
+    },
+    "cuda_thread": {
+      "l1": 2.9908324144756703e-15,
+      "linf": 4.445228907190568e-18,
+      "sum": 1.0000000000000002,
+      "top100_same_order": true,
+      "top1000_overlap": 1000
+    },
+    "cuda_warp": {
+      "l1": 3.427866210452019e-15,
+      "linf": 8.890457814381136e-18,
+      "sum": 1.0,
+      "top100_same_order": true,
+      "top1000_overlap": 1000
+    },
+    "mpi_edge_allgather": {
+      "l1": 3.293835210889406e-15,
+      "linf": 4.9873299934333204e-18,
+      "sum": 1.0,
+      "top100_same_order": true,
+      "top1000_overlap": 1000
+    },
+    "mpi_edge_ghost": {
+      "l1": 3.3183405093281833e-15,
+      "linf": 4.9873299934333204e-18,
+      "sum": 1.0,
+      "top100_same_order": true,
+      "top1000_overlap": 1000
+    },
+    "mpi_vertex_allgather": {
+      "l1": 3.232370370951016e-15,
+      "linf": 4.7704895589362195e-18,
+      "sum": 1.0000000000000002,
+      "top100_same_order": true,
+      "top1000_overlap": 1000
+    },
+    "mpi_vertex_ghost": {
+      "l1": 3.2017153486173764e-15,
+      "linf": 4.7704895589362195e-18,
+      "sum": 1.0000000000000002,
+      "top100_same_order": true,
+      "top1000_overlap": 1000
+    }
+  },
+  "networkx": {
+    "version": "3.2.1",
+    "seconds": 40.1,
+    "l1": 1.3700343935094603e-07,
+    "linf": 6.406451034544815e-10,
+    "sum": 1.0000000000000036,
+    "top100_same_order": true,
+    "top1000_overlap": 1000
+  }
+}
+{
+  "N": 875713,
+  "M": 5105039,
+  "dangling": 136259,
+  "zero_indeg": 161168,
+  "max_indeg": 6326,
+  "max_outdeg": 456,
+  "mean_degree": 5.829580010802626,
+  "spearman_pr_indeg": 0.846896823818601,
+  "pearson_logpr_logindeg": 0.815317477098757,
+  "top100_overlap_pr_vs_indeg": 88,
+  "rank_mass_share": {
+    "top_0.1pct": 0.11359043551113238,
+    "top_1pct": 0.270903097506771,
+    "top_10pct": 0.5684042453468473
+  },
+  "min_pr": 2.455537142258778e-07,
+  "max_pr": 0.0009237249379314135,
+  "uniform_pr": 1.1419266357813576e-06,
+  "top": [
+    {
+      "rank": 1,
+      "node": 597621,
+      "pagerank": 0.0009237249379314135,
+      "indeg": 5354,
+      "outdeg": 22,
+      "indeg_rank": 2
+    },
+    {
+      "rank": 2,
+      "node": 41909,
+      "pagerank": 0.0009211312330518576,
+      "indeg": 4219,
+      "outdeg": 10,
+      "indeg_rank": 12
+    },
+    {
+      "rank": 3,
+      "node": 163075,
+      "pagerank": 0.0009040044194851719,
+      "indeg": 4731,
+      "outdeg": 36,
+      "indeg_rank": 7
+    },
+    {
+      "rank": 4,
+      "node": 537039,
+      "pagerank": 0.0008988317958129914,
+      "indeg": 6326,
+      "outdeg": 27,
+      "indeg_rank": 1
+    },
+    {
+      "rank": 5,
+      "node": 384666,
+      "pagerank": 0.0007868924341328859,
+      "indeg": 4010,
+      "outdeg": 20,
+      "indeg_rank": 18
+    },
+    {
+      "rank": 6,
+      "node": 504140,
+      "pagerank": 0.0007651160445531654,
+      "indeg": 5271,
+      "outdeg": 19,
+      "indeg_rank": 3
+    },
+    {
+      "rank": 7,
+      "node": 486980,
+      "pagerank": 0.0007249402986635973,
+      "indeg": 3908,
+      "outdeg": 6,
+      "indeg_rank": 23
+    },
+    {
+      "rank": 8,
+      "node": 605856,
+      "pagerank": 0.0007179552583284985,
+      "indeg": 4550,
+      "outdeg": 22,
+      "indeg_rank": 9
+    },
+    {
+      "rank": 9,
+      "node": 32163,
+      "pagerank": 0.0007125718419557336,
+      "indeg": 5097,
+      "outdeg": 32,
+      "indeg_rank": 5
+    },
+    {
+      "rank": 10,
+      "node": 558791,
+      "pagerank": 0.0007091859285184756,
+      "indeg": 4206,
+      "outdeg": 22,
+      "indeg_rank": 13
+    },
+    {
+      "rank": 11,
+      "node": 551829,
+      "pagerank": 0.00070202429179712,
+      "indeg": 4220,
+      "outdeg": 13,
+      "indeg_rank": 11
+    },
+    {
+      "rank": 12,
+      "node": 765334,
+      "pagerank": 0.0006829883365286284,
+      "indeg": 4015,
+      "outdeg": 4,
+      "indeg_rank": 17
+    },
+    {
+      "rank": 13,
+      "node": 751384,
+      "pagerank": 0.0006612009062929491,
+      "indeg": 5182,
+      "outdeg": 68,
+      "indeg_rank": 4
+    },
+    {
+      "rank": 14,
+      "node": 425770,
+      "pagerank": 0.000623015105263549,
+      "indeg": 3940,
+      "outdeg": 28,
+      "indeg_rank": 21
+    },
+    {
+      "rank": 15,
+      "node": 908351,
+      "pagerank": 0.0006207669006827404,
+      "indeg": 3810,
+      "outdeg": 24,
+      "indeg_rank": 25
+    }
+  ]
+}

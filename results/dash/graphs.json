@@ -1,0 +1,65 @@
+[
+{
+"graph": "web-Google",
+"N": 875713,
+"M": 5105039,
+"dangling": 136259,
+"used_in": "验证、数据结论"
+},
+{
+"graph": "soc-LiveJournal1",
+"N": 4847571,
+"M": 68475391,
+"dangling": 553239,
+"used_in": "E1, E3, E4, E5"
+},
+{
+"graph": "rmat_p1",
+"N": 131072,
+"M": 1942984,
+"dangling": 53484,
+"used_in": "E2"
+},
+{
+"graph": "rmat_p2",
+"N": 262144,
+"M": 3939543,
+"dangling": 113227,
+"used_in": "E2"
+},
+{
+"graph": "rmat_p4",
+"N": 524288,
+"M": 7968498,
+"dangling": 238832,
+"used_in": "E2"
+},
+{
+"graph": "rmat_p8",
+"N": 1048576,
+"M": 16085604,
+"dangling": 501633,
+"used_in": "E2"
+},
+{
+"graph": "rmat_p16",
+"N": 2097152,
+"M": 32416613,
+"dangling": 1048671,
+"used_in": "E2"
+},
+{
+"graph": "rmat_p32",
+"N": 4194304,
+"M": 65243932,
+"dangling": 2182657,
+"used_in": "E2"
+},
+{
+"graph": "rmat_p64",
+"N": 8388608,
+"M": 131159513,
+"dangling": 4537413,
+"used_in": "E2"
+}
+]

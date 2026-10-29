@@ -1,0 +1,16 @@
+#!/bin/bash
+# Preprocess SNAP graphs and generate the R-MAT weak-scaling graphs (N = cores * 2^17, edge factor 16).
+#PBS -N p3prep
+#PBS -q auto_free
+#PBS -l select=1:ncpus=16:mem=96gb
+#PBS -l walltime=02:00:00
+#PBS -j oe
+source $PBS_O_WORKDIR/../scripts/env.sh
+cd "$P3_DATA"
+export OMP_NUM_THREADS=16
+$P3_ROOT/bin/preprocess web-Google.txt web-Google.bin web-Google.idmap
+$P3_ROOT/bin/preprocess soc-LiveJournal1.txt soc-LiveJournal1.bin
+for p in 1 2 4 8 16 32 64 128 160; do
+  [ -f rmat_p$p.bin ] || $P3_ROOT/bin/rmat_gen $((p * 131072)) 16 $p rmat_p$p.bin
+done
+ls -lh "$P3_DATA"

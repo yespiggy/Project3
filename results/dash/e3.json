@@ -1,0 +1,42 @@
+[
+{
+"config": "vertex+allgather",
+"partition": "按节点数均分",
+"communication": "Allgatherv",
+"t_iter_ms": 28.39,
+"t_comp_ms": 12.426,
+"t_comm_ms": 27.235,
+"imbalance": 5.609,
+"comm_mb_iter": 2443.2
+},
+{
+"config": "vertex+ghost",
+"partition": "按节点数均分",
+"communication": "只交换 ghost",
+"t_iter_ms": 16.726,
+"t_comp_ms": 10.757,
+"t_comm_ms": 15.846,
+"imbalance": 5.609,
+"comm_mb_iter": 194.0
+},
+{
+"config": "edge+allgather",
+"partition": "按入边数均分",
+"communication": "Allgatherv",
+"t_iter_ms": 52.951,
+"t_comp_ms": 6.981,
+"t_comm_ms": 50.899,
+"imbalance": 1.001,
+"comm_mb_iter": 2443.2
+},
+{
+"config": "edge+ghost",
+"partition": "按入边数均分",
+"communication": "只交换 ghost",
+"t_iter_ms": 9.769,
+"t_comp_ms": 6.546,
+"t_comm_ms": 8.402,
+"imbalance": 1.001,
+"comm_mb_iter": 223.7
+}
+]

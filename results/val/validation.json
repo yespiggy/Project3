@@ -1,0 +1,72 @@
+{
+  "graph": "web-Google.bin",
+  "N": 875713,
+  "M": 5105039,
+  "implementations": {
+    "cuda_cusparse": {
+      "l1": 3.470305313966538e-15,
+      "linf": 9.053088140253962e-18,
+      "sum": 0.9999999999999998,
+      "top100_same_order": true,
+      "top1000_overlap": 1000
+    },
+    "cuda_hybrid": {
+      "l1": 3.4129936353872136e-15,
+      "linf": 8.998878031629687e-18,
+      "sum": 0.9999999999999998,
+      "top100_same_order": true,
+      "top1000_overlap": 1000
+    },
+    "cuda_thread": {
+      "l1": 2.9908324144756703e-15,
+      "linf": 4.445228907190568e-18,
+      "sum": 1.0000000000000002,
+      "top100_same_order": true,
+      "top1000_overlap": 1000
+    },
+    "cuda_warp": {
+      "l1": 3.427866210452019e-15,
+      "linf": 8.890457814381136e-18,
+      "sum": 1.0,
+      "top100_same_order": true,
+      "top1000_overlap": 1000
+    },
+    "mpi_edge_allgather": {
+      "l1": 3.293835210889406e-15,
+      "linf": 4.9873299934333204e-18,
+      "sum": 1.0,
+      "top100_same_order": true,
+      "top1000_overlap": 1000
+    },
+    "mpi_edge_ghost": {
+      "l1": 3.3183405093281833e-15,
+      "linf": 4.9873299934333204e-18,
+      "sum": 1.0,
+      "top100_same_order": true,
+      "top1000_overlap": 1000
+    },
+    "mpi_vertex_allgather": {
+      "l1": 3.232370370951016e-15,
+      "linf": 4.7704895589362195e-18,
+      "sum": 1.0000000000000002,
+      "top100_same_order": true,
+      "top1000_overlap": 1000
+    },
+    "mpi_vertex_ghost": {
+      "l1": 3.2017153486173764e-15,
+      "linf": 4.7704895589362195e-18,
+      "sum": 1.0000000000000002,
+      "top100_same_order": true,
+      "top1000_overlap": 1000
+    }
+  },
+  "networkx": {
+    "version": "3.2.1",
+    "seconds": 40.1,
+    "l1": 1.3700343935094603e-07,
+    "linf": 6.406451034544815e-10,
+    "sum": 1.0000000000000036,
+    "top100_same_order": true,
+    "top1000_overlap": 1000
+  }
+}

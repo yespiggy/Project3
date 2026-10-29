@@ -1,0 +1,93 @@
+[
+{
+"cores": 1,
+"nodes": 1,
+"ranks": 1,
+"threads": 1,
+"N": 131072,
+"M": 1942984,
+"edges_per_core_m": 1.943,
+"t_iter_ms": 2.641,
+"t_comp_ms": 2.64,
+"t_comm_ms": 0.001,
+"weak_efficiency": 1.0
+},
+{
+"cores": 2,
+"nodes": 1,
+"ranks": 1,
+"threads": 2,
+"N": 262144,
+"M": 3939543,
+"edges_per_core_m": 1.97,
+"t_iter_ms": 4.295,
+"t_comp_ms": 4.292,
+"t_comm_ms": 0.002,
+"weak_efficiency": 0.615
+},
+{
+"cores": 4,
+"nodes": 1,
+"ranks": 1,
+"threads": 4,
+"N": 524288,
+"M": 7968498,
+"edges_per_core_m": 1.992,
+"t_iter_ms": 4.668,
+"t_comp_ms": 4.664,
+"t_comm_ms": 0.003,
+"weak_efficiency": 0.566
+},
+{
+"cores": 8,
+"nodes": 1,
+"ranks": 1,
+"threads": 8,
+"N": 1048576,
+"M": 16085604,
+"edges_per_core_m": 2.011,
+"t_iter_ms": 4.988,
+"t_comp_ms": 4.985,
+"t_comm_ms": 0.003,
+"weak_efficiency": 0.529
+},
+{
+"cores": 16,
+"nodes": 1,
+"ranks": 1,
+"threads": 16,
+"N": 2097152,
+"M": 32416613,
+"edges_per_core_m": 2.026,
+"t_iter_ms": 5.864,
+"t_comp_ms": 5.859,
+"t_comm_ms": 0.005,
+"weak_efficiency": 0.45
+},
+{
+"cores": 32,
+"nodes": 2,
+"ranks": 2,
+"threads": 16,
+"N": 4194304,
+"M": 65243932,
+"edges_per_core_m": 2.039,
+"t_iter_ms": 8.422,
+"t_comp_ms": 5.8,
+"t_comm_ms": 2.677,
+"weak_efficiency": 0.314
+},
+{
+"cores": 64,
+"nodes": 4,
+"ranks": 4,
+"threads": 16,
+"N": 8388608,
+"M": 131159513,
+"edges_per_core_m": 2.049,
+"t_iter_ms": 11.622,
+"t_comp_ms": 6.171,
+"t_comm_ms": 5.892,
+"weak_efficiency": 0.227
+}
+]

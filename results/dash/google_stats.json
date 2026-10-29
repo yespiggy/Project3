@@ -1,0 +1,15 @@
+[
+{
+"N": 875713,
+"M": 5105039,
+"dangling": 136259,
+"zero_indeg": 161168,
+"max_indeg": 6326,
+"spearman": 0.847,
+"top100_overlap": 88,
+"share_top01": 0.114,
+"share_top1": 0.271,
+"share_top10": 0.568,
+"iterations": 118
+}
+]

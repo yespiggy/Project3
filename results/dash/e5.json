@@ -1,0 +1,34 @@
+[
+{
+"platform": "serial",
+"label": "串行 1 核",
+"cores": 1,
+"t_iter_ms": 140.22,
+"gteps": 0.488,
+"speedup_vs_serial": 1.0
+},
+{
+"platform": "node16",
+"label": "1 个 CPU 节点（16 核）",
+"cores": 16,
+"t_iter_ms": 10.49,
+"gteps": 6.525,
+"speedup_vs_serial": 13.4
+},
+{
+"platform": "node64",
+"label": "4 个 CPU 节点（64 核）",
+"cores": 64,
+"t_iter_ms": 9.66,
+"gteps": 7.086,
+"speedup_vs_serial": 14.5
+},
+{
+"platform": "a40",
+"label": "1× A40（cusparse）",
+"cores": 1,
+"t_iter_ms": 4.76,
+"gteps": 14.386,
+"speedup_vs_serial": 29.5
+}
+]

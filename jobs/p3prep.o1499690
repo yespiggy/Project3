@@ -1,0 +1,26 @@
+graph=web-Google N=875713 M=5105039 raw_edges=5105039 selfloops=0 duplicates=0 dangling=136259 max_in=6326 max_out=456 time=1.0s
+graph=soc-LiveJournal1 N=4847571 M=68475391 raw_edges=68993773 selfloops=518382 duplicates=0 dangling=553239 max_in=13905 max_out=20292 time=13.3s
+graph=rmat_p1 N=131072 M=1942984 scale=17 dangling=53484 time=0.3s
+graph=rmat_p2 N=262144 M=3939543 scale=18 dangling=113227 time=0.4s
+graph=rmat_p4 N=524288 M=7968498 scale=19 dangling=238832 time=0.9s
+graph=rmat_p8 N=1048576 M=16085604 scale=20 dangling=501633 time=1.6s
+graph=rmat_p16 N=2097152 M=32416613 scale=21 dangling=1048671 time=3.2s
+graph=rmat_p32 N=4194304 M=65243932 scale=22 dangling=2182657 time=5.9s
+graph=rmat_p64 N=8388608 M=131159513 scale=23 dangling=4537413 time=11.3s
+graph=rmat_p128 N=16777216 M=263433055 scale=24 dangling=9395526 time=21.0s
+graph=rmat_p160 N=20971520 M=330544731 scale=25 dangling=11595937 time=42.2s
+total 5.9G
+-rw-r--r-- 1 yudachen svuusers 1.2G Oct 27 19:23 rmat_p128.bin
+-rw-r--r-- 1 yudachen svuusers 1.5G Oct 27 19:24 rmat_p160.bin
+-rw-r--r-- 1 yudachen svuusers 148M Oct 27 19:22 rmat_p16.bin
+-rw-r--r-- 1 yudachen svuusers 9.0M Oct 27 19:22 rmat_p1.bin
+-rw-r--r-- 1 yudachen svuusers  19M Oct 27 19:22 rmat_p2.bin
+-rw-r--r-- 1 yudachen svuusers 297M Oct 27 19:23 rmat_p32.bin
+-rw-r--r-- 1 yudachen svuusers  37M Oct 27 19:22 rmat_p4.bin
+-rw-r--r-- 1 yudachen svuusers 597M Oct 27 19:23 rmat_p64.bin
+-rw-r--r-- 1 yudachen svuusers  74M Oct 27 19:22 rmat_p8.bin
+-rw-r--r-- 1 yudachen svuusers 317M Oct 27 19:22 soc-LiveJournal1.bin
+-rw-r--r-- 1 yudachen svuusers 1.1G Dec  3  2009 soc-LiveJournal1.txt
+-rw-r--r-- 1 yudachen svuusers  30M Oct 27 19:22 web-Google.bin
+-rw-r--r-- 1 yudachen svuusers 6.7M Oct 27 19:22 web-Google.idmap
+-rw-r--r-- 1 yudachen svuusers  72M Dec  3  2009 web-Google.txt
