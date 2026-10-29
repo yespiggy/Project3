@@ -53,7 +53,7 @@ int main(int argc, char** argv) {
     double tt = now() - t0;
     double sumr = 0;
     for (double v : r) sumr += v;
-    std::printf("%s,serial,%s,%lld,%lld,1,1,1,1,none,none,%d,%d,%.6f,%.6e,%.6f,0,1,0,%.3e,%.15f,%.3f,,,%.2f\n", exp.c_str(),
+    std::printf("%s,serial,%s,%lld,%lld,1,1,1,1,none,none,%d,%d,%.6f,%.6e,%.6f,0,1,0,%.3e,%.15f,%.3f,,,%.2f,\n", exp.c_str(),
                 basename_noext(path).c_str(), (long long)N, (long long)M, rep, it, tt, tt / it, tt, resid, sumr, tl,
                 bytes_per_iter(N, M, 8) / (tt / it) / 1e9);
     std::fflush(stdout);

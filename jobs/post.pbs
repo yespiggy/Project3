@@ -9,3 +9,4 @@ source $PBS_O_WORKDIR/../scripts/env.sh
 cd "$P3_ROOT/tools"
 python3 validate.py $P3_DATA/web-Google.bin $P3_RESULTS/val
 python3 analyze_google.py $P3_DATA/web-Google.bin $P3_DATA/web-Google.idmap $P3_RESULTS/val
+python3 aggregate.py $P3_RESULTS

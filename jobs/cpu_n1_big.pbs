@@ -1,0 +1,16 @@
+#!/bin/bash
+# One 72-core cn node: E1 strong scaling on com-Friendster (65.6M vertices, 3.6B directed edges), 1-72 cores.
+# Fewer iterations than LiveJournal: one serial iteration takes tens of seconds; t_iter is the reported metric.
+#PBS -N p3n1big
+#PBS -q auto_free
+#PBS -l select=1:ncpus=72:mpiprocs=72:mem=120gb
+#PBS -l walltime=03:00:00
+#PBS -j oe
+source $PBS_O_WORKDIR/../scripts/env.sh
+source $P3_ROOT/scripts/run_lib.sh
+cd "$P3_ROOT"
+check_node
+ensure_build
+PERF="--iters 10 --tol 0 --reps 3"
+strong $P3_DATA/com-friendster.bin $P3_RESULTS/strong_n1_big.csv $CORES_1NODE
+echo "single-node Friendster experiments done $(date)"

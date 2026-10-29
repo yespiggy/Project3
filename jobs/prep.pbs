@@ -1,16 +1,24 @@
 #!/bin/bash
-# Preprocess SNAP graphs and generate the R-MAT weak-scaling graphs (N = cores * 2^17, edge factor 16).
+# Preprocess the SNAP graphs (web-Google, LiveJournal, com-Friendster) and generate the R-MAT weak-scaling graphs
+# (N = cores * 2^17, edge factor 16, i.e. about 2M edges per core) for 1 ... 720 cores.
+# Existing outputs are kept, so the job can be resubmitted after a failure. Friendster needs about 70 GB of memory.
 #PBS -N p3prep
 #PBS -q auto_free
-#PBS -l select=1:ncpus=16:mem=96gb
-#PBS -l walltime=02:00:00
+#PBS -l select=1:ncpus=32:mem=160gb
+#PBS -l walltime=03:00:00
 #PBS -j oe
 source $PBS_O_WORKDIR/../scripts/env.sh
+BIN=$P3_ROOT/bin
 cd "$P3_DATA"
-export OMP_NUM_THREADS=16
-$P3_ROOT/bin/preprocess web-Google.txt web-Google.bin web-Google.idmap
-$P3_ROOT/bin/preprocess soc-LiveJournal1.txt soc-LiveJournal1.bin
-for p in 1 2 4 8 16 32 64 128 160; do
-  [ -f rmat_p$p.bin ] || $P3_ROOT/bin/rmat_gen $((p * 131072)) 16 $p rmat_p$p.bin
+export OMP_NUM_THREADS=32
+[ -f web-Google.bin ] || $BIN/preprocess web-Google.txt web-Google.bin web-Google.idmap
+[ -f soc-LiveJournal1.bin ] || $BIN/preprocess soc-LiveJournal1.txt soc-LiveJournal1.bin
+if [ ! -f com-friendster.bin ]; then
+  if command -v pigz > /dev/null; then DEC="pigz -dc -p 8"; else DEC="zcat"; fi
+  $DEC com-friendster.ungraph.txt.gz | $BIN/preprocess --undirected - com-friendster.tmp && mv com-friendster.tmp com-friendster.bin
+fi
+for p in 1 2 4 8 16 36 72 144 288 432 576 720; do
+  [ -f rmat_p$p.bin ] || { $BIN/rmat_gen $((p * 131072)) 16 $p rmat_p$p.tmp && mv rmat_p$p.tmp rmat_p$p.bin; }
 done
 ls -lh "$P3_DATA"
+echo "prep done $(date)"

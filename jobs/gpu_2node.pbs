@@ -1,0 +1,26 @@
+#!/bin/bash
+# Two nodes with 1x A40 each: E6 MPI+CUDA on 2 GPUs across nodes (halo exchange over the network),
+# plus the 1-GPU baseline on the same hardware (LiveJournal and Friendster).
+#PBS -N p3gpu2
+#PBS -q auto_free
+#PBS -l select=2:ncpus=8:mpiprocs=1:ngpus=1:mem=96gb
+#PBS -l place=scatter
+#PBS -l walltime=00:45:00
+#PBS -j oe
+source $PBS_O_WORKDIR/../scripts/env.sh
+module load cuda12.4/toolkit/12.4.1 > /dev/null 2>&1
+source $P3_ROOT/scripts/run_lib.sh
+cd "$P3_ROOT"
+ensure_build
+gpu_map
+R=$P3_RESULTS
+W=$P3_ROOT/scripts/gpu_wrap.sh
+for n in 1 2; do
+  for g in $P3_DATA/soc-LiveJournal1.bin $P3_DATA/com-friendster.bin; do
+    case $g in *friendster*) IT=20 ;; *) IT=50 ;; esac
+    run_mpi $n 1 4 $R/multigpu_2node.csv $W $BIN/pagerank_mpi_cuda --graph $g --kernel thread,hybrid --iters $IT \
+      --tol 0 --reps 5 --exp E6
+  done
+  echo "E6 $n node(s) x 1 GPU done $(date)"
+done
+echo "GPU two-node experiments done $(date)"

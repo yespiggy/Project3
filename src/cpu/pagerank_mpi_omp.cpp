@@ -10,26 +10,9 @@
 #include <omp.h>
 #include <algorithm>
 #include <cmath>
-#include "../common/graph.hpp"
+#include "../common/dist.hpp"
 
 using namespace prg;
-
-static std::vector<int64_t> make_bounds(const std::vector<int64_t>& off, int64_t N, int p, bool by_edges) {
-  std::vector<int64_t> b(p + 1);
-  b[0] = 0;
-  b[p] = N;
-  const int64_t M = off[N];
-  for (int r = 1; r < p; ++r) {
-    if (by_edges) {
-      int64_t target = M * r / p;
-      b[r] = std::lower_bound(off.begin(), off.end(), target) - off.begin();
-      b[r] = std::min<int64_t>(std::max<int64_t>(b[r], b[r - 1]), N);
-    } else {
-      b[r] = N * r / p;
-    }
-  }
-  return b;
-}
 
 int main(int argc, char** argv) {
   int provided;
@@ -47,56 +30,27 @@ int main(int argc, char** argv) {
   const double tol = a.getd("tol", 0.0), d = a.getd("damping", 0.85);
   const std::string exp = a.get("exp", "run"), out = a.get("out", ""), log = a.get("log", "");
 
-  // Count distinct nodes for reporting.
-  MPI_Comm shm;
-  MPI_Comm_split_type(MPI_COMM_WORLD, MPI_COMM_TYPE_SHARED, rank, MPI_INFO_NULL, &shm);
-  int shm_rank;
-  MPI_Comm_rank(shm, &shm_rank);
-  int is_leader = shm_rank == 0, nodes = 0;
-  MPI_Allreduce(&is_leader, &nodes, 1, MPI_INT, MPI_SUM, MPI_COMM_WORLD);
+  int nodes, local_rank;
+  node_info(rank, &nodes, &local_rank);
   const int threads = omp_get_max_threads();
 
-  // ---- Load: rank 0 reads offsets and broadcasts; each rank reads only its own slice of edges.
+  // ---- Load this rank's slice (see dist.hpp).
   double t_load = MPI_Wtime();
-  Header h;
-  std::vector<int64_t> goff;
-  if (rank == 0) {
-    FILE* f = open_or_die(path, "rb");
-    h = read_header(f);
-    goff.resize(h.N + 1);
-    read_at(f, off_pos(), goff.data(), goff.size() * sizeof(int64_t));
-    std::fclose(f);
-  }
-  MPI_Bcast(&h, 2, MPI_INT64_T, 0, MPI_COMM_WORLD);
-  const int64_t N = h.N, M = h.M;
-  goff.resize(N + 1);
-  MPI_Bcast(goff.data(), N + 1, MPI_INT64_T, 0, MPI_COMM_WORLD);
-
-  std::vector<int64_t> bounds = make_bounds(goff, N, p, part == "edge");
-  const int64_t lo = bounds[rank], hi = bounds[rank + 1], nloc = hi - lo;
-  const int64_t ebase = goff[lo], mloc = goff[hi] - goff[lo];
-  std::vector<int64_t> off(nloc + 1);
-  for (int64_t v = 0; v <= nloc; ++v) off[v] = goff[lo + v] - ebase;
-  std::vector<int32_t> cols(mloc), outdeg(nloc);
-  {
-    FILE* f = open_or_die(path, "rb");
-    if (mloc) read_at(f, src_pos(h) + ebase * (long long)sizeof(int32_t), cols.data(), mloc * sizeof(int32_t));
-    if (nloc) read_at(f, deg_pos(h) + lo * (long long)sizeof(int32_t), outdeg.data(), nloc * sizeof(int32_t));
-    std::fclose(f);
-  }
-  std::vector<int64_t>().swap(goff);
+  Slice s = load_slice(path, rank, p, part == "edge");
+  const int64_t N = s.h.N, M = s.h.M, lo = s.lo, nloc = s.nloc, mloc = s.mloc;
+  const std::vector<int64_t>& off = s.off;
+  const std::vector<int32_t>& cols = s.cols;
+  const std::vector<int32_t>& outdeg = s.outdeg;
 
   // ---- Communication setup.
   std::vector<int> cnt(p), dsp(p);  // allgather: per-rank block sizes
   for (int r = 0; r < p; ++r) {
-    cnt[r] = int(bounds[r + 1] - bounds[r]);
-    dsp[r] = int(bounds[r]);
+    cnt[r] = int(s.bounds[r + 1] - s.bounds[r]);
+    dsp[r] = int(s.bounds[r]);
   }
   std::vector<double> xbuf;   // allgather: global x (size N); ghost: [owned | ghosts]
   int64_t own_off = 0;        // where this rank's own x entries live inside xbuf
-  MPI_Comm gcomm = MPI_COMM_NULL;
-  std::vector<int> scnt, sdsp, rcnt, rdsp;  // neighbour exchange layout
-  std::vector<int32_t> send_idx;            // local indices to pack, grouped by destination
+  Ghosts gx;
   std::vector<double> sendbuf;
   double comm_bytes_local = 0;
 
@@ -105,63 +59,11 @@ int main(int argc, char** argv) {
     own_off = lo;
     comm_bytes_local = double(N - nloc) * 8;
   } else {
-    // Ghosts: distinct sources outside [lo, hi), sorted by global id => grouped by owner rank.
-    std::vector<int32_t> gh;
-    for (int32_t c : cols)
-      if (c < lo || c >= hi) gh.push_back(c);
-    std::sort(gh.begin(), gh.end());
-    gh.erase(std::unique(gh.begin(), gh.end()), gh.end());
-    const int64_t ng = gh.size();
-    // Remap columns to local index space.
-#pragma omp parallel for schedule(static)
-    for (int64_t e = 0; e < mloc; ++e) {
-      int32_t c = cols[e];
-      if (c >= lo && c < hi)
-        cols[e] = int32_t(c - lo);
-      else
-        cols[e] = int32_t(nloc + (std::lower_bound(gh.begin(), gh.end(), c) - gh.begin()));
-    }
-    // How many ghosts I need from each owner.
-    std::vector<int> need(p, 0), give(p, 0);
-    {
-      int r = 0;
-      for (int32_t g : gh) {
-        while (g >= bounds[r + 1]) ++r;
-        need[r]++;
-      }
-    }
-    MPI_Alltoall(need.data(), 1, MPI_INT, give.data(), 1, MPI_INT, MPI_COMM_WORLD);
-    std::vector<int> nd(p, 0), gd(p, 0);
-    for (int r = 1; r < p; ++r) {
-      nd[r] = nd[r - 1] + need[r - 1];
-      gd[r] = gd[r - 1] + give[r - 1];
-    }
-    int64_t ngive = gd[p - 1] + give[p - 1];
-    std::vector<int32_t> req(ngive);
-    MPI_Alltoallv(gh.data(), need.data(), nd.data(), MPI_INT32_T, req.data(), give.data(), gd.data(), MPI_INT32_T,
-                  MPI_COMM_WORLD);
-    send_idx.resize(ngive);
-    for (int64_t i = 0; i < ngive; ++i) send_idx[i] = int32_t(req[i] - lo);
-    sendbuf.resize(ngive);
-    // Distributed graph topology: receive from ranks that own my ghosts, send to ranks that need my vertices.
-    std::vector<int> srcs, dsts;
-    for (int r = 0; r < p; ++r) {
-      if (need[r] > 0) {
-        srcs.push_back(r);
-        rcnt.push_back(need[r]);
-        rdsp.push_back(nd[r]);
-      }
-      if (give[r] > 0) {
-        dsts.push_back(r);
-        scnt.push_back(give[r]);
-        sdsp.push_back(gd[r]);
-      }
-    }
-    MPI_Dist_graph_create_adjacent(MPI_COMM_WORLD, int(srcs.size()), srcs.data(), MPI_UNWEIGHTED, int(dsts.size()),
-                                   dsts.data(), MPI_UNWEIGHTED, MPI_INFO_NULL, 0, &gcomm);
-    xbuf.assign(nloc + ng, 0.0);
+    gx = build_ghosts(s, p);  // remaps cols to the local [owned | ghost] index space
+    sendbuf.resize(gx.send_idx.size());
+    xbuf.assign(nloc + gx.ng, 0.0);
     own_off = 0;
-    comm_bytes_local = double(ng) * 8;
+    comm_bytes_local = double(gx.ng) * 8;
   }
   MPI_Barrier(MPI_COMM_WORLD);
   t_load = MPI_Wtime() - t_load;
@@ -200,11 +102,12 @@ int main(int argc, char** argv) {
       t_comp += tm - tc;
       // (2) exchange x, (3) global dangling mass
       if (ghost) {
-        const int64_t ns = send_idx.size();
+        const int64_t ns = gx.send_idx.size();
+        const int32_t* sidx = gx.send_idx.data();
 #pragma omp parallel for schedule(static)
-        for (int64_t i = 0; i < ns; ++i) sendbuf[i] = xown[send_idx[i]];
-        MPI_Neighbor_alltoallv(sendbuf.data(), scnt.data(), sdsp.data(), MPI_DOUBLE, xbuf.data() + nloc, rcnt.data(),
-                               rdsp.data(), MPI_DOUBLE, gcomm);
+        for (int64_t i = 0; i < ns; ++i) sendbuf[i] = xown[sidx[i]];
+        MPI_Neighbor_alltoallv(sendbuf.data(), gx.scnt.data(), gx.sdsp.data(), MPI_DOUBLE, xbuf.data() + nloc,
+                               gx.rcnt.data(), gx.rdsp.data(), MPI_DOUBLE, gx.comm);
       } else {
         MPI_Allgatherv(MPI_IN_PLACE, 0, MPI_DATATYPE_NULL, xbuf.data(), cnt.data(), dsp.data(), MPI_DOUBLE,
                        MPI_COMM_WORLD);
@@ -242,7 +145,7 @@ int main(int argc, char** argv) {
     MPI_Reduce(&t_comm, &comm_max, 1, MPI_DOUBLE, MPI_MAX, 0, MPI_COMM_WORLD);
     MPI_Reduce(&sum_loc, &sumr, 1, MPI_DOUBLE, MPI_SUM, 0, MPI_COMM_WORLD);
     if (rep >= 0 && rank == 0) {
-      std::printf("%s,mpi_omp,%s,%lld,%lld,%d,%d,%d,%d,%s,%s,%d,%d,%.6f,%.6e,%.6f,%.6f,%.4f,%.0f,%.3e,%.15f,%.3f,,,%.2f\n",
+      std::printf("%s,mpi_omp,%s,%lld,%lld,%d,%d,%d,%d,%s,%s,%d,%d,%.6f,%.6e,%.6f,%.6f,%.4f,%.0f,%.3e,%.15f,%.3f,,,%.2f,\n",
                   exp.c_str(), basename_noext(path).c_str(), (long long)N, (long long)M, nodes, p, threads, p * threads,
                   part.c_str(), comm.c_str(), rep, it, tt, tt / it, comp_max, comm_max, imbalance, comm_bytes, resid, sumr,
                   t_load, bytes_per_iter(N, M, 8) / (tt / it) / 1e9);
@@ -260,8 +163,7 @@ int main(int argc, char** argv) {
       std::fclose(f);
     }
   }
-  if (gcomm != MPI_COMM_NULL) MPI_Comm_free(&gcomm);
-  MPI_Comm_free(&shm);
+  if (gx.comm != MPI_COMM_NULL) MPI_Comm_free(&gx.comm);
   MPI_Finalize();
   return 0;
 }
