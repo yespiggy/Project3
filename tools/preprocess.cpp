@@ -66,6 +66,7 @@ int main(int argc, char** argv) {
   }
   if (f != stdin) std::fclose(f);
   std::vector<char>().swap(buf);
+  if (edges.empty()) die("no edges read from " + pos[0]);
   long long raw = edges.size();
   std::fprintf(stderr, "parsed %lld directed edges in %.1fs\n", raw, now() - t0);
 

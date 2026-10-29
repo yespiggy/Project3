@@ -8,6 +8,7 @@
 #PBS -l walltime=03:00:00
 #PBS -j oe
 source $PBS_O_WORKDIR/../scripts/env.sh
+set -o pipefail
 BIN=$P3_ROOT/bin
 cd "$P3_DATA"
 export OMP_NUM_THREADS=32
@@ -21,4 +22,8 @@ for p in 1 2 4 8 16 36 72 144 288 432 576 720; do
   [ -f rmat_p$p.bin ] || { $BIN/rmat_gen $((p * 131072)) 16 $p rmat_p$p.tmp && mv rmat_p$p.tmp rmat_p$p.bin; }
 done
 ls -lh "$P3_DATA"
+# Fail the job (so dependent jobs do not start) if any graph is missing.
+for f in web-Google soc-LiveJournal1 com-friendster rmat_p{1,2,4,8,16,36,72,144,288,432,576,720}; do
+  [ -s $f.bin ] || { echo "ERROR: $f.bin missing" >&2; exit 1; }
+done
 echo "prep done $(date)"
