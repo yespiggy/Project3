@@ -39,6 +39,10 @@ check_node() {
 run_mpi() {
   local n=$1 rpn=$2 th=$3 csv=$4
   shift 4
+  if (( n < 1 || n > ${#NODES[@]} || rpn < 1 || th < 1 )); then
+    echo "ERROR: invalid MPI layout: $n nodes, $rpn ranks/node, $th threads" >&2
+    return 1
+  fi
   local hf=$HOSTDIR/h_${n}_${rpn}
   for ((i = 0; i < n; i++)); do echo "${NODES[$i]} slots=$rpn"; done > "$hf"
   OMP_NUM_THREADS=$th OMP_PROC_BIND=close OMP_PLACES=cores \
@@ -112,3 +116,4 @@ ensure_build() {
     bash "$P3_ROOT/scripts/build.sh"
   fi
 }
+

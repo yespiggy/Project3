@@ -17,6 +17,7 @@ using namespace prg;
 int main(int argc, char** argv) {
   int provided;
   MPI_Init_thread(&argc, &argv, MPI_THREAD_FUNNELED, &provided);
+  if (provided < MPI_THREAD_FUNNELED) MPI_Abort(MPI_COMM_WORLD, 1);
   int rank, p;
   MPI_Comm_rank(MPI_COMM_WORLD, &rank);
   MPI_Comm_size(MPI_COMM_WORLD, &p);
@@ -72,7 +73,7 @@ int main(int argc, char** argv) {
   MPI_Allreduce(&mloc_d, &mmax, 1, MPI_DOUBLE, MPI_MAX, MPI_COMM_WORLD);
   MPI_Allreduce(&mloc_d, &msum, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
   MPI_Allreduce(&comm_bytes_local, &comm_bytes, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
-  const double imbalance = mmax / (msum / p);
+  const double imbalance = msum > 0 ? mmax / (msum / p) : 1.0;
 
   if (rank == 0 && a.get("header", "0") == "1") std::printf("%s\n", csv_header());
 
@@ -106,6 +107,9 @@ int main(int argc, char** argv) {
         const int32_t* sidx = gx.send_idx.data();
 #pragma omp parallel for schedule(static)
         for (int64_t i = 0; i < ns; ++i) sendbuf[i] = xown[sidx[i]];
+        double packed = MPI_Wtime();
+        t_comp += packed - tm;
+        tm = packed;
         MPI_Neighbor_alltoallv(sendbuf.data(), gx.scnt.data(), gx.sdsp.data(), MPI_DOUBLE, xbuf.data() + nloc,
                                gx.rcnt.data(), gx.rdsp.data(), MPI_DOUBLE, gx.comm);
       } else {
@@ -138,7 +142,8 @@ int main(int argc, char** argv) {
       if (!log.empty()) resid_log.push_back(resid);
       if (resid < tol) break;
     }
-    double tt = MPI_Wtime() - t0;
+    double tt_local = MPI_Wtime() - t0, tt = 0;
+      MPI_Reduce(&tt_local, &tt, 1, MPI_DOUBLE, MPI_MAX, 0, MPI_COMM_WORLD);
     double comp_max, comm_max, sum_loc = 0, sumr = 0;
     for (double v : r) sum_loc += v;
     MPI_Reduce(&t_comp, &comp_max, 1, MPI_DOUBLE, MPI_MAX, 0, MPI_COMM_WORLD);
@@ -167,3 +172,4 @@ int main(int argc, char** argv) {
   MPI_Finalize();
   return 0;
 }
+

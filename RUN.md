@@ -1,3 +1,7 @@
+> Revision note: read README.md first. The default CPU submission now stops at
+> 144 cores; set CPU_NODES="2 4 6 8 10" only after confirming queue access.
+> Timing definitions and validation have been corrected; use fresh results.
+
 # 在 Vanda 上跑实验
 
 按教授 10-29 的反馈修订：CPU 用 cn 节点（每节点 72 核），从 1 核测到 10 节点 720 核；强扩展用两张图（LiveJournal 和 com-Friendster）；GPU 加了 MPI+CUDA 多卡（同节点 2 卡、跨 2 节点各 1 卡）。
@@ -66,3 +70,4 @@ bash scripts/submit.sh gpu     # 2 个 GPU 作业
 | `results/val/` | web-Google 正确性验证 |
 
 `t_comp`、`t_comm`、`t_stage` 都是整次运行的总和（取所有 rank 中的最大值），除以 `iters` 就是每轮的时间，`aggregate.py` 已经换算好。
+

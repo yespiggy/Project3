@@ -124,7 +124,9 @@ static T* to_device(const std::vector<T>& v) {
 }
 
 int main(int argc, char** argv) {
-  MPI_Init(&argc, &argv);
+  int provided;
+  MPI_Init_thread(&argc, &argv, MPI_THREAD_FUNNELED, &provided);
+  if (provided < MPI_THREAD_FUNNELED) MPI_Abort(MPI_COMM_WORLD, 1);
   int rank, p;
   MPI_Comm_rank(MPI_COMM_WORLD, &rank);
   MPI_Comm_size(MPI_COMM_WORLD, &p);
@@ -146,7 +148,11 @@ int main(int argc, char** argv) {
   node_info(rank, &nodes, &local_rank);
   CK(cudaGetDeviceCount(&ndev));
   if (ndev == 0) die("no visible GPU");
-  const int dev = local_rank % ndev;
+  if (local_rank >= ndev) {
+    std::fprintf(stderr, "ERROR: more local ranks than visible GPUs\n");
+    MPI_Abort(MPI_COMM_WORLD, 1);
+  }
+  const int dev = local_rank;
   CK(cudaSetDevice(dev));
   CK(cudaFree(0));
   {
@@ -204,7 +210,7 @@ int main(int argc, char** argv) {
   MPI_Allreduce(&mloc_d, &mmax, 1, MPI_DOUBLE, MPI_MAX, MPI_COMM_WORLD);
   MPI_Allreduce(&mloc_d, &msum, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
   MPI_Allreduce(&comm_bytes_local, &comm_bytes, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
-  const double imbalance = mmax / (msum / p);
+  const double imbalance = msum > 0 ? mmax / (msum / p) : 1.0;
   if (rank == 0 && a.get("header", "0") == "1") std::printf("%s\n", csv_header());
 
   std::vector<int> cnt(p), dsp(p);
@@ -270,7 +276,8 @@ int main(int argc, char** argv) {
         ++it;
         if (resid < tol) break;
       }
-      double tt = MPI_Wtime() - t0;
+      double tt_local = MPI_Wtime() - t0, tt = 0;
+      MPI_Reduce(&tt_local, &tt, 1, MPI_DOUBLE, MPI_MAX, 0, MPI_COMM_WORLD);
       CK(cudaGetLastError());
       std::vector<double> r(nloc);
       double t_d2h = MPI_Wtime();
@@ -310,3 +317,4 @@ int main(int argc, char** argv) {
   MPI_Finalize();
   return 0;
 }
+

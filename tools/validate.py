@@ -24,6 +24,10 @@ def load_graph(path):
 
 
 def compare(r, ref, k=100):
+    if r.shape != ref.shape or r.size == 0:
+        raise ValueError(f"vector shape mismatch: {r.shape} vs {ref.shape}")
+    if not np.isfinite(r).all() or not np.isfinite(ref).all():
+        raise ValueError("non-finite PageRank vector")
     top_r, top_ref = np.argsort(-r)[:k], np.argsort(-ref)[:k]
     top1k = len(set(np.argsort(-r)[:1000]) & set(np.argsort(-ref)[:1000]))
     return {
@@ -39,6 +43,8 @@ def main():
     gpath, vdir = sys.argv[1], sys.argv[2]
     n, m, off, src, outdeg = load_graph(gpath)
     serial = np.fromfile(os.path.join(vdir, "serial.bin"), dtype=np.float64)
+    if serial.size != n:
+        raise ValueError("serial vector length differs from graph N")
     out = {"graph": os.path.basename(gpath), "N": n, "M": m, "implementations": {}}
 
     # NetworkX reference. Edge u->v is stored in row v of the in-edge CSR, so the adjacency is the transpose.
@@ -48,7 +54,7 @@ def main():
     dst = np.repeat(np.arange(n, dtype=np.int64), np.diff(off))
     adj = sp.csr_array((np.ones(m), (src.astype(np.int64), dst)), shape=(n, n))
     G = nx.from_scipy_sparse_array(adj, create_using=nx.DiGraph)
-    pr = nx.pagerank(G, alpha=0.85, tol=1e-13, max_iter=1000)
+    pr = nx.pagerank(G, alpha=0.85, tol=1e-11 / n, max_iter=1000)
     ref = np.array([pr[i] for i in range(n)])
     out["networkx"] = {"version": nx.__version__, "seconds": round(time.time() - t, 1), **compare(serial, ref)}
 
@@ -59,10 +65,18 @@ def main():
         r = np.fromfile(path, dtype=np.float64)
         out["implementations"][name] = compare(r, serial)
 
+    checks = [out["networkx"], *out["implementations"].values()]
+    out["tolerances"] = {"l1": 1e-8, "linf": 1e-9, "sum_error": 1e-10}
+    out["passed"] = all(x["l1"] <= 1e-8 and x["linf"] <= 1e-9 and
+                        abs(x["sum"] - 1) <= 1e-10 for x in checks)
+    out["parallel_vectors_checked"] = len(out["implementations"])
     with open(os.path.join(vdir, "validation.json"), "w") as f:
         json.dump(out, f, indent=2)
     print(json.dumps(out, indent=2))
+    if not out["passed"]:
+        raise SystemExit("validation FAILED")
 
 
 if __name__ == "__main__":
     main()
+

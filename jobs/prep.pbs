@@ -7,6 +7,7 @@
 #PBS -l select=1:ncpus=32:mem=160gb
 #PBS -l walltime=03:00:00
 #PBS -j oe
+set -e -o pipefail
 source $PBS_O_WORKDIR/../scripts/env.sh
 set -o pipefail
 BIN=$P3_ROOT/bin
@@ -27,3 +28,4 @@ for f in web-Google soc-LiveJournal1 com-friendster rmat_p{1,2,4,8,16,36,72,144,
   [ -s $f.bin ] || { echo "ERROR: $f.bin missing" >&2; exit 1; }
 done
 echo "prep done $(date)"
+

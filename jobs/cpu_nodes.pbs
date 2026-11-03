@@ -10,6 +10,7 @@
 #PBS -l place=scatter
 #PBS -l walltime=01:00:00
 #PBS -j oe
+set -e -o pipefail
 source $PBS_O_WORKDIR/../scripts/env.sh
 source $P3_ROOT/scripts/run_lib.sh
 cd "$P3_ROOT"
@@ -34,3 +35,4 @@ fi
 PERF="--iters 10 --tol 0 --reps 3"
 strong $P3_DATA/com-friendster.bin $R/strong_n${NN}_big.csv $C
 echo "$NN-node CPU experiments done $(date)"
+

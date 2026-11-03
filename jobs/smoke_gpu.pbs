@@ -1,0 +1,24 @@
+#!/bin/bash
+#PBS -N p3gpusmoke
+#PBS -q auto_free
+#PBS -l select=1:ncpus=8:mpiprocs=2:ngpus=2:mem=8gb
+#PBS -l walltime=00:10:00
+#PBS -j oe
+set -e -o pipefail
+export P3_ROOT=/home/svu/e0985955/p3-review-20261102/Project3
+source "$P3_ROOT/scripts/env.sh"
+module load cuda12.4/toolkit/12.4.1
+source "$P3_ROOT/scripts/run_lib.sh"
+cd "$P3_ROOT"
+ensure_build
+gpu_map
+V=$P3_RESULTS/smoke_gpu
+mkdir -p "$V"
+export OMP_NUM_THREADS=2
+$BIN/rmat_gen 1024 16 42 "$V/graph.bin"
+$BIN/pagerank_serial --graph "$V/graph.bin" --iters 1000 --tol 1e-12 --out "$V/serial.bin"
+$BIN/pagerank_cuda --graph "$V/graph.bin" --kernel all --iters 1000 --tol 1e-12 --out "$V/cuda"
+for g in 1 2; do
+ run_mpi 1 "$g" 2 "$V/runs.csv" "$P3_ROOT/scripts/gpu_wrap.sh" "$BIN/pagerank_mpi_cuda" --graph "$V/graph.bin" --kernel thread,hybrid --iters 1000 --tol 1e-12 --out "$V/mpi_cuda_${g}gpu"
+done
+.venv/bin/python tools/validate.py "$V/graph.bin" "$V"

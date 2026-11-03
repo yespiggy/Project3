@@ -6,6 +6,7 @@
 #PBS -l select=1:ncpus=72:mpiprocs=72:mem=120gb
 #PBS -l walltime=01:30:00
 #PBS -j oe
+set -e -o pipefail
 source $PBS_O_WORKDIR/../scripts/env.sh
 source $P3_ROOT/scripts/run_lib.sh
 cd "$P3_ROOT"
@@ -33,3 +34,4 @@ strong $LJ $R/strong_n1_lj.csv $CORES_1NODE
 weak $R/weak_n1.csv $CORES_1NODE
 $BIN/pagerank_serial --graph $LJ $PERF --exp E5_serial $(csv_flag $R/serial.csv) >> $R/serial.csv
 echo "single-node LiveJournal experiments done $(date)"
+

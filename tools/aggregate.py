@@ -81,7 +81,7 @@ def main():
                 if base:
                     x["speedup"] = base / x["t_iter_ms"]
                     x["efficiency"] = x["speedup"] / x["cores"]
-                x["comm_fraction"] = x["t_comm_ms"] / (x["t_comp_ms"] + x["t_comm_ms"])
+                x["comm_component_ratio"] = x["t_comm_ms"] / (x["t_comp_ms"] + x["t_comm_ms"])
                 if t_serial and graph == serial[0]["graph"]:
                     x["speedup_vs_serial"] = t_serial * 1e3 / x["t_iter_ms"]
         if base and 1 not in [x["cores"] for x in modes.get("mpi", [])] and "mpi" in modes:
@@ -91,10 +91,12 @@ def main():
     # E2 weak scaling: realized edges per core = M / cores after duplicate and self-loop removal.
     e2 = [summarize(rs) for rs in group(files(res, "weak_*.csv"), "cores").values()]
     e2.sort(key=lambda x: x["cores"])
+    weak_base = next((x for x in e2 if x["cores"] == 1), None)
     for x in e2:
-        x["weak_efficiency"] = e2[0]["t_iter_ms"] / x["t_iter_ms"]
+        if weak_base:
+            x["weak_efficiency"] = weak_base["t_iter_ms"] / x["t_iter_ms"]
         x["edges_per_core_m"] = x["M"] / x["cores"] / 1e6
-        x["comm_fraction"] = x["t_comm_ms"] / (x["t_comp_ms"] + x["t_comm_ms"])
+        x["comm_component_ratio"] = x["t_comm_ms"] / (x["t_comp_ms"] + x["t_comm_ms"])
     s["e2"] = e2
 
     s["e3"] = [summarize(rs) for rs in group(rows(os.path.join(res, "design_n4.csv")), "part", "comm").values()]
@@ -124,6 +126,7 @@ def main():
                and y["ranks"] == 1]
         if one:
             x["speedup_vs_1gpu"] = one[0]["t_iter_ms"] / x["t_iter_ms"]
+            x["gpu_efficiency"] = x["speedup_vs_1gpu"] / x["ranks"]
     s["e6"] = e6
 
     # E5: CPU vs GPU per graph: 1 core, 1 node (72 cores), 10 nodes (720 cores), best 1-GPU and 2-GPU runs.
@@ -169,3 +172,4 @@ def main():
 
 if __name__ == "__main__":
     main()
+

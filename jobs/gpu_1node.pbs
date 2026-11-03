@@ -9,6 +9,7 @@
 #PBS -l select=1:ncpus=16:mpiprocs=2:ngpus=2:mem=96gb
 #PBS -l walltime=01:00:00
 #PBS -j oe
+set -e -o pipefail
 source $PBS_O_WORKDIR/../scripts/env.sh
 module load cuda12.4/toolkit/12.4.1 > /dev/null 2>&1
 source $P3_ROOT/scripts/run_lib.sh
@@ -39,8 +40,9 @@ $BIN/pagerank_cuda --graph $LJ --kernel all --iters 50 --tol 0 --reps 5 --exp E4
 for g in 1 2; do
   run_mpi 1 $g 4 $R/multigpu_1node.csv $W $BIN/pagerank_mpi_cuda --graph $LJ --kernel thread,hybrid --iters 50 --tol 0 \
     --reps 5 --exp E6
-  run_mpi 1 $g 4 $R/multigpu_1node.csv $W $BIN/pagerank_mpi_cuda --graph $FR --kernel thread,hybrid --iters 20 --tol 0 \
+  run_mpi 1 $g 4 $R/multigpu_1node.csv $W $BIN/pagerank_mpi_cuda --graph $FR --kernel thread,hybrid --iters 10 --tol 0 \
     --reps 5 --exp E6
   echo "E6 $g GPU(s) on one node done $(date)"
 done
 echo "GPU single-node experiments done $(date)"
+
