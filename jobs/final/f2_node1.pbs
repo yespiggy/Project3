@@ -12,6 +12,7 @@ source "$P3_ROOT/jobs/final/common.sh"
 check_node
 meta node1
 R=$P3_RESULTS
+reset_outputs $R/strong_lj_n1.csv $R/weak_n1.csv $R/sweep_lj_n1.csv $R/split_lj_n1.csv $R/sweep_fr_n1.csv   $R/split_fr_n1.csv $R/strong_fr_n1.csv
 
 PERF="--iters 50 --tol 0 --reps 5"
 strong $LJ $R/strong_lj_n1.csv $CORES_1NODE

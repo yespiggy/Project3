@@ -13,7 +13,8 @@ meta serial
 
 # (C) validation references (CPU variants are compared against these in f2/f3 and by tools/validate.py)
 V=$P3_RESULTS/val
-mkdir -p "$V"
+mkdir -p "$V" "$VS"
+reset_outputs $V/val_cpu.csv $VS/valscale.csv $P3_RESULTS/stream_cpu.csv $P3_RESULTS/stream_cpu.csv.tmp $P3_RESULTS/serial_size.csv
 $BIN/pagerank_serial --graph $GG --iters 1000 --tol 1e-10 --exp val --out $V/serial.bin --log $V/serial_resid.csv \
   $(csv_flag $V/val_cpu.csv) >> $V/val_cpu.csv
 for part in vertex edge; do
@@ -22,8 +23,8 @@ for part in vertex edge; do
       --exp val --out $V/mpi_${part}_${comm}.bin
   done
 done
-$BIN/pagerank_serial --graph $LJ --iters 50 --tol 0 --exp valscale --out $V/serial_lj50.bin \
-  $(csv_flag $V/valscale.csv) >> $V/valscale.csv
+$BIN/pagerank_serial --graph $LJ --iters 50 --tol 0 --exp valscale --out $VS/serial_lj50.bin \
+  $(csv_flag $VS/valscale.csv) >> $VS/valscale.csv
 echo "validation references done $(date)"
 
 # (B) STREAM probe, threads pinned like the PageRank runs

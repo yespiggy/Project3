@@ -19,8 +19,8 @@ if [ "${#NODES[@]}" != "$NN" ]; then echo "ERROR: NN=$NN but job has ${#NODES[@]
 meta nodes$NN
 R=$P3_RESULTS
 C=$((NN * CPN))
-V=$R/val
-mkdir -p $V
+mkdir -p $VS
+reset_outputs $R/strong_lj_n$NN.csv $R/weak_n$NN.csv $R/split_lj_n$NN.csv $VS/valscale_n$NN.csv $R/design_n$NN.csv   $R/sweep_lj_n$NN.csv $R/transport_lj_n$NN.csv $R/strong_fr_n$NN.csv $R/split_fr_n$NN.csv $R/sweep_fr_n$NN.csv   $R/transport_fr_n$NN.csv
 
 PERF="--iters 50 --tol 0 --reps 5"
 strong $LJ $R/strong_lj_n$NN.csv $C
@@ -28,8 +28,8 @@ weak_mode hybrid $R/weak_n$NN.csv $C
 weak_mode mpi $R/weak_n$NN.csv $C
 split_runs $LJ $R/split_lj_n$NN.csv $C
 read n rpn th <<< "$(layout $C mpi)"
-run_mpi $n $rpn $th $V/valscale_n$NN.csv $BIN/pagerank_mpi_omp --graph $LJ --part edge --comm ghost --iters 50 --tol 0 \
-  --exp valscale --out $V/mpi_lj50_p$C.bin
+run_mpi $n $rpn $th $VS/valscale_n$NN.csv $BIN/pagerank_mpi_omp --graph $LJ --part edge --comm ghost --iters 50 --tol 0 \
+  --exp valscale --out $VS/mpi_lj50_p$C.bin
 if [ "$NN" = 4 ]; then
   for g in $LJ; do
     for part in vertex edge; do

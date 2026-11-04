@@ -22,6 +22,23 @@ meta() {
   } > "$f" 2>&1
 }
 
+# reset_outputs <files...>: run_mpi and the programs APPEND to their CSV files (the header is written only when the file
+# is missing). Re-running a job, or running two jobs into the same directory, would therefore mix two runs in one
+# file with duplicated rep numbers. Every job calls this first with the files it writes: existing ones are moved to
+# $P3_RESULTS/superseded/ (kept, never deleted) so each CSV holds exactly one run.
+reset_outputs() {
+  local f
+  for f in "$@"; do
+    [ -e "$f" ] || continue
+    mkdir -p "$P3_RESULTS/superseded"
+    mv "$f" "$P3_RESULTS/superseded/$(basename "$f").$(date +%Y%m%d-%H%M%S)-${PBS_JOBID:-local}"
+    echo "moved existing $f to $P3_RESULTS/superseded/"
+  done
+}
+
+# py_ready: true when the system python3 can import what the validation / smoke scripts need.
+py_ready() { python3 -c "import numpy, scipy, networkx" > /dev/null 2>&1; }
+
 # weak_mode <mode> <csv> <cores...>: E2 weak scaling on rmat_p<cores>.bin in the given mode (hybrid | mpi).
 weak_mode() {
   local mode=$1 csv=$2

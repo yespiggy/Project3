@@ -1,6 +1,8 @@
 #!/bin/bash
 # One node with 2x A40.
 #   validation on web-Google: four single-GPU kernels, MPI+CUDA on 1 and 2 GPUs (to convergence)
+#   validation at scale on LiveJournal (exactly 50 iterations; the vectors are compared with the serial 50-iteration
+#     vector by post.pbs): single-GPU kernels, MPI+CUDA on 1 and 2 GPUs
 #   E4 single-GPU kernel comparison on LiveJournal (50 it x 5) and Friendster (10 it x 5)
 #   E6 MPI+CUDA on 1 GPU and 2 GPUs of the same node (LiveJournal, Friendster)
 #   GPU memory-bandwidth probe (copy, triad, random gather)
@@ -15,8 +17,10 @@ gpu_map
 meta gpu1
 R=$P3_RESULTS
 V=$R/val
-mkdir -p $V
+mkdir -p $V $VS
 W=$P3_ROOT/scripts/gpu_wrap.sh
+# The programs append to their CSV files: move earlier copies away so each file holds this run only.
+reset_outputs $R/gpu_bw.csv $V/val_gpu.csv $VS/valscale_gpu1.csv $R/e4.csv $R/multigpu_1node.csv
 
 $BIN/gpu_bw --mb 2048 --reps 20 > $R/gpu_bw.csv
 $BIN/pagerank_cuda --graph $GG --kernel all --iters 1000 --tol 1e-10 --exp val --out $V/cuda $(csv_flag $V/val_gpu.csv) \
@@ -26,6 +30,15 @@ for g in 1 2; do
     --exp val --out $V/mpi_cuda_${g}gpu
 done
 echo "GPU validation done $(date)"
+
+# validation at scale: same synchronous 50-iteration run as valscale/serial_lj50.bin (tol 0)
+$BIN/pagerank_cuda --graph $LJ --kernel all --iters 50 --tol 0 --exp valscale --out $VS/cuda_lj50 \
+  $(csv_flag $VS/valscale_gpu1.csv) >> $VS/valscale_gpu1.csv
+for g in 1 2; do
+  run_mpi 1 $g 4 $VS/valscale_gpu1.csv $W $BIN/pagerank_mpi_cuda --graph $LJ --kernel thread,hybrid --iters 50 --tol 0 \
+    --exp valscale --out $VS/mpi_cuda_lj50_${g}gpu
+done
+echo "GPU validation at scale done $(date)"
 
 $BIN/pagerank_cuda --graph $LJ --kernel all --iters 50 --tol 0 --reps 5 --exp E4 $(csv_flag $R/e4.csv) >> $R/e4.csv
 $BIN/pagerank_cuda --graph $FR --kernel all --iters 10 --tol 0 --reps 5 --exp E4 >> $R/e4.csv

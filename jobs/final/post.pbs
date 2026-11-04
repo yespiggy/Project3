@@ -1,0 +1,44 @@
+#!/bin/bash
+# Validation and aggregation of the final suite; submitted by scripts/final_submit.sh to start after all other jobs
+# have ended (afterany, so a failed job does not block it). Every check runs even if an earlier one fails; the job
+# exits non-zero if any did, so a failure is visible in qstat -x and in the log.
+#   1. tools/validate.py       web-Google: every vector in val/ (CPU, 1-GPU, 2-GPU same node, 2-GPU cross node)
+#                              against the serial vector, and the serial vector against NetworkX
+#   2. tools/compare_vec.py    LiveJournal after exactly 50 iterations: every vector in valscale/ (CPU 144..720 ranks,
+#                              single GPU kernels, MPI+CUDA on 1 GPU, 2 GPUs same node, 2 GPUs cross node)
+#                              against valscale/serial_lj50.bin
+#   3. tools/aggregate.py      results_final/summary.json
+#PBS -N p3f_post
+#PBS -l select=1:ncpus=4:mem=32gb
+#PBS -l walltime=00:40:00
+#PBS -j oe
+source "$P3_ROOT/jobs/final/common.sh"
+R=$P3_RESULTS
+st=0
+if ! py_ready; then
+  echo "ERROR: python3 cannot import numpy, scipy and networkx" >&2
+  exit 1
+fi
+cd "$P3_ROOT/tools"
+
+python3 validate.py $GG $R/val || { echo "FAILED: validate.py" >&2; st=1; }
+python3 analyze_google.py $GG $P3_DATA/web-Google.idmap $R/val || { echo "FAILED: analyze_google.py" >&2; st=1; }
+
+if [ -s $VS/serial_lj50.bin ]; then
+  others=$(ls $VS/*.bin | grep -v serial_lj50.bin)
+  if [ -n "$others" ]; then
+    python3 compare_vec.py $VS/serial_lj50.bin $VS/validation_scale.json $others \
+      || { echo "FAILED: compare_vec.py (see $VS/validation_scale.json)" >&2; st=1; }
+  else
+    echo "FAILED: no vectors in $VS to compare" >&2
+    st=1
+  fi
+else
+  echo "FAILED: $VS/serial_lj50.bin is missing (f1_serial did not finish)" >&2
+  st=1
+fi
+
+python3 aggregate.py $R || { echo "FAILED: aggregate.py" >&2; st=1; }
+[ -s $R/failures.txt ] && { echo "run_mpi failures were recorded:"; cat $R/failures.txt; }
+echo "post done, status $st, $(date)"
+exit $st

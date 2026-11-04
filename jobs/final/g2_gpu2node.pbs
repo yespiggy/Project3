@@ -1,5 +1,7 @@
 #!/bin/bash
 # Two nodes with 1x A40 each. E6 MPI+CUDA: 1 GPU, and 2 GPUs on two nodes (halo exchange over the network).
+# Also validates the cross-node path: web-Google to convergence and LiveJournal after exactly 50 iterations, with
+# the output vectors compared with the serial ones by post.pbs.
 # Vanda's GPU queues allow at most 2 GPUs per job (resources_max.ngpus = 2), so 4-GPU runs are not possible;
 # 2 GPUs within one node are measured in g1_gpu1node.pbs.
 #PBS -N p3f_gpu2
@@ -12,8 +14,20 @@ module load cuda12.4/toolkit/12.4.1 > /dev/null 2>&1
 gpu_map
 meta gpu2
 R=$P3_RESULTS
+V=$R/val
+mkdir -p $V $VS
 W=$P3_ROOT/scripts/gpu_wrap.sh
 CSV=$R/multigpu_2node.csv
+# The programs append to their CSV files: move earlier copies away so each file holds this run only.
+reset_outputs $CSV $V/val_gpu_2node.csv $VS/valscale_gpu2.csv
+
+# validation of the cross-node path (2 ranks, one on each node)
+run_mpi 2 1 4 $V/val_gpu_2node.csv $W $BIN/pagerank_mpi_cuda --graph $GG --kernel thread,hybrid --iters 1000 --tol 1e-10 \
+  --exp val --out $V/mpi_cuda_2node
+run_mpi 2 1 4 $VS/valscale_gpu2.csv $W $BIN/pagerank_mpi_cuda --graph $LJ --kernel thread,hybrid --iters 50 --tol 0 \
+  --exp valscale --out $VS/mpi_cuda_lj50_2node
+echo "cross-node validation done $(date)"
+
 for layout in "1 1" "2 1"; do
   read n rpn <<< "$layout"
   run_mpi $n $rpn 4 $CSV $W $BIN/pagerank_mpi_cuda --graph $LJ --kernel thread,hybrid --iters 50 --tol 0 --reps 5 --exp E6

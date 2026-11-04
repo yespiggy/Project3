@@ -32,5 +32,12 @@ ls -l "$P3_DATA" "$P3_EXTRA"
 cd "$P3_ROOT"
 export OMP_NUM_THREADS=1
 NODES=($(sort -u "$PBS_NODEFILE"))
-.venv/bin/python tools/smoke.py --serial bin/pagerank_serial --mpi bin/pagerank_mpi_omp | tee "$P3_RESULTS/smoke_cpu.txt"
+# Small-graph correctness tests need numpy/scipy/networkx. Vanda's system python3 has them (there is no .venv in a
+# fresh clone). If they are missing the test is skipped and recorded as such; a missing package must not stop the
+# whole suite, but a FAILING test (exit code of smoke.py) still fails this job.
+if py_ready; then
+  python3 tools/smoke.py --serial bin/pagerank_serial --mpi bin/pagerank_mpi_omp | tee "$P3_RESULTS/smoke_cpu.txt"
+else
+  echo "SKIPPED: python3 cannot import numpy, scipy and networkx" | tee "$P3_RESULTS/smoke_cpu.txt"
+fi
 echo "prep done $(date)"
