@@ -1,0 +1,23 @@
+#!/bin/bash
+# Two nodes with 1x A40 each. E6 MPI+CUDA: 1 GPU, and 2 GPUs on two nodes (halo exchange over the network).
+# Vanda's GPU queues allow at most 2 GPUs per job (resources_max.ngpus = 2), so 4-GPU runs are not possible;
+# 2 GPUs within one node are measured in g1_gpu1node.pbs.
+#PBS -N p3f_gpu2
+#PBS -l select=2:ncpus=16:mpiprocs=1:ngpus=1:mem=120gb
+#PBS -l place=scatter
+#PBS -l walltime=01:00:00
+#PBS -j oe
+source "$P3_ROOT/jobs/final/common.sh"
+module load cuda12.4/toolkit/12.4.1 > /dev/null 2>&1
+gpu_map
+meta gpu2
+R=$P3_RESULTS
+W=$P3_ROOT/scripts/gpu_wrap.sh
+CSV=$R/multigpu_2node.csv
+for layout in "1 1" "2 1"; do
+  read n rpn <<< "$layout"
+  run_mpi $n $rpn 4 $CSV $W $BIN/pagerank_mpi_cuda --graph $LJ --kernel thread,hybrid --iters 50 --tol 0 --reps 5 --exp E6
+  run_mpi $n $rpn 4 $CSV $W $BIN/pagerank_mpi_cuda --graph $FR --kernel thread,hybrid --iters 10 --tol 0 --reps 5 --exp E6
+  echo "E6 $n node(s) x $rpn GPU(s) done $(date)"
+done
+echo "g2 done $(date)"

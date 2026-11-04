@@ -292,7 +292,7 @@ int main(int argc, char** argv) {
       MPI_Reduce(&sum_loc, &sumr, 1, MPI_DOUBLE, MPI_SUM, 0, MPI_COMM_WORLD);
       if (rep >= 0 && rank == 0) {
         std::printf("%s,mpi_cuda_%s,%s,%lld,%lld,%d,%d,1,%d,edge,ghost,%d,%d,%.6f,%.6e,%.6f,%.6f,%.4f,%.0f,%.3e,%.15f,"
-                    "%.3f,%.4f,%.4f,%.2f,%.6f\n",
+                    "%.3f,%.4f,%.4f,%.2f,%.6f,\n",
                     exp.c_str(), kname.c_str(), basename_noext(path).c_str(), (long long)N, (long long)M, nodes, p, p,
                     rep, it, tt, tt / it, comp_max, comm_max, imbalance, comm_bytes, resid, sumr, t_load, t_h2d,
                     d2h_max, bytes_per_iter(N, M, 8) / (tt / it) / 1e9, stage_max);

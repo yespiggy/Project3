@@ -109,10 +109,10 @@ inline double bytes_per_iter(int64_t N, int64_t M, int off_bytes) {
 
 // Shared CSV header for every implementation.
 // t_comp / t_comm / t_stage are totals over the run (max over ranks); t_stage is the host<->device copy time
-// of the multi-GPU halo exchange (empty for CPU runs). t_h2d / t_d2h are the one-off graph upload / result download.
+// of the multi-GPU halo exchange (empty for CPU runs); t_wait is the barrier wait of --split runs (MPI+OpenMP only). t_h2d / t_d2h are the one-off graph upload / result download.
 inline const char* csv_header() {
   return "exp,impl,graph,N,M,nodes,ranks,threads,cores,part,comm,rep,iters,t_total,t_iter,t_comp,t_comm,"
-         "imbalance,comm_bytes_iter,resid,sumr,t_load,t_h2d,t_d2h,gbps,t_stage";
+         "imbalance,comm_bytes_iter,resid,sumr,t_load,t_h2d,t_d2h,gbps,t_stage,t_wait";
 }
 
 struct Args {

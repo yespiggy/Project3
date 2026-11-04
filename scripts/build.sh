@@ -10,11 +10,13 @@ if [ "$ARCH" = x86_64 ]; then FLAGS="-O3 -march=x86-64-v3 -std=c++17"; else FLAG
 g++ $FLAGS -fopenmp tools/preprocess.cpp -o bin/preprocess
 g++ $FLAGS -fopenmp tools/rmat_gen.cpp -o bin/rmat_gen
 g++ $FLAGS src/serial/pagerank_serial.cpp -o bin/pagerank_serial
+g++ $FLAGS -fopenmp tools/stream_bw.cpp -o bin/stream_bw
 mpicxx $FLAGS -fopenmp src/cpu/pagerank_mpi_omp.cpp -o bin/pagerank_mpi_omp
 echo "$ARCH" > bin/.arch
 module load cuda12.4/toolkit/12.4.1 >/dev/null 2>&1 || true
 if command -v nvcc >/dev/null; then
   nvcc -O3 -std=c++17 -arch=sm_86 src/gpu/pagerank_cuda.cu -lcusparse -o bin/pagerank_cuda
+  nvcc -O3 -std=c++17 -arch=sm_86 tools/gpu_bw.cu -o bin/gpu_bw
   MPI_INC=$(for d in $(mpicxx --showme:incdirs); do printf -- "-I%s " "$d"; done)
   CUDA_LIB=$(dirname "$(dirname "$(command -v nvcc)")")/lib64
   nvcc -O3 -std=c++17 -arch=sm_86 -Xcompiler -fopenmp $MPI_INC -c src/gpu/pagerank_mpi_cuda.cu -o build/pagerank_mpi_cuda.o

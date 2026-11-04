@@ -1,0 +1,56 @@
+#!/bin/bash
+# One 72-core node. (A) Serial runtime vs problem size: R-MAT family p1..p720 (N and M grow together),
+# an edge-factor sweep at fixed N = 2^20 (M grows, N fixed) and the three real graphs.
+# (B) Memory-bandwidth probe (STREAM copy/triad) at 1..72 threads, to interpret the PageRank effective bandwidth.
+# (C) Reference vectors for validation: web-Google to convergence, LiveJournal after exactly 50 iterations.
+#PBS -N p3f_serial
+#PBS -l select=1:ncpus=72:mpiprocs=72:mem=200gb
+#PBS -l walltime=02:00:00
+#PBS -j oe
+source "$P3_ROOT/jobs/final/common.sh"
+check_node
+meta serial
+
+# (C) validation references (CPU variants are compared against these in f2/f3 and by tools/validate.py)
+V=$P3_RESULTS/val
+mkdir -p "$V"
+$BIN/pagerank_serial --graph $GG --iters 1000 --tol 1e-10 --exp val --out $V/serial.bin --log $V/serial_resid.csv \
+  $(csv_flag $V/val_cpu.csv) >> $V/val_cpu.csv
+for part in vertex edge; do
+  for comm in allgather ghost; do
+    run_mpi 1 4 4 $V/val_cpu.csv $BIN/pagerank_mpi_omp --graph $GG --part $part --comm $comm --iters 1000 --tol 1e-10 \
+      --exp val --out $V/mpi_${part}_${comm}.bin
+  done
+done
+$BIN/pagerank_serial --graph $LJ --iters 50 --tol 0 --exp valscale --out $V/serial_lj50.bin \
+  $(csv_flag $V/valscale.csv) >> $V/valscale.csv
+echo "validation references done $(date)"
+
+# (B) STREAM probe, threads pinned like the PageRank runs
+S=$P3_RESULTS/stream_cpu.csv
+for t in 1 2 4 8 16 36 72; do
+  OMP_NUM_THREADS=$t OMP_PROC_BIND=close OMP_PLACES=cores $BIN/stream_bw --mb 4096 --reps 10 | tail -1 >> $S.tmp
+done
+{ echo "threads,mib_per_array,copy_gbs,triad_gbs,check"; cat $S.tmp; } > $S && rm -f $S.tmp
+echo "stream done $(date)"
+
+# (A) serial scaling with problem size. 10 iterations x 3 repetitions; tol=0 so every graph does the same work.
+SER=$P3_RESULTS/serial_size.csv
+export OMP_NUM_THREADS=32
+for ef in 4 8 16 32 64; do
+  f=$P3_EXTRA/rmat_n20_ef$ef.bin
+  [ -s $f ] || { $BIN/rmat_gen 1048576 $ef 7 $f.tmp && mv $f.tmp $f; }
+done
+export OMP_NUM_THREADS=1
+for ef in 4 8 16 32 64; do
+  $BIN/pagerank_serial --graph $P3_EXTRA/rmat_n20_ef$ef.bin --iters 10 --tol 0 --reps 3 --exp S_ef $(csv_flag $SER) >> $SER
+done
+for p in 1 2 4 8 16 36 72 144 288 432 576 720; do
+  $BIN/pagerank_serial --graph $P3_DATA/rmat_p$p.bin --iters 10 --tol 0 --reps 3 --exp S_rmat $(csv_flag $SER) >> $SER
+  echo "serial rmat_p$p done $(date)"
+done
+for g in $GG $LJ $FR; do
+  $BIN/pagerank_serial --graph $g --iters 10 --tol 0 --reps 3 --exp S_real $(csv_flag $SER) >> $SER
+  echo "serial $(basename $g) done $(date)"
+done
+echo "f1 done $(date)"

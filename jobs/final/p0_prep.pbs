@@ -1,0 +1,36 @@
+#!/bin/bash
+# Build on a compute node (the login node is not a compute node), preprocess the SNAP graphs, generate all R-MAT
+# graphs with a FIXED thread count (rmat_gen seeds one RNG per OpenMP thread, so the graph depends on the thread
+# count: fixing it makes the inputs reproducible), then run the small-graph correctness tests.
+# All other final jobs depend on this one (afterok).
+#PBS -N p3f_prep
+#PBS -l select=1:ncpus=32:mpiprocs=4:mem=160gb
+#PBS -l walltime=02:30:00
+#PBS -j oe
+set -e
+source "$P3_ROOT/jobs/final/common.sh"
+bash "$P3_ROOT/scripts/build.sh"
+mkdir -p "$P3_DATA"
+cd "$P3_DATA"
+export OMP_NUM_THREADS=32
+[ -s web-Google.bin ] || $BIN/preprocess web-Google.txt web-Google.bin web-Google.idmap
+[ -s soc-LiveJournal1.bin ] || $BIN/preprocess soc-LiveJournal1.txt soc-LiveJournal1.bin
+if [ ! -s com-friendster.bin ]; then
+  # the download (scripts/download_data.sh on the login node) may still be running when this job starts
+  for i in $(seq 1 90); do [ -s com-friendster.ungraph.txt.gz ] && break; sleep 60; done
+  [ -s com-friendster.ungraph.txt.gz ] || { echo "ERROR: Friendster download missing" >&2; exit 1; }
+  zcat com-friendster.ungraph.txt.gz | $BIN/preprocess --undirected - com-friendster.tmp && mv com-friendster.tmp com-friendster.bin
+fi
+for p in 1 2 4 8 16 36 72 144 288 432 576 720; do
+  [ -s rmat_p$p.bin ] || { $BIN/rmat_gen $((p * 131072)) 16 $p rmat_p$p.tmp && mv rmat_p$p.tmp rmat_p$p.bin; }
+done
+for ef in 4 8 16 32 64; do
+  f=$P3_EXTRA/rmat_n20_ef$ef.bin
+  [ -s $f ] || { $BIN/rmat_gen 1048576 $ef 7 $f.tmp && mv $f.tmp $f; }
+done
+ls -l "$P3_DATA" "$P3_EXTRA"
+cd "$P3_ROOT"
+export OMP_NUM_THREADS=1
+NODES=($(sort -u "$PBS_NODEFILE"))
+.venv/bin/python tools/smoke.py --serial bin/pagerank_serial --mpi bin/pagerank_mpi_omp | tee "$P3_RESULTS/smoke_cpu.txt"
+echo "prep done $(date)"

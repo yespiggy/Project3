@@ -30,6 +30,10 @@ int main(int argc, char** argv) {
   const int max_iters = a.geti("iters", 50), reps = a.geti("reps", 1);
   const double tol = a.getd("tol", 0.0), d = a.getd("damping", 0.85);
   const std::string exp = a.get("exp", "run"), out = a.get("out", ""), log = a.get("log", "");
+  // --split 1: put an MPI_Barrier in front of every communication call and time it separately as t_wait, so that
+  // t_comm holds only the data movement / reduction itself and t_wait the load-imbalance and synchronisation wait.
+  // The extra barriers add synchronisation, so --split runs are a diagnostic breakdown, not the headline timing.
+  const bool split = a.geti("split", 0) != 0;
 
   int nodes, local_rank;
   node_info(rank, &nodes, &local_rank);
@@ -83,7 +87,14 @@ int main(int argc, char** argv) {
   for (int rep = -1; rep < reps; ++rep) {
     std::fill(r.begin(), r.end(), 1.0 / N);
     std::vector<double> resid_log;
-    double t_comp = 0, t_comm = 0, resid = 0;
+    double t_comp = 0, t_comm = 0, t_wait = 0, resid = 0;
+    auto wait_all = [&](double& tmark) {
+      if (!split) return;
+      MPI_Barrier(MPI_COMM_WORLD);
+      double w = MPI_Wtime();
+      t_wait += w - tmark;
+      tmark = w;
+    };
     int it = 0;
     MPI_Barrier(MPI_COMM_WORLD);
     double t0 = MPI_Wtime();
@@ -110,9 +121,11 @@ int main(int argc, char** argv) {
         double packed = MPI_Wtime();
         t_comp += packed - tm;
         tm = packed;
+        wait_all(tm);
         MPI_Neighbor_alltoallv(sendbuf.data(), gx.scnt.data(), gx.sdsp.data(), MPI_DOUBLE, xbuf.data() + nloc,
                                gx.rcnt.data(), gx.rdsp.data(), MPI_DOUBLE, gx.comm);
       } else {
+        wait_all(tm);
         MPI_Allgatherv(MPI_IN_PLACE, 0, MPI_DATATYPE_NULL, xbuf.data(), cnt.data(), dsp.data(), MPI_DOUBLE,
                        MPI_COMM_WORLD);
       }
@@ -135,6 +148,7 @@ int main(int argc, char** argv) {
       tm = MPI_Wtime();
       t_comp += tm - tc;
       // (5) global residual
+      wait_all(tm);
       MPI_Allreduce(&res_loc, &resid, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
       t_comm += MPI_Wtime() - tm;
       r.swap(rn);
@@ -144,16 +158,17 @@ int main(int argc, char** argv) {
     }
     double tt_local = MPI_Wtime() - t0, tt = 0;
       MPI_Reduce(&tt_local, &tt, 1, MPI_DOUBLE, MPI_MAX, 0, MPI_COMM_WORLD);
-    double comp_max, comm_max, sum_loc = 0, sumr = 0;
+    double comp_max, comm_max, wait_max, sum_loc = 0, sumr = 0;
     for (double v : r) sum_loc += v;
     MPI_Reduce(&t_comp, &comp_max, 1, MPI_DOUBLE, MPI_MAX, 0, MPI_COMM_WORLD);
     MPI_Reduce(&t_comm, &comm_max, 1, MPI_DOUBLE, MPI_MAX, 0, MPI_COMM_WORLD);
+    MPI_Reduce(&t_wait, &wait_max, 1, MPI_DOUBLE, MPI_MAX, 0, MPI_COMM_WORLD);
     MPI_Reduce(&sum_loc, &sumr, 1, MPI_DOUBLE, MPI_SUM, 0, MPI_COMM_WORLD);
     if (rep >= 0 && rank == 0) {
-      std::printf("%s,mpi_omp,%s,%lld,%lld,%d,%d,%d,%d,%s,%s,%d,%d,%.6f,%.6e,%.6f,%.6f,%.4f,%.0f,%.3e,%.15f,%.3f,,,%.2f,\n",
+      std::printf("%s,mpi_omp,%s,%lld,%lld,%d,%d,%d,%d,%s,%s,%d,%d,%.6f,%.6e,%.6f,%.6f,%.4f,%.0f,%.3e,%.15f,%.3f,,,%.2f,,%s\n",
                   exp.c_str(), basename_noext(path).c_str(), (long long)N, (long long)M, nodes, p, threads, p * threads,
                   part.c_str(), comm.c_str(), rep, it, tt, tt / it, comp_max, comm_max, imbalance, comm_bytes, resid, sumr,
-                  t_load, bytes_per_iter(N, M, 8) / (tt / it) / 1e9);
+                  t_load, bytes_per_iter(N, M, 8) / (tt / it) / 1e9, split ? std::to_string(wait_max).c_str() : "");
       std::fflush(stdout);
     }
     if (rep == 0 && !out.empty()) {

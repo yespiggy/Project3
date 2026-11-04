@@ -1,0 +1,58 @@
+#!/bin/bash
+# NN whole 72-core nodes (NN = 2, 4, 6, 8, 10 -> 144 ... 720 cores); one job per node count.
+# Submit through scripts/final_submit.sh, which sets NN and the matching select statement.
+#   E1 strong scaling at 72*NN cores, pure MPI and hybrid: Friendster and LiveJournal
+#   E2 weak scaling at 72*NN cores, pure MPI and hybrid: rmat_p<72*NN>
+#   E8 --split breakdown at 72*NN cores (Friendster, LiveJournal)
+#   E9 same runs with the InfiniBand verbs transport forced on (default OpenMPI 4.1 setting may use TCP)
+#   VS validation at scale: LiveJournal, 50 iterations, pure MPI at 72*NN ranks, vector compared with serial
+#   NN=4 only: E3 partition x communication comparison (288 ranks, LiveJournal and Friendster) and E7 sweep.
+#PBS -N p3f_nodes
+#PBS -l select=2:ncpus=72:mpiprocs=72:mem=200gb
+#PBS -l place=scatter
+#PBS -l walltime=01:00:00
+#PBS -j oe
+source "$P3_ROOT/jobs/final/common.sh"
+check_node
+NN=${NN:?NN not set}
+if [ "${#NODES[@]}" != "$NN" ]; then echo "ERROR: NN=$NN but job has ${#NODES[@]} nodes" >&2; exit 1; fi
+meta nodes$NN
+R=$P3_RESULTS
+C=$((NN * CPN))
+V=$R/val
+mkdir -p $V
+
+PERF="--iters 50 --tol 0 --reps 5"
+strong $LJ $R/strong_lj_n$NN.csv $C
+weak_mode hybrid $R/weak_n$NN.csv $C
+weak_mode mpi $R/weak_n$NN.csv $C
+split_runs $LJ $R/split_lj_n$NN.csv $C
+read n rpn th <<< "$(layout $C mpi)"
+run_mpi $n $rpn $th $V/valscale_n$NN.csv $BIN/pagerank_mpi_omp --graph $LJ --part edge --comm ghost --iters 50 --tol 0 \
+  --exp valscale --out $V/mpi_lj50_p$C.bin
+if [ "$NN" = 4 ]; then
+  for g in $LJ; do
+    for part in vertex edge; do
+      for comm in allgather ghost; do
+        run_mpi 4 $CPN 1 $R/design_n$NN.csv $BIN/pagerank_mpi_omp --graph $g --part $part --comm $comm $PERF --exp E3
+      done
+    done
+  done
+  sweep $LJ $R/sweep_lj_n$NN.csv 4 1 2 4 8 18 72
+fi
+
+transport_runs $LJ $R/transport_lj_n$NN.csv $C
+
+PERF="--iters 10 --tol 0 --reps 3"
+strong $FR $R/strong_fr_n$NN.csv $C
+split_runs $FR $R/split_fr_n$NN.csv $C
+if [ "$NN" = 4 ]; then
+  for part in vertex edge; do
+    for comm in allgather ghost; do
+      run_mpi 4 $CPN 1 $R/design_n$NN.csv $BIN/pagerank_mpi_omp --graph $FR --part $part --comm $comm $PERF --exp E3
+    done
+  done
+  sweep $FR $R/sweep_fr_n$NN.csv 4 1 2 4 8 18 72
+fi
+transport_runs $FR $R/transport_fr_n$NN.csv $C
+echo "f3 NN=$NN done $(date)"

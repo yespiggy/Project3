@@ -1,0 +1,27 @@
+#!/bin/bash
+# One 72-core node: the 1..72-core part of every scaling study (the multi-node part is f3_nodes.pbs).
+#   E1 strong scaling, pure MPI and hybrid: Friendster (main, 10 it x 3 reps) and LiveJournal (50 it x 5 reps)
+#   E2 weak scaling, pure MPI and hybrid: rmat_p<cores> (about 2M edges per core)
+#   E7 rank x thread sweep at 72 cores (1x72, 2x36, 4x18, 8x9, 18x4, 72x1)
+#   E8 computation / communication / wait breakdown (--split 1) at 72 cores
+#PBS -N p3f_node1
+#PBS -l select=1:ncpus=72:mpiprocs=72:mem=200gb
+#PBS -l walltime=02:30:00
+#PBS -j oe
+source "$P3_ROOT/jobs/final/common.sh"
+check_node
+meta node1
+R=$P3_RESULTS
+
+PERF="--iters 50 --tol 0 --reps 5"
+strong $LJ $R/strong_lj_n1.csv $CORES_1NODE
+weak_mode hybrid $R/weak_n1.csv $CORES_1NODE
+weak_mode mpi $R/weak_n1.csv $CORES_1NODE
+sweep $LJ $R/sweep_lj_n1.csv 1 1 2 4 8 18 72
+split_runs $LJ $R/split_lj_n1.csv 72
+
+PERF="--iters 10 --tol 0 --reps 3"
+sweep $FR $R/sweep_fr_n1.csv 1 1 2 4 8 18 72
+split_runs $FR $R/split_fr_n1.csv 72
+strong $FR $R/strong_fr_n1.csv $CORES_1NODE
+echo "f2 done $(date)"

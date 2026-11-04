@@ -1,0 +1,39 @@
+#!/bin/bash
+# One node with 2x A40.
+#   validation on web-Google: four single-GPU kernels, MPI+CUDA on 1 and 2 GPUs (to convergence)
+#   E4 single-GPU kernel comparison on LiveJournal (50 it x 5) and Friendster (10 it x 5)
+#   E6 MPI+CUDA on 1 GPU and 2 GPUs of the same node (LiveJournal, Friendster)
+#   GPU memory-bandwidth probe (copy, triad, random gather)
+# cuSPARSE is a vendor-library reference point only; the project's own kernels are thread / warp / hybrid.
+#PBS -N p3f_gpu1
+#PBS -l select=1:ncpus=16:mpiprocs=2:ngpus=2:mem=120gb
+#PBS -l walltime=01:30:00
+#PBS -j oe
+source "$P3_ROOT/jobs/final/common.sh"
+module load cuda12.4/toolkit/12.4.1 > /dev/null 2>&1
+gpu_map
+meta gpu1
+R=$P3_RESULTS
+V=$R/val
+mkdir -p $V
+W=$P3_ROOT/scripts/gpu_wrap.sh
+
+$BIN/gpu_bw --mb 2048 --reps 20 > $R/gpu_bw.csv
+$BIN/pagerank_cuda --graph $GG --kernel all --iters 1000 --tol 1e-10 --exp val --out $V/cuda $(csv_flag $V/val_gpu.csv) \
+  >> $V/val_gpu.csv
+for g in 1 2; do
+  run_mpi 1 $g 4 $V/val_gpu.csv $W $BIN/pagerank_mpi_cuda --graph $GG --kernel thread,hybrid --iters 1000 --tol 1e-10 \
+    --exp val --out $V/mpi_cuda_${g}gpu
+done
+echo "GPU validation done $(date)"
+
+$BIN/pagerank_cuda --graph $LJ --kernel all --iters 50 --tol 0 --reps 5 --exp E4 $(csv_flag $R/e4.csv) >> $R/e4.csv
+$BIN/pagerank_cuda --graph $FR --kernel all --iters 10 --tol 0 --reps 5 --exp E4 >> $R/e4.csv
+for g in 1 2; do
+  run_mpi 1 $g 4 $R/multigpu_1node.csv $W $BIN/pagerank_mpi_cuda --graph $LJ --kernel thread,hybrid --iters 50 --tol 0 \
+    --reps 5 --exp E6
+  run_mpi 1 $g 4 $R/multigpu_1node.csv $W $BIN/pagerank_mpi_cuda --graph $FR --kernel thread,hybrid --iters 10 --tol 0 \
+    --reps 5 --exp E6
+  echo "E6 $g GPU(s), one node done $(date)"
+done
+echo "g1 done $(date)"
