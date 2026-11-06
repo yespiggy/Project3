@@ -1,0 +1,35 @@
+#!/bin/bash
+# One 72-core cn node: validation on web-Google, E1 strong scaling on LiveJournal (1-72 cores),
+# E2 weak scaling (1-72 cores), E5 serial baseline on LiveJournal.
+#PBS -N p3n1lj
+#PBS -q auto_free
+#PBS -l select=1:ncpus=72:mpiprocs=72:mem=120gb
+#PBS -l walltime=01:30:00
+#PBS -j oe
+source $PBS_O_WORKDIR/../scripts/env.sh
+source $P3_ROOT/scripts/run_lib.sh
+cd "$P3_ROOT"
+check_node
+ensure_build
+mkdir -p "$P3_RESULTS/val"
+R=$P3_RESULTS
+LJ=$P3_DATA/soc-LiveJournal1.bin
+GG=$P3_DATA/web-Google.bin
+
+# --- Validation (web-Google, run to convergence): serial reference + 4 MPI variants (4 ranks x 4 threads) ---
+V=$R/val
+$BIN/pagerank_serial --graph $GG --iters 1000 --tol 1e-10 --exp val --out $V/serial.bin --log $V/serial_resid.csv \
+  $(csv_flag $V/val_cpu.csv) >> $V/val_cpu.csv
+for part in vertex edge; do
+  for comm in allgather ghost; do
+    run_mpi 1 4 4 $V/val_cpu.csv $BIN/pagerank_mpi_omp --graph $GG --part $part --comm $comm --iters 1000 --tol 1e-10 \
+      --exp val --out $V/mpi_${part}_${comm}.bin
+  done
+done
+echo "validation done $(date)"
+
+PERF="--iters 50 --tol 0 --reps 5"
+strong $LJ $R/strong_n1_lj.csv $CORES_1NODE
+weak $R/weak_n1.csv $CORES_1NODE
+$BIN/pagerank_serial --graph $LJ $PERF --exp E5_serial $(csv_flag $R/serial.csv) >> $R/serial.csv
+echo "single-node LiveJournal experiments done $(date)"

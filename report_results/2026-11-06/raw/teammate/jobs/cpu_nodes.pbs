@@ -1,0 +1,36 @@
+#!/bin/bash
+# NN whole 72-core cn nodes (NN = 2, 4, 6, 8, 10 -> 144 ... 720 cores), one job per node count so smaller jobs
+# start sooner. Submit with the matching select, e.g. (scripts/submit.sh does this):
+#   qsub -v NN=4 -l select=4:ncpus=72:mpiprocs=72:mem=120gb jobs/cpu_nodes.pbs
+# Runs E1 strong scaling (LiveJournal and Friendster, pure MPI and hybrid) and E2 weak scaling at 72*NN cores;
+# the 4-node job also runs E3 (partition x communication design comparison, 288 cores, pure MPI, LiveJournal).
+#PBS -N p3nodes
+#PBS -q auto_free
+#PBS -l select=2:ncpus=72:mpiprocs=72:mem=120gb
+#PBS -l place=scatter
+#PBS -l walltime=01:00:00
+#PBS -j oe
+source $PBS_O_WORKDIR/../scripts/env.sh
+source $P3_ROOT/scripts/run_lib.sh
+cd "$P3_ROOT"
+check_node
+ensure_build
+if [ "${#NODES[@]}" != "$NN" ]; then echo "ERROR: NN=$NN but job has ${#NODES[@]} nodes" >&2; exit 1; fi
+R=$P3_RESULTS
+LJ=$P3_DATA/soc-LiveJournal1.bin
+C=$((NN * CPN))
+
+PERF="--iters 50 --tol 0 --reps 5"
+strong $LJ $R/strong_n${NN}_lj.csv $C
+weak $R/weak_n${NN}.csv $C
+if [ "$NN" = 4 ]; then
+  for part in vertex edge; do
+    for comm in allgather ghost; do
+      run_mpi 4 $CPN 1 $R/design_n4.csv $BIN/pagerank_mpi_omp --graph $LJ --part $part --comm $comm $PERF --exp E3
+    done
+  done
+  echo "E3 done $(date)"
+fi
+PERF="--iters 10 --tol 0 --reps 3"
+strong $P3_DATA/com-friendster.bin $R/strong_n${NN}_big.csv $C
+echo "$NN-node CPU experiments done $(date)"

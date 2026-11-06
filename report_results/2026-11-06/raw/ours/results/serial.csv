@@ -1,0 +1,4 @@
+exp,impl,graph,N,M,nodes,ranks,threads,cores,part,comm,rep,iters,t_total,t_iter,t_comp,t_comm,imbalance,comm_bytes_iter,resid,sumr,t_load,t_h2d,t_d2h,gbps,t_stage
+E5_serial,serial,rmat_p144,18874368,297337356,1,1,1,1,none,none,0,20,26.100824,1.305041e+00,26.100824,0,1,0,2.657e-07,0.999999999774985,0.491,,,3.37,
+E5_serial,serial,rmat_p144,18874368,297337356,1,1,1,1,none,none,1,20,26.084788,1.304239e+00,26.084788,0,1,0,2.657e-07,0.999999999774985,0.491,,,3.37,
+E5_serial,serial,rmat_p144,18874368,297337356,1,1,1,1,none,none,2,20,26.081614,1.304081e+00,26.081614,0,1,0,2.657e-07,0.999999999774985,0.491,,,3.37,

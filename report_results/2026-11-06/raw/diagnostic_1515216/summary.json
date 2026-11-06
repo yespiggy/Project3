@@ -1,0 +1,38 @@
+[
+  {
+    "ranks": 20,
+    "threads": 36,
+    "median_ms": 15.13984,
+    "min_ms": 12.97892,
+    "max_ms": 18.67642,
+    "speedup": 90.52559340125126,
+    "efficiency_pct": 12.572999083507119,
+    "compute_ms": 2.73705,
+    "comm_ms": 13.1071,
+    "ghost_MB": 394.47916
+  },
+  {
+    "ranks": 40,
+    "threads": 18,
+    "median_ms": 199.4701,
+    "min_ms": 171.4213,
+    "max_ms": 216.7253,
+    "speedup": 6.870919501218478,
+    "efficiency_pct": 0.954294375169233,
+    "compute_ms": 4.4939,
+    "comm_ms": 197.14545,
+    "ghost_MB": 559.232032
+  },
+  {
+    "ranks": 80,
+    "threads": 9,
+    "median_ms": 239.2338,
+    "min_ms": 235.08190000000002,
+    "max_ms": 248.44359999999998,
+    "speedup": 5.7288852996524735,
+    "efficiency_pct": 0.7956785138406213,
+    "compute_ms": 4.67475,
+    "comm_ms": 236.99439999999998,
+    "ghost_MB": 753.38376
+  }
+]

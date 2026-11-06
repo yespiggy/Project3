@@ -1,0 +1,51 @@
+Job Id: 1509306.stdct-mgmt-02
+    Job_Name = p3syn2
+    Job_Owner = e0985955@vanda.nus.edu.sg
+    job_state = F
+    queue = cpu_parallel
+    server = stdct-mgmt-02
+    Checkpoint = u
+    ctime = Mon Nov  2 18:57:38 2026
+    Error_Path = vanda.nus.edu.sg:/nfs/home/svu/e0985955/p3-review-20261102/Pro
+	ject3/jobs/p3syn2.e1509306
+    Hold_Types = n
+    Join_Path = oe
+    Keep_Files = oed
+    Mail_Points = a
+    mtime = Wed Nov  4 16:06:09 2026
+    Output_Path = vanda.nus.edu.sg:/nfs/home/svu/e0985955/p3-review-20261102/Pr
+	oject3/jobs/p3syn2.o1509306
+    Priority = 0
+    qtime = Mon Nov  2 18:57:38 2026
+    Rerunable = True
+    Resource_List.am_job_cache = "{}"
+    Resource_List.mem = 128gb
+    Resource_List.mpiprocs = 144
+    Resource_List.ncpus = 144
+    Resource_List.ngpus = 0
+    Resource_List.nodect = 2
+    Resource_List.place = scatter
+    Resource_List.queue_charge_rate = 0
+    Resource_List.select = 2:ncpus=72:mpiprocs=72:mem=64gb
+    Resource_List.walltime = 00:45:00
+    substate = 91
+    Variable_List = PBS_O_HOME=/home/svu/e0985955,PBS_O_LANG=en_US.UTF-8,
+	PBS_O_LOGNAME=e0985955,
+	PBS_O_PATH=/home/svu/e0985955/.local/bin:/home/svu/e0985955/bin:/cm/sh
+	ared/apps/apptainer/1.4.1/bin:/cm/local/apps/environment-modules/4.5.3/
+	/bin:/usr/local/bin:/usr/bin:/usr/local/sbin:/usr/sbin:/opt/am/python/b
+	in:/sbin:/usr/sbin:/cm/local/apps/environment-modules/4.5.3/bin:/opt/pb
+	s/bin,PBS_O_SHELL=/bin/bash,PBS_O_INTERACTIVE_AUTH_METHOD=resvport,
+	PBS_O_HOST=stdct-login-01.stdct.loc,
+	PBS_O_WORKDIR=/nfs/home/svu/e0985955/p3-review-20261102/Project3/jobs,
+	PBS_O_SYSTEM=Linux,NN=2,PBS_O_QUEUE=auto_free
+    comment = Not Running: Insufficient amount of resource: node_pool  and term
+	inated
+    etime = Mon Nov  2 18:57:38 2026
+    Submit_arguments = -W depend=afterok:1509304.stdct-mgmt-02 -v NN=2 -N p3syn
+	2 -l select=2:ncpus=72:mpiprocs=72:mem=64gb -l place=scatter scale_synt
+	hetic.pbs
+    history_timestamp = 1793779569
+    project = personal-e0985955
+    Submit_Host = vanda.nus.edu.sg
+

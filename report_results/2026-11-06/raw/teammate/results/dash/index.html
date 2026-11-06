@@ -1,0 +1,587 @@
+<style>
+.pr { display: flex; flex-direction: column; gap: var(--cds-gap-xl); font-family: var(--font-anthropic-sans); font-variant-numeric: tabular-nums; }
+.pr h1 { margin: 0; font-family: var(--font-anthropic-serif); font-weight: 400; font-size: var(--cds-font-size-title); }
+.pr h2 { margin: 0; font-size: var(--cds-font-size-heading); font-weight: var(--cds-font-weight-medium); }
+.pr h3 { margin: 0; font-size: var(--cds-font-size-body); font-weight: var(--cds-font-weight-medium); }
+.pr p { margin: 0; }
+.pr .muted { color: var(--color-fg-muted); font-size: var(--cds-font-size-caption); }
+.pr-head { display: flex; flex-direction: column; gap: var(--cds-gap-sm); }
+.pr-take { max-width: 70ch; }
+.pr-take b, .pr-tile b { font-weight: 600; }
+.pr-tiles { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 11rem), 1fr)); gap: var(--cds-gap-md); }
+.pr-tile { background: var(--color-panel); border: 1px solid var(--color-border-line); border-radius: var(--cds-radius); padding: var(--cds-pad-md); display: flex; flex-direction: column; gap: var(--cds-gap-xs); }
+.pr-tile .big { font-family: var(--font-anthropic-serif); font-size: var(--cds-font-size-title); line-height: 1.1; }
+.pr-nav { display: flex; flex-wrap: wrap; gap: var(--cds-gap-sm); font-size: var(--cds-font-size-caption); }
+.pr-nav a { color: var(--color-fg-muted); text-decoration: none; border: 1px solid var(--color-border-line); border-radius: 999px; padding: 2px 10px; }
+.pr-nav a:hover { color: var(--color-fg); }
+.pr-sec { display: flex; flex-direction: column; gap: var(--cds-gap-md); scroll-margin-top: 16px; }
+.pr-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 22rem), 1fr)); gap: var(--cds-gap-md); }
+.pr-card { background: var(--color-panel); border: 1px solid var(--color-border-line); border-radius: var(--cds-radius); padding: var(--cds-pad-lg); display: flex; flex-direction: column; gap: var(--cds-gap-sm); min-width: 0; }
+.pr-chart { position: relative; min-height: 260px; }
+.pr-chart svg { display: block; overflow: visible; }
+.pr-tip { position: absolute; pointer-events: none; background: var(--cds-surface-popover); border: 1px solid var(--cds-border); border-radius: var(--cds-radius); box-shadow: var(--cds-shadow-popover); padding: var(--cds-pad-xs) var(--cds-pad-sm); font-size: var(--cds-font-size-caption); white-space: nowrap; display: none; z-index: 2; }
+.pr-tip .h { color: var(--cds-text-secondary); margin-bottom: 2px; }
+.pr-tip .sw { display: inline-block; width: 8px; height: 8px; border-radius: 2px; margin-right: 6px; }
+.pr-legend { display: flex; flex-wrap: wrap; gap: var(--cds-gap-md); font-size: var(--cds-font-size-caption); color: var(--color-fg-muted); }
+.pr-legend i { display: inline-block; width: 14px; height: 3px; border-radius: 2px; margin-right: 6px; vertical-align: middle; }
+.pr-tablebox { overflow: auto; max-height: 420px; }
+.pr table { border-collapse: collapse; width: 100%; font-size: var(--cds-font-size-caption); }
+.pr th, .pr td { text-align: right; padding: 6px 10px; border-bottom: 1px solid var(--color-border-line); white-space: nowrap; }
+.pr th:first-child, .pr td:first-child, .pr th.l, .pr td.l { text-align: left; }
+.pr th { position: sticky; top: 0; background: var(--color-panel); color: var(--color-fg-muted); font-weight: 500; }
+.pr .ok { color: var(--color-ok); }
+.pr .bad { color: var(--color-bad); }
+.pr-search { font: inherit; font-size: var(--cds-font-size-caption); padding: 4px 8px; border: 1px solid var(--color-border-line); border-radius: var(--cds-radius); background: var(--color-bg); color: var(--color-fg); max-width: 260px; }
+.pr-fail { display: flex; align-items: center; justify-content: center; gap: 8px; min-height: 260px; color: var(--color-fg-muted); font-size: var(--cds-font-size-caption); }
+.pr-fail::before { content: ""; width: .375rem; height: .375rem; border-radius: 50%; background: var(--color-bad); }
+.pr [data-dash-source-state=refreshing] { opacity: .5; transition: opacity var(--cds-dur-slow); }
+.pr [data-dash-source-state=empty] { color: transparent; }
+</style>
+
+<div class="pr">
+  <header class="pr-head">
+    <h1>PageRank 实验数据</h1>
+    <p class="pr-take">在 LiveJournal 上，单张 A40 每轮迭代比串行快 <b data-source="e5" data-field="speedup_vs_serial" data-where="platform=a40" class="dash-skeleton">—</b> 倍，64 核 CPU 快 <b data-source="e5" data-field="speedup_vs_serial" data-where="platform=node64" class="dash-skeleton">—</b> 倍。8 种并行实现与串行结果的最大 L1 误差为 <b data-source="val_max_l1" data-field="max_l1" data-row="0" class="dash-skeleton">—</b>。</p>
+    <p class="muted">所有运行在 NUS HPC Vanda 上完成（CPU 节点 Xeon Gold 6438N，每节点使用 16 核；GPU 为 NVIDIA A40）。性能实验每个配置跑 5 次取中位数，每次固定 50 轮迭代。</p>
+  </header>
+
+  <div class="pr-tiles">
+    <div class="pr-tile"><span class="muted">串行每轮耗时</span><span class="big"><span data-source="e5" data-field="t_iter_ms" data-where="platform=serial" class="dash-skeleton">—</span> ms</span><span class="muted">LiveJournal，1 核</span></div>
+    <div class="pr-tile"><span class="muted">1 个节点（16 核）加速比</span><span class="big"><span data-source="e5" data-field="speedup_vs_serial" data-where="platform=node16" class="dash-skeleton">—</span>×</span><span class="muted">MPI+OpenMP</span></div>
+    <div class="pr-tile"><span class="muted">4 个节点（64 核）加速比</span><span class="big"><span data-source="e5" data-field="speedup_vs_serial" data-where="platform=node64" class="dash-skeleton">—</span>×</span><span class="muted">相对串行</span></div>
+    <div class="pr-tile"><span class="muted">1× A40 加速比</span><span class="big"><span data-source="e5" data-field="speedup_vs_serial" data-where="platform=a40" class="dash-skeleton">—</span>×</span><span class="muted">cuSPARSE kernel</span></div>
+  </div>
+
+  <nav class="pr-nav" aria-label="章节">
+    <a href="#sec-val">正确性</a><a href="#sec-e1">E1 强扩展</a><a href="#sec-e2">E2 弱扩展</a><a href="#sec-e3">E3 设计对比</a><a href="#sec-e4">E4 GPU kernel</a><a href="#sec-e5">E5 CPU vs GPU</a><a href="#sec-google">web-Google 数据</a><a href="#sec-raw">原始数据</a>
+  </nav>
+
+  <section class="pr-sec" id="sec-val">
+    <h2>正确性验证</h2>
+    <p class="muted">web-Google 上迭代到 L1 残差 &lt; 1e-10。每种并行实现与串行 C++ 结果比较，串行结果再与 NetworkX 比较。NetworkX 的误差稍大，是因为它的收敛判据较松（tol × N）。</p>
+    <div class="pr-card">
+      <div class="pr-tablebox">
+        <table id="tbl-val" data-source="validation" data-row-key="impl">
+          <thead><tr><th data-field="impl">比较</th><th data-field="l1">L1 误差</th><th data-field="linf">最大单点误差</th><th data-field="top100_same">Top-100 顺序一致</th><th data-field="top1000_overlap">Top-1000 重合数</th></tr></thead>
+          <tbody></tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+
+  <section class="pr-sec" id="sec-e1">
+    <h2>E1 · CPU 强扩展（LiveJournal）</h2>
+    <p class="muted">按入边数划分、只交换 ghost 节点。纯 MPI 为每核 1 个 rank；MPI+OpenMP 为每节点 1 个 rank，线程填满该节点（每节点 16 核）。加速比相对同模式的 1 核运行。</p>
+    <div class="pr-grid">
+      <div class="pr-card">
+        <h3>加速比</h3><p class="muted">双对数坐标，虚线为理想线性加速</p>
+        <div class="pr-chart" id="ch-e1-speedup" data-source="e1"></div>
+      </div>
+      <div class="pr-card">
+        <h3>每轮计算与通信时间</h3><p class="muted">各 rank 中的最大值（ms）；单节点的 MPI+OpenMP 只有 1 个 rank，没有通信</p>
+        <div class="pr-chart" id="ch-e1-break" data-source="e1"></div>
+      </div>
+    </div>
+    <div class="pr-card">
+      <div class="pr-tablebox">
+        <table id="tbl-e1" data-source="e1" data-row-key="config">
+          <thead><tr><th data-field="config">配置</th><th data-field="mode" class="l">模式</th><th data-field="cores">核数</th><th data-field="nodes">节点</th><th data-field="ranks">rank</th><th data-field="threads">线程/rank</th><th data-field="t_iter_ms">每轮 (ms)</th><th data-field="t_comp_ms">计算 (ms)</th><th data-field="t_comm_ms">通信 (ms)</th><th data-field="speedup">加速比</th><th data-field="efficiency">并行效率</th></tr></thead>
+          <tbody></tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+
+  <section class="pr-sec" id="sec-e2">
+    <h2>E2 · CPU 弱扩展（R-MAT，每核约 2M 条边）</h2>
+    <p class="muted">MPI+OpenMP。弱扩展效率 = 1 核每轮耗时 ÷ p 核每轮耗时，理想值为 1。</p>
+    <div class="pr-grid">
+      <div class="pr-card">
+        <h3>弱扩展效率</h3><p class="muted">虚线为理想值 1</p>
+        <div class="pr-chart" id="ch-e2-eff" data-source="e2"></div>
+      </div>
+      <div class="pr-card">
+        <h3>每轮耗时组成</h3><p class="muted">ms；32 核起跨节点，出现通信</p>
+        <div class="pr-chart" id="ch-e2-break" data-source="e2"></div>
+      </div>
+    </div>
+    <div class="pr-card">
+      <div class="pr-tablebox">
+        <table id="tbl-e2" data-source="e2" data-row-key="cores">
+          <thead><tr><th data-field="cores">核数</th><th data-field="nodes">节点</th><th data-field="N">节点数 N</th><th data-field="M">边数 M</th><th data-field="edges_per_core_m">每核边数 (M)</th><th data-field="t_iter_ms">每轮 (ms)</th><th data-field="t_comp_ms">计算 (ms)</th><th data-field="t_comm_ms">通信 (ms)</th><th data-field="weak_efficiency">弱扩展效率</th></tr></thead>
+          <tbody></tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+
+  <section class="pr-sec" id="sec-e3">
+    <h2>E3 · CPU 设计对比（64 核 = 4 节点 × 16 rank）</h2>
+    <p class="muted">2×2 组合：划分方式 × 通信方式，纯 MPI，LiveJournal。负载不均衡度 = 各 rank 边数的最大值 ÷ 平均值。</p>
+    <div class="pr-grid">
+      <div class="pr-card">
+        <h3>每轮耗时</h3><p class="muted">ms</p>
+        <div class="pr-chart" id="ch-e3-time" data-source="e3"></div>
+      </div>
+      <div class="pr-card">
+        <h3>每轮通信量</h3><p class="muted">所有 rank 合计接收的数据量（MB）</p>
+        <div class="pr-chart" id="ch-e3-bytes" data-source="e3"></div>
+      </div>
+    </div>
+    <div class="pr-card">
+      <div class="pr-tablebox">
+        <table id="tbl-e3" data-source="e3" data-row-key="config">
+          <thead><tr><th data-field="config">配置</th><th data-field="partition" class="l">划分</th><th data-field="communication" class="l">通信</th><th data-field="t_iter_ms">每轮 (ms)</th><th data-field="t_comp_ms">计算 (ms)</th><th data-field="t_comm_ms">通信 (ms)</th><th data-field="imbalance">负载不均衡度</th><th data-field="comm_mb_iter">通信量 (MB/轮)</th></tr></thead>
+          <tbody></tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+
+  <section class="pr-sec" id="sec-e4">
+    <h2>E4 · GPU 单卡 kernel 对比（1× A40，LiveJournal）</h2>
+    <p class="muted">整张图常驻显存。有效带宽按每轮的理论访存量估算，A40 峰值约 696 GB/s。Vanda 不开放 GPU 性能计数器，因此没有 Nsight 数据。</p>
+    <div class="pr-grid">
+      <div class="pr-card">
+        <h3>每轮耗时</h3><p class="muted">ms，越短越好</p>
+        <div class="pr-chart" id="ch-e4-time" data-source="e4"></div>
+      </div>
+      <div class="pr-card">
+        <h3>有效带宽</h3><p class="muted">GB/s</p>
+        <div class="pr-chart" id="ch-e4-bw" data-source="e4"></div>
+      </div>
+    </div>
+    <div class="pr-card">
+      <div class="pr-tablebox">
+        <table id="tbl-e4" data-source="e4" data-row-key="kernel">
+          <thead><tr><th data-field="kernel">kernel</th><th data-field="name" class="l">说明</th><th data-field="t_iter_ms">每轮 (ms)</th><th data-field="gbps">有效带宽 (GB/s)</th><th data-field="pct_peak">占峰值 (%)</th><th data-field="speedup_vs_serial">相对串行</th><th data-field="t_load_s">读图 (s)</th><th data-field="t_h2d_s">拷贝到显存 (s)</th></tr></thead>
+          <tbody></tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+
+  <section class="pr-sec" id="sec-e5">
+    <h2>E5 · CPU vs GPU（LiveJournal）</h2>
+    <p class="muted">同一张图的每轮耗时。CPU 数据取 E1 中同核数下较快的模式，GPU 取 E4 中最快的 kernel。</p>
+    <div class="pr-grid">
+      <div class="pr-card">
+        <h3>相对串行的加速比</h3><p class="muted">倍</p>
+        <div class="pr-chart" id="ch-e5" data-source="e5"></div>
+      </div>
+      <div class="pr-card">
+        <div class="pr-tablebox">
+          <table id="tbl-e5" data-source="e5" data-row-key="platform">
+            <thead><tr><th data-field="platform">平台</th><th data-field="label" class="l">配置</th><th data-field="t_iter_ms">每轮 (ms)</th><th data-field="gteps">GTEPS</th><th data-field="speedup_vs_serial">加速比</th></tr></thead>
+            <tbody></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="pr-sec" id="sec-google">
+    <h2>web-Google 的数据结论</h2>
+    <p class="muted">来自串行版本收敛后的 PageRank 向量。web-Google 是 Google 2002 年公开的网页链接图，规模见页底“使用的图”。</p>
+    <div class="pr-tiles">
+      <div class="pr-tile"><span class="muted">PageRank 与入度的 Spearman 相关</span><span class="big" data-source="google_stats" data-field="spearman" data-row="0">—</span></div>
+      <div class="pr-tile"><span class="muted">PageRank Top-100 与入度 Top-100 重合</span><span class="big"><span data-source="google_stats" data-field="top100_overlap" data-row="0">—</span> / 100</span></div>
+      <div class="pr-tile"><span class="muted">前 1% 页面占的 rank 总量</span><span class="big" data-source="google_stats" data-field="share_top1" data-row="0">—</span></div>
+      <div class="pr-tile"><span class="muted">dangling 页面（无出链）</span><span class="big" data-source="google_stats" data-field="dangling" data-row="0">—</span></div>
+    </div>
+    <div class="pr-grid">
+      <div class="pr-card">
+        <h3>入度分布</h3><p class="muted">按 2 的幂分组的页面数，纵轴对数</p>
+        <div class="pr-chart" id="ch-g-hist" data-source="google_indeg"></div>
+      </div>
+      <div class="pr-card">
+        <h3>各入度区间的平均 PageRank</h3><p class="muted">双对数坐标</p>
+        <div class="pr-chart" id="ch-g-prdeg" data-source="google_indeg"></div>
+      </div>
+      <div class="pr-card">
+        <h3>收敛过程</h3><p class="muted">每轮 L1 残差，纵轴对数；虚线为收敛阈值 1e-10</p>
+        <div class="pr-chart" id="ch-g-conv" data-source="convergence"></div>
+      </div>
+    </div>
+    <div class="pr-card">
+      <h3>PageRank 最高的 15 个页面</h3>
+      <p class="muted">节点编号为 SNAP 原始 ID；“入度排名”表示该页面按入度排第几</p>
+      <div class="pr-tablebox">
+        <table id="tbl-gtop" data-source="google_top" data-row-key="rank">
+          <thead><tr><th data-field="rank">排名</th><th data-field="node">节点</th><th data-field="pagerank">PageRank</th><th data-field="indeg">入度</th><th data-field="outdeg">出度</th><th data-field="indeg_rank">入度排名</th></tr></thead>
+          <tbody></tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+
+  <section class="pr-sec" id="sec-raw">
+    <h2>原始数据</h2>
+    <div class="pr-card">
+      <h3>使用的图</h3>
+      <div class="pr-tablebox">
+        <table id="tbl-graphs" data-source="graphs" data-row-key="graph">
+          <thead><tr><th data-field="graph">图</th><th data-field="N">节点数</th><th data-field="M">边数</th><th data-field="dangling">dangling 节点</th><th data-field="used_in" class="l">用于</th></tr></thead>
+          <tbody></tbody>
+        </table>
+      </div>
+    </div>
+    <div class="pr-card">
+      <h3>全部运行记录</h3>
+      <input class="pr-search" id="raw-search" type="search" placeholder="筛选，例如 E3 或 cuda" aria-label="筛选运行记录">
+      <div class="pr-tablebox">
+        <table id="tbl-runs" data-source="runs" data-row-key="run_id">
+          <thead><tr><th data-field="run_id">记录</th><th data-field="exp" class="l">实验</th><th data-field="impl" class="l">实现</th><th data-field="graph" class="l">图</th><th data-field="nodes">节点</th><th data-field="ranks">rank</th><th data-field="threads">线程</th><th data-field="part" class="l">划分</th><th data-field="comm" class="l">通信</th><th data-field="rep">重复</th><th data-field="iters">轮数</th><th data-field="t_iter_ms">每轮 (ms)</th><th data-field="resid">残差</th><th data-field="sumr">Σr</th></tr></thead>
+          <tbody></tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+</div>
+
+<script>
+window.PR = (() => {
+  const css = (name) => getComputedStyle(document.getElementById('dash-root')).getPropertyValue(name).trim();
+  const fmtNum = (v, d) => (v == null || Number.isNaN(v)) ? '' : (typeof v === 'number' ? (Number.isInteger(v) && d == null ? d3.format(',')(v) : (d != null ? v.toFixed(d) : String(v))) : String(v));
+
+  function tipFor(box) {
+    let t = box.querySelector('.pr-tip');
+    if (!t) { t = document.createElement('div'); t.className = 'pr-tip'; box.appendChild(t); }
+    return t;
+  }
+  function showTip(box, html, x, y) {
+    const t = tipFor(box);
+    t.replaceChildren(...html);
+    t.style.display = 'block';
+    const w = t.offsetWidth, bw = box.clientWidth;
+    t.style.left = Math.max(0, Math.min(bw - w, x + 12)) + 'px';
+    t.style.top = Math.max(0, y - t.offsetHeight - 8) + 'px';
+  }
+  function hideTip(box) { const t = box.querySelector('.pr-tip'); if (t) t.style.display = 'none'; }
+  function line(text, color) {
+    const d = document.createElement('div');
+    if (color) { const s = document.createElement('span'); s.className = 'sw'; s.style.background = color; d.appendChild(s); }
+    d.appendChild(document.createTextNode(text));
+    return d;
+  }
+  function head(text) { const d = document.createElement('div'); d.className = 'h'; d.textContent = text; return d; }
+
+  function clear(box) {
+    box.querySelectorAll('svg, .pr-fail, .pr-legend').forEach((n) => n.remove());
+    hideTip(box);
+  }
+  function fail(box) { clear(box); box.classList.remove('dash-skeleton'); const f = document.createElement('div'); f.className = 'pr-fail'; f.textContent = 'Failed to load'; box.appendChild(f); }
+
+  function styleAxis(g) {
+    g.attr('font-size', null).attr('font-family', null);
+    g.selectAll('text').attr('fill', css('--color-fg-muted')).style('font-size', css('--cds-font-size-caption'));
+    g.selectAll('.domain').attr('stroke', css('--cds-chart-axis'));
+    g.selectAll('.tick line').attr('stroke', css('--cds-chart-axis'));
+  }
+  function textWidth(svg, texts) {
+    const t = svg.append('text').style('font-size', css('--cds-font-size-caption'));
+    let w = 0;
+    texts.forEach((s) => { t.text(s); w = Math.max(w, t.node().getComputedTextLength()); });
+    t.remove();
+    return w;
+  }
+
+  // Line chart. series: [{name, color, dash, rows:[{x,y,...}]}]; opts: logX, logY, xTicks, yFmt, xFmt, ref:[[x,y],...], refY, tipRows(x)
+  function lineChart(box, series, o) {
+    clear(box);
+    box.classList.remove('dash-skeleton');
+    const W = Math.max(280, box.clientWidth), H = 260;
+    const svg = d3.select(box).append('svg').attr('width', '100%').attr('viewBox', `0 0 ${W} ${H}`);
+    const all = series.flatMap((s) => s.rows);
+    const xs = [...new Set(all.map((r) => r.x))].sort((a, b) => a - b);
+    let yMin = d3.min(all, (r) => r.y), yMax = d3.max(all, (r) => r.y);
+    if (o.ref) { yMin = Math.min(yMin, d3.min(o.ref, (p) => p[1])); yMax = Math.max(yMax, d3.max(o.ref, (p) => p[1])); }
+    if (o.refY != null) { yMin = Math.min(yMin, o.refY); yMax = Math.max(yMax, o.refY); }
+    const yScale0 = o.logY ? d3.scaleLog().base(o.logY).domain([yMin, yMax]).nice() : d3.scaleLinear().domain([o.yZero === false ? yMin : Math.min(0, yMin), yMax]).nice();
+    let yTicks = yScale0.ticks(5);
+    if (o.logY === 10) {
+      yTicks = yScale0.ticks().filter((v) => Math.abs(Math.log10(v) - Math.round(Math.log10(v))) < 1e-9);
+      if (yTicks.length > 6) yTicks = yTicks.filter((_, i) => i % 2 === 0);
+    } else if (o.logY === 2) {
+      yTicks = d3.range(Math.ceil(Math.log2(yScale0.domain()[0])), Math.floor(Math.log2(yScale0.domain()[1])) + 1).map((k) => 2 ** k);
+    }
+    const yFmt = o.yFmt || d3.format(',');
+    const ml = textWidth(svg, yTicks.map(yFmt)) + 14;
+    const m = { l: ml, r: 16, t: 10, b: 28 };
+    const x = (o.logX ? d3.scaleLog().base(o.logX) : d3.scaleLinear()).domain(d3.extent(xs)).range([m.l, W - m.r]);
+    const y = yScale0.range([H - m.b, m.t]);
+    svg.append('g').selectAll('line').data(yTicks).join('line').attr('x1', m.l).attr('x2', W - m.r).attr('y1', (d) => y(d)).attr('y2', (d) => y(d)).attr('stroke', css('--cds-chart-grid'));
+    const xTickVals = o.xTicks || xs;
+    const gx = svg.append('g').attr('transform', `translate(0,${H - m.b})`).call(d3.axisBottom(x).tickValues(xTickVals).tickFormat(o.xFmt || d3.format(',')).tickSizeOuter(0));
+    styleAxis(gx);
+    const gy = svg.append('g').attr('transform', `translate(${m.l},0)`).call(d3.axisLeft(y).tickValues(yTicks).tickFormat(yFmt).tickSize(0).tickPadding(8));
+    styleAxis(gy); gy.select('.domain').remove();
+    if (o.ref) svg.append('path').attr('d', d3.line().x((p) => x(p[0])).y((p) => y(p[1]))(o.ref)).attr('fill', 'none').attr('stroke', css('--cds-chart-reference')).attr('stroke-dasharray', '4 4');
+    if (o.refY != null) svg.append('line').attr('x1', m.l).attr('x2', W - m.r).attr('y1', y(o.refY)).attr('y2', y(o.refY)).attr('stroke', css('--cds-chart-reference')).attr('stroke-dasharray', '4 4');
+    series.forEach((s) => {
+      svg.append('path').attr('d', d3.line().x((r) => x(r.x)).y((r) => y(r.y))(s.rows)).attr('fill', 'none').attr('stroke', s.color)
+        .attr('stroke-width', 2).attr('stroke-linecap', 'round').attr('stroke-linejoin', 'round').attr('stroke-dasharray', s.dash || null);
+      if (!o.noDots) svg.append('g').selectAll('circle').data(s.rows).join('circle').attr('cx', (r) => x(r.x)).attr('cy', (r) => y(r.y)).attr('r', 3).attr('fill', s.color);
+    });
+    const hover = svg.append('g').style('display', 'none');
+    const rule = hover.append('line').attr('y1', m.t).attr('y2', H - m.b).attr('stroke', css('--cds-chart-axis'));
+    svg.append('rect').attr('x', m.l).attr('y', m.t).attr('width', W - m.l - m.r).attr('height', H - m.t - m.b).attr('fill', 'transparent')
+      .on('mousemove', (ev) => {
+        const [px] = d3.pointer(ev);
+        const xv = xs.reduce((a, b) => Math.abs(x(b) - px) < Math.abs(x(a) - px) ? b : a);
+        hover.style('display', null); rule.attr('x1', x(xv)).attr('x2', x(xv));
+        hover.selectAll('circle').remove();
+        const lines = [head((o.xName || '') + (o.xFmt || d3.format(','))(xv))];
+        series.forEach((s) => {
+          const r = s.rows.find((q) => q.x === xv);
+          if (!r) return;
+          hover.append('circle').attr('cx', x(xv)).attr('cy', y(r.y)).attr('r', 5).attr('fill', s.color);
+          lines.push(line(`${s.name}：${(o.tipFmt || yFmt)(r.y)}${o.tipExtra ? o.tipExtra(r) : ''}`, series.length > 1 ? s.color : null));
+        });
+        const rect = box.getBoundingClientRect(), sr = svg.node().getBoundingClientRect();
+        showTip(box, lines, x(xv) * sr.width / W, d3.pointer(ev, box)[1]);
+      })
+      .on('mouseleave', () => { hover.style('display', 'none'); hideTip(box); });
+    if (series.length > 1 || o.legendRef) {
+      const lg = document.createElement('div'); lg.className = 'pr-legend';
+      series.forEach((s) => { const sp = document.createElement('span'); const i = document.createElement('i'); i.style.background = s.color; if (s.dash) i.style.opacity = '.6'; sp.append(i, s.name); lg.appendChild(sp); });
+      if (o.legendRef) { const sp = document.createElement('span'); const i = document.createElement('i'); i.style.background = css('--cds-chart-reference'); sp.append(i, o.legendRef); lg.appendChild(sp); }
+      box.appendChild(lg);
+    }
+  }
+
+  // Horizontal bars. rows:[{label, segs:[{name, value, color}]}]
+  function hbar(box, rows, o) {
+    clear(box);
+    box.classList.remove('dash-skeleton');
+    const W = Math.max(280, box.clientWidth), bh = 26, gap = 14;
+    const H = rows.length * (bh + gap) + 30;
+    const svg = d3.select(box).append('svg').attr('width', '100%').attr('viewBox', `0 0 ${W} ${H}`);
+    const fmt = o.fmt || d3.format(',');
+    const ml = textWidth(svg, rows.map((r) => r.label)) + 12;
+    const totals = rows.map((r) => d3.sum(r.segs, (s) => s.value));
+    const mr = textWidth(svg, totals.map(fmt)) + 12;
+    const x = d3.scaleLinear().domain([0, d3.max(totals) || 1]).nice().range([ml, W - mr]);
+    const ticks = x.ticks(4);
+    svg.append('g').selectAll('line').data(ticks).join('line').attr('x1', (d) => x(d)).attr('x2', (d) => x(d)).attr('y1', 0).attr('y2', H - 24).attr('stroke', css('--cds-chart-grid'));
+    const gx = svg.append('g').attr('transform', `translate(0,${H - 24})`).call(d3.axisBottom(x).tickValues(ticks).tickFormat(d3.format(',')).tickSize(0).tickPadding(6));
+    styleAxis(gx); gx.select('.domain').remove();
+    rows.forEach((r, i) => {
+      const yy = i * (bh + gap) + 4;
+      svg.append('text').attr('x', ml - 8).attr('y', yy + bh / 2).attr('dy', '0.35em').attr('text-anchor', 'end').attr('fill', css('--color-fg')).style('font-size', css('--cds-font-size-caption')).text(r.label);
+      let acc = 0;
+      r.segs.forEach((s) => {
+        const x0 = x(acc), x1 = x(acc + s.value);
+        svg.append('rect').attr('x', x0).attr('y', yy).attr('width', Math.max(0, x1 - x0)).attr('height', bh).attr('rx', r.segs.length > 1 ? 0 : 4).attr('fill', s.color)
+          .on('mousemove', (ev) => {
+            const p = d3.pointer(ev, box);
+            showTip(box, [head(r.label), ...r.segs.map((q) => line(`${q.name}：${fmt(q.value)}`, r.segs.length > 1 ? q.color : null)), ...(r.extra ? [line(r.extra)] : [])], p[0], p[1]);
+          })
+          .on('mouseleave', () => hideTip(box));
+        acc += s.value;
+      });
+      svg.append('text').attr('x', x(acc) + 6).attr('y', yy + bh / 2).attr('dy', '0.35em').attr('fill', css('--color-fg-muted')).style('font-size', css('--cds-font-size-caption')).text(fmt(totals[i]));
+    });
+    if (o.legend) {
+      const lg = document.createElement('div'); lg.className = 'pr-legend';
+      o.legend.forEach(([n, c]) => { const sp = document.createElement('span'); const i = document.createElement('i'); i.style.background = c; sp.append(i, n); lg.appendChild(sp); });
+      box.appendChild(lg);
+    }
+  }
+
+  // Vertical bars with optional log y. rows:[{label, value}]
+  function vbar(box, rows, o) {
+    clear(box);
+    box.classList.remove('dash-skeleton');
+    const W = Math.max(280, box.clientWidth), H = 260;
+    const svg = d3.select(box).append('svg').attr('width', '100%').attr('viewBox', `0 0 ${W} ${H}`);
+    const y0 = o.logY ? d3.scaleLog().domain([1, d3.max(rows, (r) => r.value)]).nice() : d3.scaleLinear().domain([0, d3.max(rows, (r) => r.value)]).nice();
+    const yTicks = o.logY ? y0.ticks().filter((v) => Math.log10(v) % 1 === 0) : y0.ticks(5);
+    const yFmt = d3.format('~s');
+    const m = { l: textWidth(svg, yTicks.map(yFmt)) + 14, r: 8, t: 10, b: 44 };
+    const x = d3.scaleBand().domain(rows.map((r) => r.label)).range([m.l, W - m.r]).padding(0.2);
+    const y = y0.range([H - m.b, m.t]);
+    svg.append('g').selectAll('line').data(yTicks).join('line').attr('x1', m.l).attr('x2', W - m.r).attr('y1', (d) => y(d)).attr('y2', (d) => y(d)).attr('stroke', css('--cds-chart-grid'));
+    const gy = svg.append('g').attr('transform', `translate(${m.l},0)`).call(d3.axisLeft(y).tickValues(yTicks).tickFormat(yFmt).tickSize(0).tickPadding(8));
+    styleAxis(gy); gy.select('.domain').remove();
+    const every = Math.ceil(rows.length / Math.max(1, Math.floor((W - m.l) / 46)));
+    const gx = svg.append('g').attr('transform', `translate(0,${H - m.b})`).call(d3.axisBottom(x).tickValues(rows.map((r) => r.label).filter((_, i) => i % every === 0)).tickSizeOuter(0));
+    styleAxis(gx);
+    gx.selectAll('text').attr('transform', 'rotate(-35)').attr('text-anchor', 'end').attr('dx', '-0.4em').attr('dy', '0.6em');
+    svg.append('g').selectAll('rect').data(rows).join('rect').attr('x', (r) => x(r.label)).attr('width', x.bandwidth())
+      .attr('y', (r) => y(Math.max(o.logY ? 1 : 0, r.value))).attr('height', (r) => y(o.logY ? 1 : 0) - y(Math.max(o.logY ? 1 : 0, r.value)))
+      .attr('rx', 3).attr('fill', o.color)
+      .on('mousemove', (ev, r) => { const p = d3.pointer(ev, box); showTip(box, [head(o.xName + r.label), line(o.tip(r))], p[0], p[1]); })
+      .on('mouseleave', () => hideTip(box));
+  }
+
+  // Table body from rows; cols: [{field, fmt}] in header order.
+  function table(tbl, rows, cols, filter) {
+    const tb = tbl.querySelector('tbody');
+    tb.replaceChildren();
+    rows.filter(filter || (() => true)).forEach((r) => {
+      const tr = document.createElement('tr');
+      cols.forEach((c, i) => {
+        const td = document.createElement('td');
+        if (tbl.querySelectorAll('thead th')[i].classList.contains('l')) td.className = 'l';
+        const v = r[c.field];
+        td.textContent = c.fmt ? c.fmt(v, r) : fmtNum(v);
+        if (c.cls) td.classList.add(c.cls(v, r));
+        tr.appendChild(td);
+      });
+      tb.appendChild(tr);
+    });
+  }
+
+  return { css, lineChart, hbar, vbar, table, fail, fmtNum };
+})();
+</script>
+
+<script>
+dash.calc('val_max_l1', {
+  title: '最大验证误差',
+  description: '8 种并行实现（MPI 4 种 + CUDA 4 种）与串行结果之间 L1 误差的最大值。',
+  inputs: ['validation'],
+  fn: (validation) => [{ max_l1: Math.max(...validation.filter((r) => r.impl.endsWith('vs 串行')).map((r) => r.l1)) }],
+});
+
+(() => {
+  const e = (v) => v == null ? '' : v.toExponential(2);
+  const f = (d) => (v) => v == null ? '' : v.toFixed(d);
+  const int = (v) => v == null ? '' : d3.format(',')(v);
+  const pct = (v) => v == null ? '' : d3.format('.1%')(v);
+  const C = () => dash.colors;
+  const ok = (id) => dash.data(id).status === 'ok';
+  const box = (id) => document.getElementById(id);
+
+  const fillText = () => {
+    document.querySelectorAll('.pr [data-source][data-field]').forEach((el) => {
+      if (el.tagName === 'TH' || el.closest('table')) return;
+      const d = dash.data(el.dataset.source);
+      if (d.status !== 'ok') return;
+      const rows = d.data;
+      let row = null;
+      if (el.dataset.row != null) row = rows[+el.dataset.row];
+      else if (el.dataset.where) {
+        const [k, v] = el.dataset.where.split('=');
+        row = rows.find((r) => String(r[k]) === decodeURIComponent(v));
+      }
+      if (!row) return;
+      const v = row[el.dataset.field];
+      const fld = el.dataset.field;
+      el.textContent = fld === 'max_l1' ? v.toExponential(2) : fld.startsWith('share') ? pct(v) : fld === 'dangling' ? int(v) : String(v);
+      el.classList.remove('dash-skeleton');
+    });
+  };
+
+  const charts = [
+    ['ch-e1-speedup', ['e1']], ['ch-e1-break', ['e1']], ['ch-e2-eff', ['e2']], ['ch-e2-break', ['e2']],
+    ['ch-e3-time', ['e3']], ['ch-e3-bytes', ['e3']], ['ch-e4-time', ['e4']], ['ch-e4-bw', ['e4']], ['ch-e5', ['e5']],
+    ['ch-g-hist', ['google_indeg']], ['ch-g-prdeg', ['google_indeg']], ['ch-g-conv', ['convergence']],
+  ];
+
+  function draw() {
+    fillText();
+    charts.forEach(([id, srcs]) => {
+      const st = srcs.map((s) => dash.data(s).status);
+      if (st.some((s) => s === 'error' || s === 'connect' || s === 'missing')) PR.fail(box(id));
+      else if (st.some((s) => s !== 'ok')) box(id).classList.add('dash-skeleton');
+    });
+    const cores = [1, 2, 4, 8, 16, 32, 64];
+
+    if (ok('validation')) PR.table(box('tbl-val'), dash.data('validation').data, [
+      { field: 'impl' }, { field: 'l1', fmt: e }, { field: 'linf', fmt: e },
+      { field: 'top100_same', fmt: (v) => v ? '是' : '否', cls: (v) => v ? 'ok' : 'bad' }, { field: 'top1000_overlap', fmt: int }]);
+
+    if (ok('e1')) {
+      const rows = dash.data('e1').data;
+      const by = (mode, key) => rows.filter((r) => r.mode === mode).sort((a, b) => a.cores - b.cores).map((r) => ({ ...r, x: r.cores, y: r[key] }));
+      PR.lineChart(box('ch-e1-speedup'), [
+        { name: '纯 MPI', color: C()[0], rows: by('纯 MPI', 'speedup') },
+        { name: 'MPI+OpenMP', color: C()[1], rows: by('MPI+OpenMP', 'speedup') }],
+        { logX: 2, logY: 2, xTicks: cores, ref: cores.map((c) => [c, c]), xName: '核数 ', yFmt: d3.format('~g'), tipFmt: (v) => v.toFixed(2) + '×',
+          tipExtra: (r) => `（${r.t_iter_ms.toFixed(2)} ms）`, legendRef: '理想线性加速' });
+      PR.lineChart(box('ch-e1-break'), [
+        { name: '纯 MPI 计算', color: C()[0], rows: by('纯 MPI', 't_comp_ms') },
+        { name: '纯 MPI 通信', color: C()[0], dash: '5 4', rows: by('纯 MPI', 't_comm_ms') },
+        { name: 'MPI+OpenMP 计算', color: C()[1], rows: by('MPI+OpenMP', 't_comp_ms') },
+        { name: 'MPI+OpenMP 通信', color: C()[1], dash: '5 4', rows: by('MPI+OpenMP', 't_comm_ms') }],
+        { logX: 2, xTicks: cores, xName: '核数 ', yFmt: d3.format(','), tipFmt: (v) => v.toFixed(2) + ' ms' });
+      PR.table(box('tbl-e1'), rows.slice().sort((a, b) => a.mode.localeCompare(b.mode) || a.cores - b.cores), [
+        { field: 'config' }, { field: 'mode' }, { field: 'cores', fmt: int }, { field: 'nodes', fmt: int }, { field: 'ranks', fmt: int },
+        { field: 'threads', fmt: int }, { field: 't_iter_ms', fmt: f(2) }, { field: 't_comp_ms', fmt: f(2) }, { field: 't_comm_ms', fmt: f(2) },
+        { field: 'speedup', fmt: f(2) }, { field: 'efficiency', fmt: pct }]);
+    }
+
+    if (ok('e2')) {
+      const rows = dash.data('e2').data.slice().sort((a, b) => a.cores - b.cores);
+      PR.lineChart(box('ch-e2-eff'), [{ name: '弱扩展效率', color: C()[1], rows: rows.map((r) => ({ ...r, x: r.cores, y: r.weak_efficiency })) }],
+        { logX: 2, xTicks: cores, refY: 1, xName: '核数 ', yFmt: d3.format('.0%'), tipFmt: pct, tipExtra: (r) => `（${r.t_iter_ms.toFixed(2)} ms，M = ${d3.format('.3s')(r.M)}）` });
+      PR.lineChart(box('ch-e2-break'), [
+        { name: '计算', color: C()[1], rows: rows.map((r) => ({ x: r.cores, y: r.t_comp_ms })) },
+        { name: '通信', color: C()[1], dash: '5 4', rows: rows.map((r) => ({ x: r.cores, y: r.t_comm_ms })) },
+        { name: '每轮总计', color: C()[2], rows: rows.map((r) => ({ x: r.cores, y: r.t_iter_ms })) }],
+        { logX: 2, xTicks: cores, xName: '核数 ', tipFmt: (v) => v.toFixed(2) + ' ms' });
+      PR.table(box('tbl-e2'), rows, [{ field: 'cores', fmt: int }, { field: 'nodes', fmt: int }, { field: 'N', fmt: int }, { field: 'M', fmt: int },
+        { field: 'edges_per_core_m', fmt: f(2) }, { field: 't_iter_ms', fmt: f(2) }, { field: 't_comp_ms', fmt: f(2) }, { field: 't_comm_ms', fmt: f(2) },
+        { field: 'weak_efficiency', fmt: pct }]);
+    }
+
+    if (ok('e3')) {
+      const order = ['vertex+allgather', 'vertex+ghost', 'edge+allgather', 'edge+ghost'];
+      const rows = dash.data('e3').data.slice().sort((a, b) => order.indexOf(a.config) - order.indexOf(b.config));
+      const best = d3.min(rows, (r) => r.t_iter_ms);
+      PR.hbar(box('ch-e3-time'), rows.map((r) => ({ label: `${r.partition} + ${r.communication}`,
+        segs: [{ name: '每轮', value: r.t_iter_ms, color: r.t_iter_ms === best ? C()[0] : PR.css('--cds-chart-muted') }],
+        extra: `计算 ${r.t_comp_ms.toFixed(2)} ms，通信 ${r.t_comm_ms.toFixed(2)} ms，不均衡度 ${r.imbalance.toFixed(3)}` })), { fmt: (v) => v.toFixed(2) });
+      PR.hbar(box('ch-e3-bytes'), rows.map((r) => ({ label: `${r.partition} + ${r.communication}`,
+        segs: [{ name: '通信量', value: r.comm_mb_iter, color: r.communication === 'Allgatherv' ? PR.css('--cds-chart-muted') : C()[0] }] })), { fmt: (v) => d3.format(',.0f')(v) });
+      PR.table(box('tbl-e3'), rows, [{ field: 'config' }, { field: 'partition' }, { field: 'communication' }, { field: 't_iter_ms', fmt: f(2) },
+        { field: 't_comp_ms', fmt: f(2) }, { field: 't_comm_ms', fmt: f(2) }, { field: 'imbalance', fmt: f(3) }, { field: 'comm_mb_iter', fmt: f(1) }]);
+    }
+
+    if (ok('e4')) {
+      const rows = dash.data('e4').data.slice().sort((a, b) => a.t_iter_ms - b.t_iter_ms);
+      const best = rows[0].kernel;
+      const col = (r) => r.kernel === best ? C()[3] : PR.css('--cds-chart-muted');
+      PR.hbar(box('ch-e4-time'), rows.map((r) => ({ label: r.name, segs: [{ name: '每轮', value: r.t_iter_ms, color: col(r) }] })), { fmt: (v) => v.toFixed(2) });
+      PR.hbar(box('ch-e4-bw'), rows.map((r) => ({ label: r.name, segs: [{ name: '有效带宽', value: r.gbps, color: col(r) }], extra: `占 A40 峰值 ${r.pct_peak}%` })), { fmt: (v) => d3.format(',.0f')(v) });
+      PR.table(box('tbl-e4'), rows, [{ field: 'kernel' }, { field: 'name' }, { field: 't_iter_ms', fmt: f(3) }, { field: 'gbps', fmt: f(1) },
+        { field: 'pct_peak', fmt: f(1) }, { field: 'speedup_vs_serial', fmt: f(1) }, { field: 't_load_s', fmt: f(2) }, { field: 't_h2d_s', fmt: f(3) }]);
+    }
+
+    if (ok('e5')) {
+      const rows = dash.data('e5').data;
+      PR.hbar(box('ch-e5'), rows.map((r) => ({ label: r.label, segs: [{ name: '加速比', value: r.speedup_vs_serial, color: r.platform === 'a40' ? C()[3] : r.platform === 'serial' ? PR.css('--cds-chart-muted') : C()[1] }],
+        extra: `每轮 ${r.t_iter_ms} ms，${r.gteps} GTEPS` })), { fmt: (v) => v.toFixed(1) + '×' });
+      PR.table(box('tbl-e5'), rows, [{ field: 'platform' }, { field: 'label' }, { field: 't_iter_ms', fmt: f(2) }, { field: 'gteps', fmt: f(3) }, { field: 'speedup_vs_serial', fmt: f(1) }]);
+    }
+
+    if (ok('google_indeg')) {
+      const rows = dash.data('google_indeg').data.slice().sort((a, b) => a.lo - b.lo);
+      PR.vbar(box('ch-g-hist'), rows.map((r) => ({ label: r.bin, value: r.count })), { logY: true, color: C()[2], xName: '入度 ', tip: (r) => `${d3.format(',')(r.value)} 个页面` });
+      const pos = rows.filter((r) => r.lo > 0);
+      PR.lineChart(box('ch-g-prdeg'), [{ name: '平均 PageRank', color: C()[2], rows: pos.map((r) => ({ ...r, x: r.lo, y: r.mean_pr })) }],
+        { logX: 2, logY: 10, xTicks: pos.map((r) => r.lo).filter((_, i) => i % 2 === 0), xName: '入度 ≥ ', yFmt: d3.format('.0e'), tipFmt: (v) => v.toExponential(2), tipExtra: (r) => `（${d3.format(',')(r.count)} 个页面）` });
+    }
+    if (ok('convergence')) {
+      const rows = dash.data('convergence').data;
+      PR.lineChart(box('ch-g-conv'), [{ name: 'L1 残差', color: C()[0], rows: rows.map((r) => ({ x: r.iter, y: r.resid })) }],
+        { logY: 10, refY: 1e-10, noDots: true, xTicks: [1, 20, 40, 60, 80, 100, 118], xName: '第 ', yFmt: d3.format('.0e'), tipFmt: (v) => v.toExponential(2), yZero: false });
+    }
+    if (ok('google_top')) PR.table(box('tbl-gtop'), dash.data('google_top').data, [{ field: 'rank' }, { field: 'node' }, { field: 'pagerank', fmt: e },
+      { field: 'indeg', fmt: int }, { field: 'outdeg', fmt: int }, { field: 'indeg_rank', fmt: int }]);
+    if (ok('graphs')) PR.table(box('tbl-graphs'), dash.data('graphs').data, [{ field: 'graph' }, { field: 'N', fmt: int }, { field: 'M', fmt: int },
+      { field: 'dangling', fmt: int }, { field: 'used_in' }]);
+    if (ok('runs')) {
+      const q = (box('raw-search').value || '').trim().toLowerCase();
+      PR.table(box('tbl-runs'), dash.data('runs').data, [{ field: 'run_id' }, { field: 'exp' }, { field: 'impl' }, { field: 'graph' }, { field: 'nodes' },
+        { field: 'ranks' }, { field: 'threads' }, { field: 'part' }, { field: 'comm' }, { field: 'rep' }, { field: 'iters' }, { field: 't_iter_ms', fmt: f(3) },
+        { field: 'resid', fmt: e }, { field: 'sumr', fmt: f(12) }], (r) => !q || Object.values(r).join(' ').toLowerCase().includes(q));
+    }
+  }
+
+  box('raw-search').addEventListener('input', draw);
+  dash.onData(draw);
+})();
+</script>

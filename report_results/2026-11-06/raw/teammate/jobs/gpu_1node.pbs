@@ -1,0 +1,46 @@
+#!/bin/bash
+# One node with 2x A40:
+#   validation on web-Google (single-GPU kernels and MPI+CUDA on 1 and 2 GPUs),
+#   E4 single-GPU kernel comparison on LiveJournal (thread / warp / hybrid / cuSPARSE),
+#   E6 MPI+CUDA on 1 GPU and on 2 GPUs in the same node (LiveJournal and Friendster).
+# Nsight Compute is not run: performance counters are not permitted for users on Vanda (ERR_NVGPUCTRPERM).
+#PBS -N p3gpu1
+#PBS -q auto_free
+#PBS -l select=1:ncpus=16:mpiprocs=2:ngpus=2:mem=96gb
+#PBS -l walltime=01:00:00
+#PBS -j oe
+source $PBS_O_WORKDIR/../scripts/env.sh
+module load cuda12.4/toolkit/12.4.1 > /dev/null 2>&1
+source $P3_ROOT/scripts/run_lib.sh
+cd "$P3_ROOT"
+ensure_build
+gpu_map
+R=$P3_RESULTS
+V=$R/val
+mkdir -p $V
+LJ=$P3_DATA/soc-LiveJournal1.bin
+FR=$P3_DATA/com-friendster.bin
+GG=$P3_DATA/web-Google.bin
+W=$P3_ROOT/scripts/gpu_wrap.sh
+
+# Validation: every kernel to convergence on web-Google.
+$BIN/pagerank_cuda --graph $GG --kernel all --iters 1000 --tol 1e-10 --exp val --out $V/cuda $(csv_flag $V/val_gpu.csv) \
+  >> $V/val_gpu.csv
+for g in 1 2; do
+  run_mpi 1 $g 4 $V/val_gpu.csv $W $BIN/pagerank_mpi_cuda --graph $GG --kernel thread,hybrid --iters 1000 --tol 1e-10 \
+    --exp val --out $V/mpi_cuda_${g}gpu
+done
+echo "validation done $(date)"
+
+# E4: single-GPU kernel comparison on LiveJournal.
+$BIN/pagerank_cuda --graph $LJ --kernel all --iters 50 --tol 0 --reps 5 --exp E4 $(csv_flag $R/e4.csv) >> $R/e4.csv
+
+# E6: MPI+CUDA, 1 GPU and 2 GPUs on one node.
+for g in 1 2; do
+  run_mpi 1 $g 4 $R/multigpu_1node.csv $W $BIN/pagerank_mpi_cuda --graph $LJ --kernel thread,hybrid --iters 50 --tol 0 \
+    --reps 5 --exp E6
+  run_mpi 1 $g 4 $R/multigpu_1node.csv $W $BIN/pagerank_mpi_cuda --graph $FR --kernel thread,hybrid --iters 20 --tol 0 \
+    --reps 5 --exp E6
+  echo "E6 $g GPU(s) on one node done $(date)"
+done
+echo "GPU single-node experiments done $(date)"

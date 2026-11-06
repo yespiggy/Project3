@@ -1,0 +1,9 @@
+exp,impl,graph,N,M,nodes,ranks,threads,cores,part,comm,iters,batch,source,repetitions,median_ms,min_ms,max_ms,t_comp_median_ms,t_comm_median_ms,t_stage_median_ms,edges_per_core
+E4,cuda_thread,soc-LiveJournal1,4847571,68475391,1,1,1,1,none,none,50,e4_block1_provenance_unconfirmed,normalized/e4_block1.csv,5,5.425491,5.4235359999999995,5.430035,5.4254999999999995,0.0,,68475391.0
+E4,cuda_warp,soc-LiveJournal1,4847571,68475391,1,1,1,1,none,none,50,e4_block1_provenance_unconfirmed,normalized/e4_block1.csv,5,22.40377,22.402890000000003,22.403969999999997,22.40376,0.0,,68475391.0
+E4,cuda_hybrid,soc-LiveJournal1,4847571,68475391,1,1,1,1,none,none,50,e4_block1_provenance_unconfirmed,normalized/e4_block1.csv,5,6.743829,6.743213,6.746461,6.74382,0.0,,68475391.0
+E4,cuda_cusparse,soc-LiveJournal1,4847571,68475391,1,1,1,1,none,none,50,e4_block1_provenance_unconfirmed,normalized/e4_block1.csv,5,4.759936000000001,4.759391,4.760636000000001,4.759939999999999,0.0,,68475391.0
+E4,cuda_thread,soc-LiveJournal1,4847571,68475391,1,1,1,1,none,none,50,e4_block2_provenance_unconfirmed,normalized/e4_block2.csv,5,5.431155,5.427026,5.439241,5.431160000000001,0.0,,68475391.0
+E4,cuda_warp,soc-LiveJournal1,4847571,68475391,1,1,1,1,none,none,50,e4_block2_provenance_unconfirmed,normalized/e4_block2.csv,5,22.40709,22.40537,22.41083,22.4071,0.0,,68475391.0
+E4,cuda_hybrid,soc-LiveJournal1,4847571,68475391,1,1,1,1,none,none,50,e4_block2_provenance_unconfirmed,normalized/e4_block2.csv,5,6.746345,6.745881,6.747808,6.74634,0.0,,68475391.0
+E4,cuda_cusparse,soc-LiveJournal1,4847571,68475391,1,1,1,1,none,none,50,e4_block2_provenance_unconfirmed,normalized/e4_block2.csv,5,4.762316,4.760879,4.763037000000001,4.76232,0.0,,68475391.0

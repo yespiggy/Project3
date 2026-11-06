@@ -1,0 +1,73 @@
+Job Id: 1518822.stdct-mgmt-02
+    Job_Name = p3strong256
+    Job_Owner = e0985955@vanda.nus.edu.sg
+    resources_used.cpupercent = 17927
+    resources_used.cput = 02:56:56
+    resources_used.mem = 8395376kb
+    resources_used.ncpus = 256
+    resources_used.ngpus = 0
+    resources_used.vmem = 29958508kb
+    resources_used.walltime = 00:00:57
+    job_state = F
+    queue = batch_cpu
+    server = stdct-mgmt-02
+    Checkpoint = u
+    ctime = Wed Nov  4 16:05:53 2026
+    Error_Path = vanda.nus.edu.sg:/nfs/home/svu/e0985955/p3-review-20261102/Pro
+	ject3/jobs/p3strong256.e1518822
+    exec_host = CN-040/0*0+CN-041/0*0+CN-039/0*0+CN-037/0*0
+    exec_vnode = (CN-040[0]:mem=256465mb:ncpus=36+CN-040[1]:mem=198191mb:ncpus=
+	28)+(CN-041[0]:mem=256423mb:ncpus=36+CN-041[1]:mem=198233mb:ncpus=28)+(
+	CN-039[0]:mem=256423mb:ncpus=36+CN-039[1]:mem=198233mb:ncpus=28)+(CN-03
+	7[0]:mem=256465mb:ncpus=36+CN-037[1]:mem=198191mb:ncpus=28)
+    Hold_Types = n
+    Join_Path = oe
+    Keep_Files = oed
+    Mail_Points = a
+    mtime = Wed Nov  4 22:09:11 2026
+    Output_Path = vanda.nus.edu.sg:/nfs/home/svu/e0985955/p3-review-20261102/Pr
+	oject3/jobs/p3strong256.o1518822
+    Priority = 0
+    qtime = Wed Nov  4 16:05:53 2026
+    Rerunable = True
+    Resource_List.am_job_cache = {"job.queue_charge_rate": 1.0,
+	 "job.walltime": 1200, "job.ncpus": 256.0, "job.ngpus": 0,
+	 "am_cloud_enabled": false}
+    Resource_List.mem = 1776gb
+    Resource_List.mpiprocs = 256
+    Resource_List.ncpus = 256
+    Resource_List.ngpus = 0
+    Resource_List.nodect = 4
+    Resource_List.place = scatter
+    Resource_List.queue_charge_rate = 1
+    Resource_List.select = 4:ncpus=64:mpiprocs=64:mem=444GB
+    Resource_List.walltime = 00:20:00
+    stime = Wed Nov  4 22:08:06 2026
+    obittime = Wed Nov  4 22:09:11 2026
+    session_id = 179974
+    jobdir = /home/svu/e0985955
+    substate = 92
+    Variable_List = PBS_O_HOME=/home/svu/e0985955,PBS_O_LANG=en_US.UTF-8,
+	PBS_O_LOGNAME=e0985955,
+	PBS_O_PATH=/home/svu/e0985955/.local/bin:/home/svu/e0985955/bin:/cm/sh
+	ared/apps/apptainer/1.4.1/bin:/cm/local/apps/environment-modules/4.5.3/
+	/bin:/usr/local/bin:/usr/bin:/usr/local/sbin:/usr/sbin:/opt/am/python/b
+	in:/sbin:/usr/sbin:/cm/local/apps/environment-modules/4.5.3/bin:/opt/pb
+	s/bin,PBS_O_MAIL=/var/spool/mail/e0985955,PBS_O_SHELL=/bin/bash,
+	PBS_O_INTERACTIVE_AUTH_METHOD=resvport,
+	PBS_O_HOST=stdct-login-01.stdct.loc,
+	PBS_O_WORKDIR=/nfs/home/svu/e0985955/p3-review-20261102/Project3/jobs,
+	PBS_O_SYSTEM=Linux,PBS_O_QUEUE=auto
+    comment = Job run at Wed Nov 04 at 22:08 on (CN-040[0]:mem=256465mb:ncpus=3
+	6+CN-040[1]:mem=198191mb:ncpus=28)+(CN-041[0]:mem=256423mb:ncpus=36+CN-
+	041[1]:mem=198233mb:ncpus=28)+(CN-039[0]:mem=256423mb:ncpus=36+CN-039[1
+	]:mem=198233mb:ncpus=28)+(CN-037[0]:mem=25646... and finished
+    etime = Wed Nov  4 16:05:53 2026
+    run_count = 1
+    Stageout_status = 1
+    Exit_status = 0
+    Submit_arguments = strong_256.pbs
+    history_timestamp = 1793801351
+    project = personal-e0985955
+    Submit_Host = vanda.nus.edu.sg
+

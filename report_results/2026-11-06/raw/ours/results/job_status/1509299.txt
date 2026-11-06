@@ -1,0 +1,67 @@
+Job Id: 1509299.stdct-mgmt-02
+    Job_Name = p3smoke
+    Job_Owner = e0985955@vanda.nus.edu.sg
+    resources_used.cpupercent = 17
+    resources_used.cput = 00:00:16
+    resources_used.mem = 48732kb
+    resources_used.ncpus = 4
+    resources_used.ngpus = 0
+    resources_used.vmem = 965076kb
+    resources_used.walltime = 00:00:28
+    job_state = F
+    queue = cpu_parallel
+    server = stdct-mgmt-02
+    Checkpoint = u
+    ctime = Mon Nov  2 18:55:54 2026
+    Error_Path = vanda.nus.edu.sg:/nfs/home/svu/e0985955/p3-review-20261102/Pro
+	ject3/jobs/p3smoke.e1509299
+    exec_host = CN-161/7*4
+    exec_vnode = (CN-161[0]:ncpus=4:mem=4gb)
+    Hold_Types = n
+    Join_Path = oe
+    Keep_Files = oed
+    Mail_Points = a
+    mtime = Mon Nov  2 18:56:26 2026
+    Output_Path = vanda.nus.edu.sg:/nfs/home/svu/e0985955/p3-review-20261102/Pr
+	oject3/jobs/p3smoke.o1509299
+    Priority = 0
+    qtime = Mon Nov  2 18:55:54 2026
+    Rerunable = True
+    Resource_List.am_job_cache = {"job.queue_charge_rate": 0,
+	 "job.walltime": 600, "job.ncpus": 4.0, "job.ngpus": 0,
+	 "am_cloud_enabled": false}
+    Resource_List.mem = 4gb
+    Resource_List.mpiprocs = 4
+    Resource_List.ncpus = 4
+    Resource_List.ngpus = 0
+    Resource_List.nodect = 1
+    Resource_List.place = free
+    Resource_List.queue_charge_rate = 0
+    Resource_List.select = 1:ncpus=4:mpiprocs=4:mem=4gb
+    Resource_List.walltime = 00:10:00
+    stime = Mon Nov  2 18:55:58 2026
+    obittime = Mon Nov  2 18:56:26 2026
+    session_id = 540705
+    jobdir = /home/svu/e0985955
+    substate = 92
+    Variable_List = PBS_O_HOME=/home/svu/e0985955,PBS_O_LANG=en_US.UTF-8,
+	PBS_O_LOGNAME=e0985955,
+	PBS_O_PATH=/home/svu/e0985955/.local/bin:/home/svu/e0985955/bin:/cm/sh
+	ared/apps/apptainer/1.4.1/bin:/cm/local/apps/environment-modules/4.5.3/
+	/bin:/usr/local/bin:/usr/bin:/usr/local/sbin:/usr/sbin:/opt/am/python/b
+	in:/sbin:/usr/sbin:/cm/local/apps/environment-modules/4.5.3/bin:/opt/pb
+	s/bin,PBS_O_SHELL=/bin/bash,PBS_O_INTERACTIVE_AUTH_METHOD=resvport,
+	PBS_O_HOST=stdct-login-01.stdct.loc,
+	PBS_O_WORKDIR=/nfs/home/svu/e0985955/p3-review-20261102/Project3/jobs,
+	PBS_O_SYSTEM=Linux,PBS_O_QUEUE=auto_free
+    comment = Job run at Mon Nov 02 at 18:55 on (CN-161[0]:ncpus=4:mem=4gb) and
+	 finished
+    etime = Mon Nov  2 18:55:54 2026
+    run_count = 1
+    Stageout_status = 1
+    Exit_status = 0
+    Submit_arguments = smoke_cpu.pbs
+    history_timestamp = 1793616986
+    project = personal-e0985955
+    Submit_Host = vanda.nus.edu.sg
+
