@@ -1,0 +1,110 @@
+Queue: batch_cpu
+    queue_type = Execution
+    Priority = 100
+    total_jobs = 279
+    state_count = Transit:0 Queued:48 Held:89 Waiting:0 Running:136 Exiting:0 B
+	egun:6 
+    from_route_only = True
+    resources_max.ncpus = 720
+    resources_max.ngpus = 0
+    resources_max.nodect = 10
+    resources_max.walltime = 240:00:00
+    resources_min.ncpus = 1
+    resources_min.nodect = 1
+    resources_default.queue_charge_rate = 1
+    resources_default.walltime = 24:00:00
+    default_chunk.node_pool = cpu_node
+    resources_assigned.mem = 65505gb
+    resources_assigned.mpiprocs = 8996
+    resources_assigned.ncpus = 9439
+    resources_assigned.nodect = 202
+    max_run = [u:PBS_GENERIC=6]
+    max_run_res.ncpus = [u:PBS_GENERIC=720]
+    enabled = True
+    started = True
+
+Queue: auto
+    queue_type = Route
+    total_jobs = 20
+    state_count = Transit:0 Queued:0 Held:19 Waiting:1 Running:0 Exiting:0 Begu
+	n:0 
+    acl_host_enable = False
+    from_route_only = False
+    resources_default.queue_charge_rate = 1
+    route_destinations = batch_cpu,batch_gpu
+    route_held_jobs = False
+    route_waiting_jobs = False
+    route_retry_time = 5
+    enabled = True
+    started = True
+
+Queue: auto_free
+    queue_type = Route
+    total_jobs = 5
+    state_count = Transit:0 Queued:0 Held:2 Waiting:3 Running:0 Exiting:0 Begun
+	:0 
+    acl_host_enable = False
+    from_route_only = False
+    resources_default.queue_charge_rate = 0
+    route_destinations = cpu_serial,cpu_parallel,gpu
+    route_held_jobs = False
+    route_waiting_jobs = False
+    route_retry_time = 5
+    enabled = True
+    started = True
+
+Queue: cpu_parallel
+    queue_type = Execution
+    total_jobs = 129
+    state_count = Transit:0 Queued:62 Held:31 Waiting:0 Running:36 Exiting:0 Be
+	gun:0 
+    from_route_only = True
+    resources_max.ncpus = 160
+    resources_max.ngpus = 0
+    resources_max.nodect = 10
+    resources_max.walltime = 168:00:00
+    resources_min.ncpus = 2
+    resources_min.nodect = 1
+    resources_default.mem = 20gb
+    resources_default.ncpus = 2
+    resources_default.queue_charge_rate = 0
+    resources_default.walltime = 24:00:00
+    default_chunk.node_pool = cpu_free
+    resources_assigned.mem = 5606gb
+    resources_assigned.mpiprocs = 756
+    resources_assigned.ncpus = 1162
+    resources_assigned.nodect = 44
+    max_run = [u:PBS_GENERIC=2]
+    max_run = [u:e0030005=16]
+    max_run = [u:e0540410=9]
+    max_run = [u:e0983460=28]
+    max_run = [u:e1554743=3]
+    max_run = [u:sauyong=12]
+    max_run_res.ncpus = [u:PBS_GENERIC=160]
+    enabled = True
+    started = True
+
+Queue: gpu
+    queue_type = Execution
+    total_jobs = 77
+    state_count = Transit:0 Queued:23 Held:40 Waiting:0 Running:12 Exiting:0 Be
+	gun:2 
+    from_route_only = True
+    resources_max.ncpus = 36
+    resources_max.ngpus = 2
+    resources_max.walltime = 48:00:00
+    resources_min.ngpus = 1
+    resources_min.nodect = 1
+    resources_default.mem = 240gb
+    resources_default.ncpus = 36
+    resources_default.queue_charge_rate = 0
+    resources_default.walltime = 24:00:00
+    default_chunk.node_pool = gpu_free
+    resources_assigned.mem = 916gb
+    resources_assigned.mpiprocs = 5
+    resources_assigned.ncpus = 196
+    resources_assigned.nodect = 12
+    max_run = [u:PBS_GENERIC=2]
+    enabled = True
+    started = True
+

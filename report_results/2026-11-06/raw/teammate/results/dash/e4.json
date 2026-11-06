@@ -1,0 +1,42 @@
+[
+{
+"kernel": "thread",
+"name": "一个线程一行",
+"t_iter_ms": 5.425,
+"gbps": 187.2,
+"pct_peak": 26.9,
+"speedup_vs_serial": 25.8,
+"t_load_s": 3.204,
+"t_h2d_s": 0.0351
+},
+{
+"kernel": "warp",
+"name": "一个 warp 一行",
+"t_iter_ms": 22.404,
+"gbps": 45.3,
+"pct_peak": 6.5,
+"speedup_vs_serial": 6.3,
+"t_load_s": 3.204,
+"t_h2d_s": 0.0351
+},
+{
+"kernel": "hybrid",
+"name": "按度数分桶混合",
+"t_iter_ms": 6.744,
+"gbps": 150.6,
+"pct_peak": 21.6,
+"speedup_vs_serial": 20.8,
+"t_load_s": 3.204,
+"t_h2d_s": 0.0351
+},
+{
+"kernel": "cusparse",
+"name": "cuSPARSE",
+"t_iter_ms": 4.76,
+"gbps": 213.4,
+"pct_peak": 30.7,
+"speedup_vs_serial": 29.5,
+"t_load_s": 3.204,
+"t_h2d_s": 0.0351
+}
+]

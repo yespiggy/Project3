@@ -1,0 +1,39 @@
+GPU map gn-a40-005: (not set)
+  gn-a40-005: 0, 00000000:0A:00.0, NVIDIA A40, 0 %, 0 MiB
+  gn-a40-005: 1, 00000000:AE:00.0, NVIDIA A40, 0 %, 0 MiB
+device=NVIDIA A40 N=875713 M=5105039 buckets small=815670 mid=59909 large=134
+[GN-A40-005:19804] mca_base_component_repository_open: unable to open mca_plm_tm: libpbs.so.0: cannot open shared object file: No such file or directory (ignored)
+[GN-A40-005:19804] mca_base_component_repository_open: unable to open mca_ras_tm: libpbs.so.0: cannot open shared object file: No such file or directory (ignored)
+[GN-A40-005:19812] mca_base_component_repository_open: unable to open mca_osc_ucx: libucp.so.0: cannot open shared object file: No such file or directory (ignored)
+rank 0/1 host=GN-A40-005 local_rank=0 visible_gpus=2 device=0 NVIDIA A40 bus=0000:AE:00.0
+[GN-A40-005:19831] mca_base_component_repository_open: unable to open mca_plm_tm: libpbs.so.0: cannot open shared object file: No such file or directory (ignored)
+[GN-A40-005:19831] mca_base_component_repository_open: unable to open mca_ras_tm: libpbs.so.0: cannot open shared object file: No such file or directory (ignored)
+[GN-A40-005:19835] mca_base_component_repository_open: unable to open mca_osc_ucx: libucp.so.0: cannot open shared object file: No such file or directory (ignored)
+[GN-A40-005:19836] mca_base_component_repository_open: unable to open mca_osc_ucx: libucp.so.0: cannot open shared object file: No such file or directory (ignored)
+rank 1/2 host=GN-A40-005 local_rank=1 visible_gpus=2 device=1 NVIDIA A40 bus=0000:0A:00.0
+rank 0/2 host=GN-A40-005 local_rank=0 visible_gpus=2 device=0 NVIDIA A40 bus=0000:AE:00.0
+validation done Mon Nov  2 04:55:24 PM +08 2026
+device=NVIDIA A40 N=4847571 M=68475391 buckets small=3827045 mid=1019787 large=739
+[GN-A40-005:19882] mca_base_component_repository_open: unable to open mca_plm_tm: libpbs.so.0: cannot open shared object file: No such file or directory (ignored)
+[GN-A40-005:19882] mca_base_component_repository_open: unable to open mca_ras_tm: libpbs.so.0: cannot open shared object file: No such file or directory (ignored)
+[GN-A40-005:19886] mca_base_component_repository_open: unable to open mca_osc_ucx: libucp.so.0: cannot open shared object file: No such file or directory (ignored)
+rank 0/1 host=GN-A40-005 local_rank=0 visible_gpus=2 device=0 NVIDIA A40 bus=0000:AE:00.0
+[GN-A40-005:19903] mca_base_component_repository_open: unable to open mca_plm_tm: libpbs.so.0: cannot open shared object file: No such file or directory (ignored)
+[GN-A40-005:19903] mca_base_component_repository_open: unable to open mca_ras_tm: libpbs.so.0: cannot open shared object file: No such file or directory (ignored)
+[GN-A40-005:19907] mca_base_component_repository_open: unable to open mca_osc_ucx: libucp.so.0: cannot open shared object file: No such file or directory (ignored)
+rank 0/1 host=GN-A40-005 local_rank=0 visible_gpus=2 device=0 NVIDIA A40 bus=0000:AE:00.0
+E6 1 GPU(s) on one node done Mon Nov  2 04:59:22 PM +08 2026
+[GN-A40-005:20073] mca_base_component_repository_open: unable to open mca_plm_tm: libpbs.so.0: cannot open shared object file: No such file or directory (ignored)
+[GN-A40-005:20073] mca_base_component_repository_open: unable to open mca_ras_tm: libpbs.so.0: cannot open shared object file: No such file or directory (ignored)
+[GN-A40-005:20077] mca_base_component_repository_open: unable to open mca_osc_ucx: libucp.so.0: cannot open shared object file: No such file or directory (ignored)
+[GN-A40-005:20078] mca_base_component_repository_open: unable to open mca_osc_ucx: libucp.so.0: cannot open shared object file: No such file or directory (ignored)
+rank 0/2 host=GN-A40-005 local_rank=0 visible_gpus=2 device=0 NVIDIA A40 bus=0000:AE:00.0
+rank 1/2 host=GN-A40-005 local_rank=1 visible_gpus=2 device=1 NVIDIA A40 bus=0000:0A:00.0
+[GN-A40-005:20105] mca_base_component_repository_open: unable to open mca_plm_tm: libpbs.so.0: cannot open shared object file: No such file or directory (ignored)
+[GN-A40-005:20105] mca_base_component_repository_open: unable to open mca_ras_tm: libpbs.so.0: cannot open shared object file: No such file or directory (ignored)
+[GN-A40-005:20110] mca_base_component_repository_open: unable to open mca_osc_ucx: libucp.so.0: cannot open shared object file: No such file or directory (ignored)
+[GN-A40-005:20109] mca_base_component_repository_open: unable to open mca_osc_ucx: libucp.so.0: cannot open shared object file: No such file or directory (ignored)
+rank 0/2 host=GN-A40-005 local_rank=0 visible_gpus=2 device=0 NVIDIA A40 bus=0000:AE:00.0
+rank 1/2 host=GN-A40-005 local_rank=1 visible_gpus=2 device=1 NVIDIA A40 bus=0000:0A:00.0
+E6 2 GPU(s) on one node done Mon Nov  2 05:02:51 PM +08 2026
+GPU single-node experiments done Mon Nov  2 05:02:51 PM +08 2026

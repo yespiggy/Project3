@@ -1,5 +1,7 @@
 # Parallel PageRank: feedback revision
 
+Latest report materials: [2026-11-06 results, figures, validation evidence and limitations](report_results/2026-11-06/README.md) · [Download results ZIP](report_results/pagerank-report-results-20261106.zip).
+
 Based on `yespiggy/Project3`, branch `feedback-72core-multigpu`, commit
 `20c289ad6745946d0a363490eca9a49300f22dfc`. This branch contains the source, job scripts and analysis tools. Historical
 benchmark outputs inherited from the parent branch are not measurements of these changes. Use a fresh results directory for the changed timing definitions.

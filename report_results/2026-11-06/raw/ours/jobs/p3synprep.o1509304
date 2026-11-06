@@ -1,0 +1,8 @@
+graph=rmat_p1.bin N=131072 M=1942984 scale=17 dangling=53484 time=0.2s
+graph=rmat_p2.bin N=262144 M=3939543 scale=18 dangling=113227 time=0.5s
+graph=rmat_p4.bin N=524288 M=7968498 scale=19 dangling=238832 time=1.0s
+graph=rmat_p8.bin N=1048576 M=16085604 scale=20 dangling=501633 time=1.6s
+graph=rmat_p16.bin N=2097152 M=32416613 scale=21 dangling=1048671 time=3.2s
+graph=rmat_p36.bin N=4718592 M=73752735 scale=23 dangling=2420959 time=7.8s
+graph=rmat_p72.bin N=9437184 M=148147394 scale=24 dangling=5031662 time=13.4s
+graph=rmat_p144.bin N=18874368 M=297337356 scale=25 dangling=10433497 time=24.3s

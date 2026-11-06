@@ -1,0 +1,34 @@
+parsed 3612134270 directed edges in 316.1s
+graph=com-friendster N=65608366 M=3612134270 raw_edges=3612134270 selfloops=0 duplicates=0 dangling=0 max_in=5214 max_out=5214 time=453.6s
+graph=rmat_p36 N=4718592 M=73754215 scale=23 dangling=2420997 time=6.1s
+graph=rmat_p72 N=9437184 M=148145422 scale=24 dangling=5032429 time=11.1s
+graph=rmat_p144 N=18874368 M=297340400 scale=25 dangling=10434768 time=19.2s
+graph=rmat_p288 N=37748736 M=596389987 scale=26 dangling=21571371 time=29.6s
+graph=rmat_p432 N=56623104 M=895469264 scale=26 dangling=32739127 time=37.4s
+graph=rmat_p576 N=75497472 M=1195593789 scale=27 dangling=44495909 time=53.1s
+graph=rmat_p720 N=94371840 M=1495592066 scale=27 dangling=55579083 time=61.7s
+total 58G
+-rw-r----- 1 yudachen svuusers  15G Nov  2 16:50 com-friendster.bin
+-rw-r--r-- 1 yudachen svuusers 8.8G Oct 30 00:34 com-friendster.ungraph.txt.gz
+-rw-r--r-- 1 yudachen svuusers 1.2G Oct 27 19:23 rmat_p128.bin
+-rw-r----- 1 yudachen svuusers 1.4G Nov  2 16:50 rmat_p144.bin
+-rw-r--r-- 1 yudachen svuusers 1.5G Oct 27 19:24 rmat_p160.bin
+-rw-r--r-- 1 yudachen svuusers 148M Oct 27 19:22 rmat_p16.bin
+-rw-r--r-- 1 yudachen svuusers 9.0M Oct 27 19:22 rmat_p1.bin
+-rw-r----- 1 yudachen svuusers 2.7G Nov  2 16:51 rmat_p288.bin
+-rw-r--r-- 1 yudachen svuusers  19M Oct 27 19:22 rmat_p2.bin
+-rw-r--r-- 1 yudachen svuusers 297M Oct 27 19:23 rmat_p32.bin
+-rw-r----- 1 yudachen svuusers 336M Nov  2 16:50 rmat_p36.bin
+-rw-r----- 1 yudachen svuusers 4.0G Nov  2 16:51 rmat_p432.bin
+-rw-r--r-- 1 yudachen svuusers  37M Oct 27 19:22 rmat_p4.bin
+-rw-r----- 1 yudachen svuusers 5.3G Nov  2 16:52 rmat_p576.bin
+-rw-r--r-- 1 yudachen svuusers 597M Oct 27 19:23 rmat_p64.bin
+-rw-r----- 1 yudachen svuusers 6.7G Nov  2 16:53 rmat_p720.bin
+-rw-r----- 1 yudachen svuusers 674M Nov  2 16:50 rmat_p72.bin
+-rw-r--r-- 1 yudachen svuusers  74M Oct 27 19:22 rmat_p8.bin
+-rw-r--r-- 1 yudachen svuusers 317M Oct 27 19:22 soc-LiveJournal1.bin
+-rw-r--r-- 1 yudachen svuusers 1.1G Oct 30 00:34 soc-LiveJournal1.txt
+-rw-r--r-- 1 yudachen svuusers  30M Oct 27 19:22 web-Google.bin
+-rw-r--r-- 1 yudachen svuusers 6.7M Oct 27 19:22 web-Google.idmap
+-rw-r--r-- 1 yudachen svuusers  72M Oct 30 00:34 web-Google.txt
+prep done Mon Nov  2 04:53:44 PM +08 2026

@@ -1,0 +1,37 @@
+{
+  "assembled_on": "2026-11-06",
+  "repository": "yespiggy/Project3",
+  "branch": "vanda-timing-validation-720core",
+  "code_commit_at_packaging": "8922a4aa7d015499de0d8e0f49230b2488f69468",
+  "code_revision_note": "The code commit identifies the accompanying repository, NOT the unverified executable revision of every archived run.",
+  "inputs": [
+    {
+      "filename": "p3-results-20261105.tar.gz",
+      "description": "User supplied results archive",
+      "destination": "raw/ours",
+      "size_bytes": 35862,
+      "sha256": "30788e24a1c7a7bb3b2fbae935c4e2431bf8bdf1a3bcaab605e54251f7c1accc"
+    },
+    {
+      "filename": "vanda_results_2026-11-04.zip",
+      "description": "Teammate results archive supplied by user",
+      "destination": "raw/teammate",
+      "size_bytes": 69301,
+      "sha256": "38fcf6081b620699f78a7f15c71e04b6cff045307069e75dd81089c560dbebf1"
+    },
+    {
+      "filename": "Pasted text.txt",
+      "description": "User-pasted diagnostic job 1515216 output",
+      "destination": "raw/diagnostic_1515216",
+      "size_bytes": 13397,
+      "sha256": "8e0b8a38d37e3eaf27ee73cd55f963a6df8f0f168501abea89f982c721710bf1"
+    }
+  ],
+  "transcribed_input": {
+    "destination": "raw/user_transcribed_1521041",
+    "source": "User chat messages containing job 1521040/1521041 status, validation JSON, weak-scaling CSV, and allocated host list",
+    "provenance": "Transcribed; not downloaded from Vanda. No original binary reference vectors included."
+  },
+  "normalization": "Split two 20-row blocks of legacy e4.csv; remove only a trailing empty column. Preserve original raw file.",
+  "aggregation": "Explicit source whitelist in summarize.py; archive duplicates excluded; batches remain separate."
+}
