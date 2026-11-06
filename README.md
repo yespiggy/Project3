@@ -61,7 +61,7 @@ No queue is specified; Vanda routes the jobs. Every CPU job requests whole 72-co
 | `f1_serial.pbs` | 1 node | validation references, STREAM, serial size study (S_ef, S_rmat, S_real) |
 | `f2_node1.pbs` | 1 node | 1–72 cores: strong scaling (E1), weak scaling (E2), ranks×threads sweep (E7), `--split` (E8) |
 | `f3_nodes.pbs` | 2, 4, 6, 8, 10 nodes | 144–720 cores: E1, E2, E8, validation at scale, InfiniBand-verbs test (E9); 4 nodes: partition × exchange (E3), E7 |
-| `f4_rerun.pbs` | 8, 10 nodes | rerun of the 576/720-rank configurations that failed in `f3` (TCP connection resets) |
+| `f4_rerun.pbs` | 8, 10 nodes | rerun of the 576/720-rank configurations that failed in `f3` (nodes out of TCP ports; see `scripts/final_lib.sh`) |
 | `g1_gpu1node.pbs` | 1 GPU node | GPU bandwidth probe, GPU validation, single-GPU kernels (E4), MPI+CUDA on 1–2 GPUs (E6) |
 | `g2_gpu2node.pbs` | 2 GPU nodes | MPI+CUDA with one GPU on each of two nodes (E6) |
 | `post.pbs` | 1 node | validation and aggregation after all jobs |

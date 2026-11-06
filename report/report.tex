@@ -583,9 +583,12 @@ and 518,000 for 720. This is what we see:
   (Table~\ref{tab:design});
 \item pure MPI on soc-LiveJournal1 jumps from 10~ms (144 ranks) to 34~ms (288) and 0.3--0.45~s (432--720): almost all
   of it is $t_{comm}$ (about 20~s of the 20~s total at 432 ranks);
-\item with 576 and 720 ranks, some pure-MPI runs failed with ``\code{mca\_btl\_tcp\_recv\_blocking ... Connection reset
-  by peer}''. Several later runs in the same job then failed as well. These configurations were rerun in a separate
-  job; any that never completed are shown as ``--''.
+\item with 576 and 720 ranks, every rank opens a TCP connection to almost every rank on another node, about
+  $72\times504\approx36{,}000$ connections per node at 576 ranks. A run that started less than 60~s after the
+  previous large run failed with ``\code{bind on local address ... Address already in use}'': the sockets of the
+  previous run were still in the TCP \code{TIME\_WAIT} state, so the node had no free local port. The same
+  configurations succeeded when started a few minutes later. The failed runs were repeated in a separate job that
+  waits for these sockets to drain before every large run; any that never completed are shown as ``--''.
 \end{itemize}
 The hybrid layout avoids the problem because it uses 36$\times$ fewer ranks. It sends fewer bytes, and above all it
 sends about $36^2$ times fewer messages and opens 1,300$\times$ fewer TCP connections. On this cluster the
@@ -762,8 +765,9 @@ computation for every multi-node configuration of soc-LiveJournal1, and for com-
 \paragraph{Limitations.} (i)~Inter-node MPI ran over TCP; an RDMA-capable MPI would shift all multi-node curves down,
 and should help pure MPI most. (ii)~We did not reorder the vertices (e.g.\ by graph partitioning or locality-aware
 relabelling). Such reordering would reduce the number of ghost vertices and is the most promising way to improve
-scaling further. (iii)~GPU runs are limited to two GPUs per job on Vanda. (iv)~A few pure-MPI configurations at 576
-and 720 ranks did not complete because of TCP connection resets; they are reported as missing, not estimated.
+scaling further. (iii)~GPU runs are limited to two GPUs per job on Vanda. (iv)~Pure MPI at 576 and 720 ranks needs tens of
+thousands of TCP connections per node and is close to the port limit of a node; configurations that did not complete
+are reported as missing, not estimated.
 
 % =====================================================================================================
 \section*{Declaration of AI use}

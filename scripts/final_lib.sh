@@ -103,3 +103,48 @@ run_mpi() {
   fi
   return 0
 }
+
+# Guard for large pure-MPI runs over btl/tcp (needed by f4_rerun.pbs).
+# In the first 8- and 10-node f3 jobs, a 576/720-rank run that started less than 60 s after the previous large run
+# failed with "btl_tcp_endpoint_start_connect: bind on local address ... failed: Address already in use (98)".
+# Every rank opens a TCP connection to almost every off-node rank, and the sockets of the previous run were still in
+# TIME_WAIT (60 s on Linux), so the node had no free local ports. The same configurations succeeded when started a
+# few minutes later. Therefore: before every run with more than 144 ranks, wait until the TIME_WAIT sockets on all
+# nodes of the run have drained; after a failed run, kill leftover processes on those nodes.
+tw_max() {  # tw_max <nodes>: largest number of TIME_WAIT TCP sockets on the first <nodes> nodes of the job
+  local n=$1 i c max=0
+  for ((i = 0; i < n; i++)); do
+    c=$(ssh -o BatchMode=yes "${NODES[$i]}" "cat /proc/net/tcp /proc/net/tcp6 2> /dev/null | awk '\$4 == \"06\"' | wc -l" \
+      2> /dev/null || echo 0)
+    ((c > max)) && max=$c
+  done
+  echo "$max"
+}
+wait_ports() {  # wait_ports <nodes>: wait (at most 5 min) until every node has fewer than 500 TIME_WAIT sockets
+  local n=$1 t0=$SECONDS m
+  while :; do
+    m=$(tw_max "$n")
+    ((m < 500 || SECONDS - t0 > 300)) && break
+    sleep 15
+  done
+  echo "ports: max TIME_WAIT $m on $n nodes after $((SECONDS - t0)) s wait $(date)"
+}
+clean_nodes() {  # clean_nodes <nodes>: kill processes left behind by an aborted mpirun
+  local n=$1 i
+  for ((i = 0; i < n; i++)); do
+    ssh -o BatchMode=yes "${NODES[$i]}" "pkill -u \$USER -f '$BIN/pagerank_mpi_omp'; pkill -u \$USER -x orted" \
+      2> /dev/null || true
+  done
+  sleep 20
+}
+eval "$(declare -f run_mpi | sed '1s/^run_mpi/_run_mpi_logged/')"
+run_mpi() {
+  local nf
+  (($1 * $2 > 144)) && wait_ports "$1"
+  nf=$(wc -l < "$P3_RESULTS/failures.txt" 2> /dev/null || echo 0)
+  _run_mpi_logged "$@"
+  if [ "$(wc -l < "$P3_RESULTS/failures.txt" 2> /dev/null || echo 0)" -gt "$nf" ]; then
+    clean_nodes "$1"
+  fi
+  return 0
+}

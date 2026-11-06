@@ -1,8 +1,11 @@
 #!/bin/bash
 # Rerun of the configurations that failed in the first 8- and 10-node f3 jobs (results_final/failures.txt).
-# In those jobs a 576/720-rank pure-MPI run reset the btl/tcp connections between nodes ("Connection reset by
-# peer"), and every later run in the same job failed with it. This job therefore runs all hybrid configurations
-# first, then the pure-MPI ones, each pure-MPI run retried up to 3 times with a pause in between.
+# In those jobs a 576/720-rank pure-MPI run that started less than 60 s after the previous large run could not open
+# its TCP connections ("bind on local address ... Address already in use"): the previous run's sockets were still in
+# TIME_WAIT, so the nodes had no free local ports. The aborted run's peers then saw "Connection reset by peer", and
+# later runs in the same job failed too. This job runs all hybrid configurations first, then the pure-MPI ones, each
+# retried up to 3 times; run_mpi (scripts/final_lib.sh) waits for the TIME_WAIT sockets to drain before every run
+# with more than 144 ranks and cleans up the nodes after a failed run.
 # E9 (forced InfiniBand verbs) is not repeated: it fails deterministically ("BTLs attempted: self vader").
 # Rows are appended to the same CSV files as f3 (those configurations have no rows yet).
 # Submit: qsub -N p3f_rr$NN -v P3_ROOT=..,P3_DATA=..,P3_RESULTS=..,NN=8 -l select=8:ncpus=72:mpiprocs=72:mem=200gb f4_rerun.pbs
