@@ -1,0 +1,19 @@
+job=1519622.stdct-mgmt-02 name=p3f_gpu1 date=2026-11-04T20:17:42+08:00
+nodes=gn-a40-026.stdct.loc
+git=8922a4a
+CPU(s):                               72
+Model name:                           Intel(R) Xeon(R) Platinum 8452Y
+Core(s) per socket:                   36
+Socket(s):                            2
+CPU(s) scaling MHz:                   97%
+L3 cache:                             135 MiB (2 instances)
+NUMA node(s):                         2
+               total        used        free      shared  buff/cache   available
+Mem:             503          21         363           0         122         481
+g++ (GCC) 13.1.0
+mpirun (Open MPI) 4.1.8
+Currently Loaded Modulefiles:  1) gcc/13.1.0   2) openmpi/gcc/64/4.1.8   3) cuda12.4/toolkit/12.4.1   
+NVIDIA A40, 46068 MiB, 575.57.08
+NVIDIA A40, 46068 MiB, 575.57.08
+infiniband devices: irdma0 irdma1 irdma2 irdma3 
+btl: self btl: tcp btl: openib btl: vader mtl: psm2 pml: v pml: monitoring pml: cm pml: ob1 

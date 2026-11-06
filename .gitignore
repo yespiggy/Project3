@@ -1,0 +1,9 @@
+bin/
+build/
+*.bin
+__pycache__/
+.venv/
+report/*.aux
+report/*.log
+report/*.out
+results_final/superseded/

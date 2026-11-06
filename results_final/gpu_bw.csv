@@ -1,0 +1,2 @@
+device,mib_per_array,copy_gbs,triad_gbs,random_gather_gbs
+NVIDIA A40,2048,565.1,542.1,113.1

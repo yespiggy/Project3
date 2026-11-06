@@ -1,0 +1,2 @@
+exp,impl,graph,N,M,nodes,ranks,threads,cores,part,comm,rep,iters,t_total,t_iter,t_comp,t_comm,imbalance,comm_bytes_iter,resid,sumr,t_load,t_h2d,t_d2h,gbps,t_stage,t_wait
+valscale,mpi_omp,soc-LiveJournal1,4847571,68475391,2,144,1,144,edge,ghost,0,50,0.460340,9.206801e-03,0.310347,0.438303,1.0018,262658104,7.888e-07,1.000000000000024,0.427,,,112.42,,

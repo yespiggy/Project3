@@ -1,0 +1,64 @@
+#!/bin/bash
+# Rerun of the configurations that failed in the first 8- and 10-node f3 jobs (results_final/failures.txt).
+# In those jobs a 576/720-rank pure-MPI run reset the btl/tcp connections between nodes ("Connection reset by
+# peer"), and every later run in the same job failed with it. This job therefore runs all hybrid configurations
+# first, then the pure-MPI ones, each pure-MPI run retried up to 3 times with a pause in between.
+# E9 (forced InfiniBand verbs) is not repeated: it fails deterministically ("BTLs attempted: self vader").
+# Rows are appended to the same CSV files as f3 (those configurations have no rows yet).
+# Submit: qsub -N p3f_rr$NN -v P3_ROOT=..,P3_DATA=..,P3_RESULTS=..,NN=8 -l select=8:ncpus=72:mpiprocs=72:mem=200gb f4_rerun.pbs
+#PBS -N p3f_rerun
+#PBS -l select=8:ncpus=72:mpiprocs=72:mem=200gb
+#PBS -l place=scatter
+#PBS -l walltime=01:00:00
+#PBS -j oe
+source "$P3_ROOT/jobs/final/common.sh"
+check_node
+NN=${NN:?NN not set}
+if [ "${#NODES[@]}" != "$NN" ]; then echo "ERROR: NN=$NN but job has ${#NODES[@]} nodes" >&2; exit 1; fi
+meta rerun$NN
+R=$P3_RESULTS
+C=$((NN * CPN))
+V=$R/val
+
+# retry <tries> <run_mpi args...>: rerun a configuration until it writes a new CSV row.
+retry() {
+  local tries=$1 csv=$5 k before
+  shift
+  for ((k = 1; k <= tries; k++)); do
+    before=$(wc -l < "$csv" 2> /dev/null || echo 0)
+    run_mpi "$@"
+    [ "$(wc -l < "$csv" 2> /dev/null || echo 0)" -gt "$before" ] && return 0
+    echo "attempt $k failed: $* $(date)"
+    sleep 60
+  done
+}
+
+read hn hrpn hth <<< "$(layout $C hybrid)"
+read mn mrpn mth <<< "$(layout $C mpi)"
+LJA="--graph $LJ --part edge --comm ghost --iters 50 --tol 0 --reps 5"
+FRA="--graph $FR --part edge --comm ghost --iters 10 --tol 0 --reps 3"
+P=$BIN/pagerank_mpi_omp
+
+# Hybrid configurations (20 ranks at most) first.
+if [ "$NN" = 8 ]; then
+  retry 2 $hn $hrpn $hth $R/strong_fr_n$NN.csv $P $FRA --exp E1_hybrid
+  retry 2 $hn $hrpn $hth $R/split_fr_n$NN.csv $P $FRA --split 1 --exp E8_hybrid
+fi
+if [ "$NN" = 10 ]; then
+  retry 2 $hn $hrpn $hth $R/split_lj_n$NN.csv $P $LJA --split 1 --exp E8_hybrid
+fi
+echo "hybrid reruns done $(date)"
+
+# Pure-MPI configurations (576 / 720 ranks).
+retry 3 $mn $mrpn $mth $V/valscale_n$NN.csv $P --graph $LJ --part edge --comm ghost --iters 50 --tol 0 \
+  --exp valscale --out $V/mpi_lj50_p$C.bin
+retry 3 $mn $mrpn $mth $R/split_lj_n$NN.csv $P $LJA --split 1 --exp E8_mpi
+retry 3 $mn $mrpn $mth $R/split_fr_n$NN.csv $P $FRA --split 1 --exp E8_mpi
+if [ "$NN" = 8 ]; then
+  retry 3 $mn $mrpn $mth $R/strong_fr_n$NN.csv $P $FRA --exp E1_mpi
+fi
+if [ "$NN" = 10 ]; then
+  retry 3 $mn $mrpn $mth $R/weak_n$NN.csv $P --graph $P3_DATA/rmat_p$C.bin --part edge --comm ghost \
+    --iters 50 --tol 0 --reps 5 --exp E2_mpi
+fi
+echo "f4 rerun NN=$NN done $(date)"

@@ -1,6 +1,0 @@
-exp,impl,graph,N,M,nodes,ranks,threads,cores,part,comm,rep,iters,t_total,t_iter,t_comp,t_comm,imbalance,comm_bytes_iter,resid,sumr,t_load,t_h2d,t_d2h,gbps,t_stage
-E5_serial,serial,soc-LiveJournal1,4847571,68475391,1,1,1,1,none,none,0,50,7.798175,1.559635e-01,7.798175,0,1,0,7.888e-07,0.999999999998197,0.116,,,6.64,
-E5_serial,serial,soc-LiveJournal1,4847571,68475391,1,1,1,1,none,none,1,50,7.793794,1.558759e-01,7.793794,0,1,0,7.888e-07,0.999999999998197,0.116,,,6.64,
-E5_serial,serial,soc-LiveJournal1,4847571,68475391,1,1,1,1,none,none,2,50,7.806528,1.561306e-01,7.806528,0,1,0,7.888e-07,0.999999999998197,0.116,,,6.63,
-E5_serial,serial,soc-LiveJournal1,4847571,68475391,1,1,1,1,none,none,3,50,7.794611,1.558922e-01,7.794611,0,1,0,7.888e-07,0.999999999998197,0.116,,,6.64,
-E5_serial,serial,soc-LiveJournal1,4847571,68475391,1,1,1,1,none,none,4,50,7.796319,1.559264e-01,7.796319,0,1,0,7.888e-07,0.999999999998197,0.116,,,6.64,

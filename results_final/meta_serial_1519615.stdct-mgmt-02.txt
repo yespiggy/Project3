@@ -1,0 +1,16 @@
+job=1519615.stdct-mgmt-02 name=p3f_serial date=2026-11-04T20:07:55+08:00
+nodes=cn-115.stdct.loc
+git=unknown
+CPU(s):                               72
+Model name:                           Intel(R) Xeon(R) Platinum 8452Y
+Core(s) per socket:                   36
+Socket(s):                            2
+L3 cache:                             135 MiB (2 instances)
+NUMA node(s):                         2
+               total        used        free      shared  buff/cache   available
+Mem:             503          18         480           0           8         484
+g++ (GCC) 13.1.0
+mpirun (Open MPI) 4.1.8
+Currently Loaded Modulefiles:  1) gcc/13.1.0   2) openmpi/gcc/64/4.1.8   
+infiniband devices: irdma0 irdma1 irdma2 irdma3 
+btl: self btl: tcp btl: openib btl: vader mtl: psm2 pml: v pml: monitoring pml: cm pml: ob1 

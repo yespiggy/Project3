@@ -1,0 +1,37 @@
+{
+  "graph": "web-Google.bin",
+  "N": 875713,
+  "M": 5105039,
+  "implementations": {
+    "cuda_thread": {
+      "l1": 3.0078813348193272e-15,
+      "linf": 4.445228907190568e-18,
+      "sum": 1.0000000000000002,
+      "top100_same_order": true,
+      "top1000_overlap": 1000
+    },
+    "mpi_edge_ghost": {
+      "l1": 3.293835210889406e-15,
+      "linf": 4.9873299934333204e-18,
+      "sum": 1.0,
+      "top100_same_order": true,
+      "top1000_overlap": 1000
+    }
+  },
+  "networkx": {
+    "version": "3.2.1",
+    "seconds": 114.6,
+    "l1": 1.2612984775782418e-10,
+    "linf": 7.074923329478122e-13,
+    "sum": 1.0000000000000036,
+    "top100_same_order": true,
+    "top1000_overlap": 1000
+  },
+  "tolerances": {
+    "l1": 1e-08,
+    "linf": 1e-09,
+    "sum_error": 1e-10
+  },
+  "passed": true,
+  "parallel_vectors_checked": 2
+}

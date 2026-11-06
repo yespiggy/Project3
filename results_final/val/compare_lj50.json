@@ -1,0 +1,33 @@
+{
+ "reference": "results_final/val/serial_lj50.bin",
+ "N": 4847571,
+ "tolerances": {
+  "l1": 1e-10,
+  "linf": 1e-12,
+  "sum": 1e-10
+ },
+ "vectors": {
+  "results_final/val/mpi_lj50_p144.bin": {
+   "l1": 1.6482078774983656e-14,
+   "linf": 4.445228907190568e-18,
+   "sum": 0.9999999999999996,
+   "top100_same_order": true,
+   "passed": true
+  },
+  "results_final/val/mpi_lj50_p288.bin": {
+   "l1": 1.6491036016051973e-14,
+   "linf": 4.445228907190568e-18,
+   "sum": 0.9999999999999996,
+   "top100_same_order": true,
+   "passed": true
+  },
+  "results_final/val/mpi_lj50_p432.bin": {
+   "l1": 1.648353196588379e-14,
+   "linf": 4.445228907190568e-18,
+   "sum": 0.9999999999999996,
+   "top100_same_order": true,
+   "passed": true
+  }
+ },
+ "passed": true
+}

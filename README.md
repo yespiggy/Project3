@@ -1,111 +1,77 @@
-# Parallel PageRank: feedback revision
+# Distributed PageRank with MPI+OpenMP and MPI+CUDA (DSA5208 Project 3)
 
-Latest report materials: [2026-11-06 results, figures, validation evidence and limitations](report_results/2026-11-06/README.md) · [Download results ZIP](report_results/pagerank-report-results-20261106.zip).
+Ma Xiaoxiao (A0259173X), Ye Sifan (A0262394Y), Chen Yuda (A0353182H)
 
-Based on `yespiggy/Project3`, branch `feedback-72core-multigpu`, commit
-`20c289ad6745946d0a363490eca9a49300f22dfc`. This branch contains the source, job scripts and analysis tools. Historical
-benchmark outputs inherited from the parent branch are not measurements of these changes. Use a fresh results directory for the changed timing definitions.
+The report is [`report/report.pdf`](report/report.pdf). This repository contains everything needed to reproduce it:
+the source code, the PBS job scripts that produced every measurement, the raw result files, and the script that turns
+those files into the report's figures and tables.
 
-## Vanda setup and queue inspection
+## Layout
 
-Place this folder in a new directory on Vanda, then set:
+| Path | Contents |
+|---|---|
+| `src/serial/pagerank_serial.cpp` | serial reference implementation (pull-based PageRank on an in-edge CSR) |
+| `src/cpu/pagerank_mpi_omp.cpp` | MPI+OpenMP implementation: vertex or edge partition, allgather or ghost exchange |
+| `src/common/` | binary graph format, CSV output, 1D partition and ghost-exchange plan (`dist.hpp`) |
+| `src/gpu/pagerank_cuda.cu` | single-GPU CUDA implementation: thread / warp / degree-bucket kernels, cuSPARSE reference |
+| `src/gpu/pagerank_mpi_cuda.cu` | MPI+CUDA multi-GPU implementation (one rank per GPU, 64-bit offsets) |
+| `tools/preprocess.cpp` | SNAP edge list to binary in-edge CSR (renumbering, self-loop and duplicate removal) |
+| `tools/rmat_gen.cpp` | R-MAT synthetic graph generator (Graph500 parameters) |
+| `tools/stream_bw.cpp`, `tools/gpu_bw.cu` | CPU (STREAM) and GPU (copy, triad, random gather) memory-bandwidth probes |
+| `tools/smoke.py`, `tools/validate.py`, `tools/compare_vec.py` | correctness tests (NetworkX, serial reference, at scale) |
+| `tools/analyze_google.py` | data findings for web-Google |
+| `tools/make_report.py` | builds `report/figures/*.pdf` and `report/generated/*.tex` from `results_final/` |
+| `tools/aggregate.py` | alternative summary of a results directory as JSON |
+| `jobs/final/*.pbs` | the PBS jobs that produced `results_final/` (see below) |
+| `scripts/` | environment, build, data download and job submission |
+| `results_final/` | raw CSV files of every run, hardware metadata of every job, validation results |
+| `report/` | LaTeX source of the report, generated figures and tables |
 
-```bash
-export P3_ROOT="$PWD"
-export P3_DATA=/scratch/$USER/p3data
-export P3_RESULTS="$P3_ROOT/results"
-mkdir -p "$P3_RESULTS"
-qstat -Qf batch_cpu > "$P3_RESULTS/batch_cpu.txt" 2>&1
-qstat -Qf auto_free > "$P3_RESULTS/auto_free.txt" 2>&1
-qstat -Bf > "$P3_RESULTS/server_limits.txt" 2>&1
-bash scripts/build.sh
-```
+No BLAS, LAPACK or sparse library is used by our implementations. cuSPARSE appears only as a reference kernel in
+`pagerank_cuda.cu`.
 
-Inspect queue ACLs, enabled/started state, resource minima/maxima/defaults,
-walltime, per-user and project limits. Queue visibility does not prove submission
-permission. Confirm the course allocation with Prof. Chen if batch_cpu denies access.
-Do not assume the queue limit is 720 cores just because the hardware supports it.
-
-Use existing graphs where possible. See RUN.md for data preparation; the full
-Friendster and R-MAT suite is large. The build needs GCC, OpenMPI, OpenMP and CUDA
-for GPU binaries. Python analysis needs NumPy, SciPy and NetworkX.
-
-## Run
-
-```bash
-# After all required data exist:
-CPU_NODES=2 bash scripts/submit.sh cpu
-bash scripts/submit.sh gpu
-# Only after larger allocations are confirmed:
-CPU_NODES="2 4 6 8 10" bash scripts/submit.sh cpu
-# Optionally select an authorized queue:
-P3_QUEUE=batch_cpu CPU_NODES=2 bash scripts/submit.sh cpu
-```
-
-The default CPU suite uses 1 and 2 nodes (up to 144 active cores). One-node
-allocations reserve 72 cores even when a measurement uses only 1, 2, etc.;
-speedup efficiency uses active ranks × OpenMP threads, not reserved capacity.
-The 4-node design comparison runs only if that configuration is selected.
-Do not submit both examples to the same results directory: CSV files append.
-Each job must finish successfully; inspect its log and exit status before analysis.
-GPU launches now require an explicit per-node PBS GPU assignment and reject
-more ranks than visible GPUs. If mapping fails, inspect the site's scheduler GPU
-environment; do not bypass the check by selecting arbitrary devices.
-
-Run the small tests inside an appropriate CPU allocation:
+## Building (NUS Vanda)
 
 ```bash
-python3 tools/smoke.py --serial bin/pagerank_serial --mpi bin/pagerank_mpi_omp
+export P3_ROOT=$PWD                # the repository root on Vanda
+bash scripts/build.sh              # GCC 13.1, OpenMPI 4.1.8, CUDA 12.4; binaries go to bin/
 ```
 
-After CPU and GPU validation jobs finish, from the jobs directory:
+## Data
 
 ```bash
-cd "$P3_ROOT/jobs"
-qsub -v P3_ROOT="$P3_ROOT",P3_DATA="$P3_DATA",P3_RESULTS="$P3_RESULTS" post.pbs
+bash scripts/download_data.sh      # login node: web-Google, soc-LiveJournal1, com-friendster into /scratch/$USER/p3data
 ```
 
-## Timing and interpretation
+The preprocessing job (`p0_prep.pbs`) converts the SNAP files to binary CSR and generates the R-MAT graphs:
+`rmat_p<k>` (131,072·k vertices, edge factor 16, seed k) for weak scaling and `rmat_n20_ef<f>` (2^20 vertices, edge
+factor f) for the serial size study. Graphs are reproducible from the seed and the generator's thread count (32).
 
-- `t_total`: maximum rank elapsed time for the iteration loop. Excludes graph
-  loading, communication-plan setup, initial uploads, final output and warm-up.
-- `t_iter = t_total / iters`; strong scaling uses identical graphs, iteration
-  counts and damping, with `tol=0`. Compare medians over repetitions.
-- `t_comp`: local computation, including ghost-buffer packing; `t_comm`: MPI
-  calls, including waiting; `t_stage`: MPI+CUDA host/device staging, including
-  scalar transfers. Components are separately maximized over ranks. They need
-  not sum to `t_total`, so `comm_component_ratio` is not a measured wall-time share.
-- Strong speedup `S(p)=T(1)/T(p)`; efficiency `S(p)/p`. The shared one-core
-  MPI+OpenMP baseline is distinct from the serial-program baseline.
-- Weak efficiency `T(1)/T(p)` is emitted only when a one-core measurement exists.
-  Realized edges per active core means stored directed edges after removal of
-  duplicates/self-loops, divided by active CPU cores. R-MAT's nominal work is
-  2,097,152 candidate edges/core; realized work varies. Report M/p and N/p, and
-  describe this as approximate weak scaling. Non-power-of-two graph sizes also
-  change the R-MAT sampling distribution through rejection sampling.
-- GPU scaling uses one MPI rank/device; efficiency is speedup/device count.
-  GPU CSV `cores` is a legacy field, not the scheduler's reserved CPU count.
-- `gbps` is an algorithmic traffic estimate, not measured DRAM bandwidth.
-  Investigate the modest GPU speedup using matched loop timing, kernel variants,
-  staging cost, degree skew and hardware details; do not claim a bottleneck
-  without evidence. CPU/GPU jobs use the same Friendster iteration
-  count (10); CPU uses 3 measured repetitions and GPU uses 5.
+## Running the experiments
 
-## Correctness and report
+```bash
+bash scripts/final_submit.sh all   # prep, then all experiment jobs, then post (validation + aggregation)
+```
 
-Validation compares full vectors with the serial program and NetworkX, checks
-finite values, length, L1/L-infinity error and mass. It exits nonzero on numerical
-failure. Verify that every expected CPU and GPU vector exists: a successful
-comparison alone does not prove all variants were run. The small smoke suite
-also exercises dangling/isolated vertices, no edges and empty rank partitions.
+No queue is specified; Vanda routes the jobs. Every CPU job requests whole 72-core nodes.
 
-The report still needs measured Vanda figures, uncertainty/repetition counts,
-hardware/compiler/job metadata, definitions, group names/IDs and data findings.
-Record failed/denied submissions and queue waits separately from execution time.
+| Job | Resources | Experiments |
+|---|---|---|
+| `p0_prep.pbs` | 1 node | build, preprocessing, R-MAT generation, small-graph tests against NetworkX |
+| `f1_serial.pbs` | 1 node | validation references, STREAM, serial size study (S_ef, S_rmat, S_real) |
+| `f2_node1.pbs` | 1 node | 1–72 cores: strong scaling (E1), weak scaling (E2), ranks×threads sweep (E7), `--split` (E8) |
+| `f3_nodes.pbs` | 2, 4, 6, 8, 10 nodes | 144–720 cores: E1, E2, E8, validation at scale, InfiniBand-verbs test (E9); 4 nodes: partition × exchange (E3), E7 |
+| `f4_rerun.pbs` | 8, 10 nodes | rerun of the 576/720-rank configurations that failed in `f3` (TCP connection resets) |
+| `g1_gpu1node.pbs` | 1 GPU node | GPU bandwidth probe, GPU validation, single-GPU kernels (E4), MPI+CUDA on 1–2 GPUs (E6) |
+| `g2_gpu2node.pbs` | 2 GPU nodes | MPI+CUDA with one GPU on each of two nodes (E6) |
+| `post.pbs` | 1 node | validation and aggregation after all jobs |
 
-AI disclosure suggestion: "OpenAI Codex assisted with code review, timing and
-submission-script corrections, validation checks and experimental documentation.
-The group reviewed these changes and verified reported measurements on Vanda."
-Use the last sentence only after actually completing that verification.
+Every program appends one CSV row per timed repetition (columns defined in `src/common/graph.hpp`). Configurations
+that failed are listed in `results_final/failures.txt`.
 
-See Vanda-2026-11-03.md for the new job scripts and verified execution status.
+## Rebuilding the report
+
+```bash
+python3 tools/make_report.py results_final report   # figures and tables (needs matplotlib)
+cd report && tectonic report.tex                    # or: latexmk -pdf report.tex
+```

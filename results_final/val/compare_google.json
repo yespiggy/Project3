@@ -1,0 +1,96 @@
+{
+ "reference": "results_final/val/serial.bin",
+ "N": 875713,
+ "tolerances": {
+  "l1": 1e-10,
+  "linf": 1e-12,
+  "sum": 1e-10
+ },
+ "vectors": {
+  "results_final/val/mpi_vertex_allgather.bin": {
+   "l1": 3.2323729120498578e-15,
+   "linf": 4.7704895589362195e-18,
+   "sum": 1.0000000000000002,
+   "top100_same_order": true,
+   "passed": true
+  },
+  "results_final/val/mpi_vertex_ghost.bin": {
+   "l1": 3.232451791993071e-15,
+   "linf": 4.7704895589362195e-18,
+   "sum": 1.0000000000000002,
+   "top100_same_order": true,
+   "passed": true
+  },
+  "results_final/val/mpi_edge_allgather.bin": {
+   "l1": 3.2733600422741053e-15,
+   "linf": 4.9873299934333204e-18,
+   "sum": 1.0,
+   "top100_same_order": true,
+   "passed": true
+  },
+  "results_final/val/mpi_edge_ghost.bin": {
+   "l1": 3.293835210889406e-15,
+   "linf": 4.9873299934333204e-18,
+   "sum": 1.0,
+   "top100_same_order": true,
+   "passed": true
+  },
+  "results_final/val/cuda_cusparse.bin": {
+   "l1": 3.4393054433442475e-15,
+   "linf": 8.998878031629687e-18,
+   "sum": 0.9999999999999998,
+   "top100_same_order": true,
+   "passed": true
+  },
+  "results_final/val/cuda_hybrid.bin": {
+   "l1": 3.4148496963328845e-15,
+   "linf": 9.107298248878237e-18,
+   "sum": 1.0,
+   "top100_same_order": true,
+   "passed": true
+  },
+  "results_final/val/cuda_thread.bin": {
+   "l1": 3.0078813348193272e-15,
+   "linf": 4.445228907190568e-18,
+   "sum": 1.0000000000000002,
+   "top100_same_order": true,
+   "passed": true
+  },
+  "results_final/val/cuda_warp.bin": {
+   "l1": 3.4490734802315433e-15,
+   "linf": 8.944667923005412e-18,
+   "sum": 1.0,
+   "top100_same_order": true,
+   "passed": true
+  },
+  "results_final/val/mpi_cuda_1gpu_hybrid.bin": {
+   "l1": 3.4645893768197884e-15,
+   "linf": 9.107298248878237e-18,
+   "sum": 0.9999999999999998,
+   "top100_same_order": true,
+   "passed": true
+  },
+  "results_final/val/mpi_cuda_1gpu_thread.bin": {
+   "l1": 3.031169976308492e-15,
+   "linf": 4.445228907190568e-18,
+   "sum": 1.0000000000000002,
+   "top100_same_order": true,
+   "passed": true
+  },
+  "results_final/val/mpi_cuda_2gpu_hybrid.bin": {
+   "l1": 3.635720525351258e-15,
+   "linf": 9.161508357502512e-18,
+   "sum": 0.9999999999999996,
+   "top100_same_order": true,
+   "passed": true
+  },
+  "results_final/val/mpi_cuda_2gpu_thread.bin": {
+   "l1": 3.1769876510903856e-15,
+   "linf": 4.7704895589362195e-18,
+   "sum": 1.0,
+   "top100_same_order": true,
+   "passed": true
+  }
+ },
+ "passed": true
+}
