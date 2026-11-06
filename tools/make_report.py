@@ -28,7 +28,7 @@ os.makedirs(GEN, exist_ok=True)
 # Categorical slots 1-3 of the reference palette (validated all-pairs); gray for reference lines.
 C1, C2, C3, GRAY, INK, INK2 = "#2a78d6", "#eb6834", "#1baf7a", "#8a8984", "#0b0b0b", "#52514e"
 plt.rcParams.update({
-    "font.size": 8.5, "axes.titlesize": 9, "axes.labelsize": 8.5, "legend.fontsize": 7.5,
+    "font.size": 8.5, "axes.titlesize": 8.5, "axes.titlelocation": "left", "axes.titleweight": "bold", "axes.labelsize": 8.5, "legend.fontsize": 7.5,
     "xtick.labelsize": 7.5, "ytick.labelsize": 7.5, "axes.edgecolor": INK2, "axes.labelcolor": INK,
     "xtick.color": INK2, "ytick.color": INK2, "axes.spines.top": False, "axes.spines.right": False,
     "axes.grid": True, "grid.color": "#e4e3df", "grid.linewidth": 0.6, "lines.linewidth": 1.5,
@@ -89,6 +89,11 @@ def plain_y(ax):
 
 
 def save(fig, name):
+    # Multi-panel figures: label the panels (a), (b) so captions can refer to them.
+    titled = [ax for ax in fig.axes if ax.get_title(loc="left")]
+    if len(titled) > 1:
+        for i, ax in enumerate(titled):
+            ax.set_title(f"({'abcd'[i]}) {ax.get_title(loc='left')}", loc="left")
     fig.savefig(f"{FIG}/{name}.pdf")
     plt.close(fig)
 
@@ -159,7 +164,7 @@ num("serRMlo", rm[0][1]), num("serRMhi", rm[-1][1])
 # ---------------------------------------------------------------- strong scaling (E1)
 strong = {"lj": rows("strong_lj_n*.csv"), "fr": rows("strong_fr_n*.csv")}
 gname = {"lj": "soc-LiveJournal1", "fr": "com-friendster"}
-title = {"lj": "soc-LiveJournal1 (4.8M vertices, 68M edges)", "fr": "com-friendster (65.6M vertices, 3.6G edges)"}
+title = {"lj": "soc-LiveJournal1 (4.8M vertices)", "fr": "com-friendster (65.6M vertices)"}
 fig, axs = plt.subplots(1, 2, figsize=(7.0, 2.7))
 strong_tab = {}
 for ax, key in zip(axs, ["lj", "fr"]):
@@ -203,8 +208,8 @@ for ax in axs:
     ax.set_yscale("log")
 axs[0].set_ylabel("speedup $S_p = T_1 / T_p$")
 axs[1].set_ylabel("parallel efficiency $E_p = S_p / p$")
-axs[0].set_title("Strong-scaling speedup")
-axs[1].set_title("Strong-scaling efficiency")
+axs[0].set_title("Speedup")
+axs[1].set_title("Parallel efficiency")
 axs[0].legend(loc="upper left", fontsize=6.5)
 save(fig, "strong_speedup")
 
@@ -255,11 +260,12 @@ for ax in axs:
     logx_cores(ax, [2, 8, 36, 72, 144, 288, 720])
 axs[0].set_yscale("log")
 axs[0].set_ylabel("ghost data sent per iteration (MB)")
-axs[0].set_title("Communication volume (all ranks)")
+axs[0].set_title("Ghost data per iteration")
 axs[1].set_ylabel("$t_{comm} / (t_{comm} + t_{comp})$")
 axs[1].set_ylim(0, 1.02)
-axs[1].set_title("Share of time in communication")
-axs[0].legend(loc="upper left", fontsize=6.5)
+axs[1].set_title("Share of time in MPI calls")
+fig.legend(*axs[0].get_legend_handles_labels(), loc="lower center", ncol=4, fontsize=6.5,
+           bbox_to_anchor=(0.5, -0.14))
 save(fig, "comm_volume")
 
 # --split breakdown: compute / wait (imbalance + synchronisation) / data movement, per iteration
@@ -279,7 +285,7 @@ for ax, key in zip(axs, ["lj", "fr"]):
     logx_cores(ax, [x for x in TICKS if x in xs])
     ax.set_yscale("log")
     ax.set_ylabel("ms per iteration")
-    ax.set_title(f"MPI+OpenMP breakdown, {gname[key]}")
+    ax.set_title(gname[key])
     plain_y(ax)
 h, l = axs[0].get_legend_handles_labels()
 fig.legend(h, l, loc="lower center", ncol=3, bbox_to_anchor=(0.5, -0.13))
@@ -314,7 +320,7 @@ for ax in axs:
     ax.set_yscale("log")
 axs[0].set_ylabel("time per iteration (ms)")
 axs[1].set_ylabel("weak efficiency $T_1 / T_p$")
-axs[0].set_title("Weak scaling: R-MAT, $\\approx$2M edges per core")
+axs[0].set_title("Time per iteration")
 axs[1].set_title("Weak-scaling efficiency")
 axs[0].legend(loc="upper left")
 save(fig, "weak")
@@ -348,7 +354,7 @@ logx_cores(ax, [1, 2, 4, 8, 16, 36, 72])
 ax.set_xlabel("cores (OpenMP threads) on one node")
 ax.set_yscale("log")
 ax.set_ylabel("GB/s")
-ax.set_title("Memory bandwidth, one 72-core node")
+ax.set_title("Memory bandwidth, one node")
 ax.legend(loc="lower right")
 save(fig, "bandwidth")
 num("streamOne", float(st[0]["triad_gbs"]), "{:.0f}")
@@ -420,10 +426,10 @@ ax.text(2.45, 2.02, "ideal 2x", fontsize=6.5, color=INK2, ha="right", va="bottom
 ax.set_xticks(range(3))
 ax.set_xticklabels(labels)
 ax.set_ylabel("speedup over 1 GPU")
-ax.set_ylim(0, 2.3)
+ax.set_ylim(0, 2.6)
 ax.grid(axis="x", visible=False)
-ax.set_title("MPI+CUDA, hybrid kernel")
-ax.legend(loc="upper left")
+ax.set_title("MPI+CUDA speedup")
+ax.legend(loc="upper left", ncol=2, bbox_to_anchor=(0, 1.0))
 save(fig, "gpu")
 with open(f"{GEN}/tab_gpu.tex", "w") as f:
     nm = {"cuda_thread": "one thread per row", "cuda_warp": "one warp per row",
@@ -469,7 +475,7 @@ ax.set_xticks(range(4))
 ax.set_xticklabels([f"{p}\n{c}" for p, c in combos])
 ax.set_ylabel("time relative to vertex + allgather")
 ax.grid(axis="x", visible=False)
-ax.set_title("Partition x exchange, 288 pure-MPI ranks (ms)")
+ax.set_title("Partition $\\times$ exchange")
 ax.set_ylim(0, 2.4)
 ax.legend(loc="upper center", ncol=2)
 ax = axs[1]
@@ -487,7 +493,7 @@ ax.set_xticklabels([f"{x}\n({288 // x})" for x in xt])
 ax.set_xlabel("MPI ranks (threads per rank)")
 ax.set_yscale("log")
 ax.set_ylabel("time relative to best layout")
-ax.set_title("Ranks x threads, 288 cores on 4 nodes")
+ax.set_title("Ranks $\\times$ threads")
 ax.legend(loc="upper left")
 plain_y(ax)
 save(fig, "design")
