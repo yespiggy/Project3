@@ -1,0 +1,4 @@
+exp,impl,graph,N,M,nodes,ranks,threads,cores,part,comm,rep,iters,t_total,t_iter,t_comp,t_comm,imbalance,comm_bytes_iter,resid,sumr,t_load,t_h2d,t_d2h,gbps,t_stage,t_wait
+valscale,mpi_omp,soc-LiveJournal1,4847571,68475391,10,720,1,720,edge,ghost,0,50,20.335835,4.067167e-01,0.379497,20.331002,1.0430,321966848,7.888e-07,0.999999999999981,1.264,,,2.54,,
+valscale,mpi_omp,soc-LiveJournal1,4847571,68475391,10,720,1,720,edge,ghost,0,50,22.662019,4.532404e-01,0.298205,22.657283,1.0430,321966848,7.888e-07,0.999999999999981,1.237,,,2.28,,
+valscale,mpi_omp,soc-LiveJournal1,4847571,68475391,10,720,1,720,edge,ghost,0,50,28.703283,5.740657e-01,0.209606,28.698337,1.0430,321966848,7.888e-07,0.999999999999981,1.142,,,1.80,,

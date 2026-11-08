@@ -27,6 +27,20 @@
    "sum": 0.9999999999999996,
    "top100_same_order": true,
    "passed": true
+  },
+  "results_final/val/mpi_lj50_p576.bin": {
+   "l1": 1.6493754687410194e-14,
+   "linf": 4.445228907190568e-18,
+   "sum": 0.9999999999999996,
+   "top100_same_order": true,
+   "passed": true
+  },
+  "results_final/val/mpi_lj50_p720.bin": {
+   "l1": 1.6522395564656936e-14,
+   "linf": 4.445228907190568e-18,
+   "sum": 0.9999999999999996,
+   "top100_same_order": true,
+   "passed": true
   }
  },
  "passed": true

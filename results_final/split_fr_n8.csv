@@ -1,9 +1,7 @@
-------------------------------------------------------------
-A process or daemon was unable to complete a TCP connection
-to another process:
-  Local host:    CN-046
-  Remote host:   CN-063
-This is usually caused by a firewall on the remote host. Please
-check that any firewall (e.g., iptables) has been disabled and
-try again.
-------------------------------------------------------------
+exp,impl,graph,N,M,nodes,ranks,threads,cores,part,comm,rep,iters,t_total,t_iter,t_comp,t_comm,imbalance,comm_bytes_iter,resid,sumr,t_load,t_h2d,t_d2h,gbps,t_stage,t_wait
+E8_hybrid,mpi_omp,com-friendster,65608366,3612134270,8,16,36,576,edge,ghost,0,10,1.587340,1.587340e-01,0.489594,1.076568,1.0000,3057301776,3.191e-03,0.999999999999985,19.298,,,291.26,,0.126127
+E8_hybrid,mpi_omp,com-friendster,65608366,3612134270,8,16,36,576,edge,ghost,1,10,1.527831,1.527831e-01,0.486591,1.016714,1.0000,3057301776,3.191e-03,0.999999999999985,19.298,,,302.60,,0.127157
+E8_hybrid,mpi_omp,com-friendster,65608366,3612134270,8,16,36,576,edge,ghost,2,10,1.400299,1.400299e-01,0.485845,0.890901,1.0000,3057301776,3.191e-03,0.999999999999985,19.298,,,330.16,,0.126490
+E8_mpi,mpi_omp,com-friendster,65608366,3612134270,8,576,1,576,edge,ghost,0,10,18.767656,1.876766e+00,0.819611,17.878749,1.0005,19079035336,3.191e-03,1.000000000000000,3.865,,,24.63,,1.674499
+E8_mpi,mpi_omp,com-friendster,65608366,3612134270,8,576,1,576,edge,ghost,1,10,24.970705,2.497070e+00,0.819340,24.081433,1.0005,19079035336,3.191e-03,1.000000000000000,3.865,,,18.51,,1.391873
+E8_mpi,mpi_omp,com-friendster,65608366,3612134270,8,576,1,576,edge,ghost,2,10,21.182444,2.118244e+00,0.818378,20.288464,1.0005,19079035336,3.191e-03,1.000000000000000,3.865,,,21.83,,1.679524

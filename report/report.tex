@@ -433,8 +433,7 @@ soc-LiveJournal1, open markers: com-friendster.}
 \begin{table}[tb]
 \centering\footnotesize
 \setlength{\tabcolsep}{3.6pt}
-\caption{Strong scaling: time per iteration $T_p$ (ms), speedup $S_p$ and efficiency $E_p$. ``--'': configuration
-did not complete (Section~\ref{sec:transport}).}
+\caption{Strong scaling: time per iteration $T_p$ (ms), speedup $S_p$ and efficiency $E_p$.}
 \label{tab:strong}
 \begin{tabular}{r rrr rrr rrr rrr}
 \toprule
@@ -456,9 +455,10 @@ threads together hold more of $x$ in their caches). soc-LiveJournal1 reaches $S_
 the two graphs behave differently:
 \begin{itemize}
 \item \textbf{com-friendster} keeps scaling: \stFRhy{72}~ms on one node, \stFRhy{144}~ms on 2 nodes, \stFRhy{288}~ms
-  on 4 nodes and \stFRbest~ms on \stFRbestc\ cores, a speedup of \stFRbestS\ over one core and of 2.6$\times$ over one
-  node. Efficiency falls from \stFRhyE{72} (72 cores) to \stFRhyE{288} (288) and \stFRhyE{720} (720), where the time
-  stops improving (\stFRhy{720}~ms).
+  on 4 nodes and \stFRbest~ms on \stFRbestc\ cores, a speedup of \stFRbestS\ over one core and of 3.0$\times$ over one
+  node. Efficiency falls from \stFRhyE{72} (72 cores) to \stFRhyE{288} (288) and \stFRhyE{720} (720). At 720 cores the
+  time rises again to \stFRhy{720}~ms: the computation per rank keeps shrinking, but the exchange does not
+  (Section~\ref{sec:comm}).
 \item \textbf{soc-LiveJournal1} is too small to profit from more than one socket. One iteration takes only
   \stLJhy{36}~ms on 36 cores, which is less than one exchange of its ghost values between nodes. The time stays
   between 6 and 9~ms from 36 to 720 cores. The best value, \stLJbest~ms on \stLJbestc\ cores, is only slightly better
@@ -553,7 +553,7 @@ separate waiting from moving data. For com-friendster on 72 cores, an iteration 
 \spFRwait{72}~ms waiting at barriers and \spFRcomm{72}~ms moving data. On 720 cores computation has dropped to
 \spFRcomp{720}~ms, roughly in proportion to the cores, but the data exchange has \emph{grown} to \spFRcomm{720}~ms.
 The crossover is at about 288 cores, which matches where the strong-scaling efficiency drops below 0.5. The barrier
-wait stays small (15--22~ms) because the edge partition balances the work: load imbalance is not the limit,
+wait stays small (13--22~ms) because the edge partition balances the work: load imbalance is not the limit,
 communication is.
 
 Even within one node, going from one rank (36 cores) to two ranks (72 cores) makes soc-LiveJournal1 slower
@@ -588,7 +588,8 @@ and 518,000 for 720. This is what we see:
   previous large run failed with ``\code{bind on local address ... Address already in use}'': the sockets of the
   previous run were still in the TCP \code{TIME\_WAIT} state, so the node had no free local port. The same
   configurations succeeded when started a few minutes later. The failed runs were repeated in a separate job that
-  waits for these sockets to drain before every large run; any that never completed are shown as ``--''.
+  waits for these sockets to drain before every large run (\code{scripts/final\_lib.sh}); with this wait every
+  configuration completed.
 \end{itemize}
 The hybrid layout avoids the problem because it uses 36$\times$ fewer ranks. It sends fewer bytes, and above all it
 sends about $36^2$ times fewer messages and opens 1,300$\times$ fewer TCP connections. On this cluster the
@@ -741,7 +742,7 @@ For the computation, the properties that matter are those of Section~\ref{sec:da
 whether the $x$ vector fits in the CPU cache (web-Google and soc-LiveJournal1: yes; com-friendster and the large R-MAT
 graphs: no), and in the ratio of local work to communication. com-friendster has 55 edges per vertex: on 144 cores it processes 34 edges per received ghost value,
 against 10 for soc-LiveJournal1, which is why it keeps scaling to
-432 cores while soc-LiveJournal1 stops at one node. The heavy-tailed degree distribution makes the edge partition
+576 cores while soc-LiveJournal1 stops at one node. The heavy-tailed degree distribution makes the edge partition
 necessary: with a vertex partition, the slowest rank of soc-LiveJournal1 on 288 ranks has 8.6$\times$ the average work.
 
 \paragraph{How the problem was parallelised.}
@@ -766,8 +767,8 @@ computation for every multi-node configuration of soc-LiveJournal1, and for com-
 and should help pure MPI most. (ii)~We did not reorder the vertices (e.g.\ by graph partitioning or locality-aware
 relabelling). Such reordering would reduce the number of ghost vertices and is the most promising way to improve
 scaling further. (iii)~GPU runs are limited to two GPUs per job on Vanda. (iv)~Pure MPI at 576 and 720 ranks needs tens of
-thousands of TCP connections per node and is close to the port limit of a node; configurations that did not complete
-are reported as missing, not estimated.
+thousands of TCP connections per node, close to the port limit of a node; it ran reliably only with a pause between
+runs.
 
 % =====================================================================================================
 \section*{Declaration of AI use}
