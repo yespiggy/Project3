@@ -548,7 +548,6 @@ num("valIters", int(val[("serial", "1", "none", "none")]["iters"]), "{:d}")
 num("valScaleMax", max((p for p in vs if f"mpi_lj50_p{p}.bin" in cmp), default=0), "{:d}")
 num("valMaxLone", max((v["l1"] for v in cmp.values()), default=0), "{:.1e}")
 
-# failures that remain after the rerun (configurations without any CSV row) are listed in the report
 # LaTeX command names cannot contain digits: a number such as stFRhy144 is stored under \csname and read in the
 # text as \stFRhy{144} through one look-up macro per prefix.
 with open(f"{GEN}/numbers.tex", "w") as f:

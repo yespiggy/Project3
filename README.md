@@ -62,12 +62,15 @@ No queue is specified; Vanda routes the jobs. Every CPU job requests whole 72-co
 | `f2_node1.pbs` | 1 node | 1–72 cores: strong scaling (E1), weak scaling (E2), ranks×threads sweep (E7), `--split` (E8) |
 | `f3_nodes.pbs` | 2, 4, 6, 8, 10 nodes | 144–720 cores: E1, E2, E8, validation at scale, InfiniBand-verbs test (E9); 4 nodes: partition × exchange (E3), E7 |
 | `f4_rerun.pbs` | 8, 10 nodes | rerun of the 576/720-rank configurations that failed in `f3` (nodes out of TCP ports; see `scripts/final_lib.sh`) |
+| `f5_ibprobe.pbs` | 2 nodes | probe of why the InfiniBand-verbs transport (E9) cannot start on Vanda (Section 7.4 of the report) |
 | `g1_gpu1node.pbs` | 1 GPU node | GPU bandwidth probe, GPU validation, single-GPU kernels (E4), MPI+CUDA on 1–2 GPUs (E6) |
 | `g2_gpu2node.pbs` | 2 GPU nodes | MPI+CUDA with one GPU on each of two nodes (E6) |
 | `post.pbs` | 1 node | validation and aggregation after all jobs |
 
-Every program appends one CSV row per timed repetition (columns defined in `src/common/graph.hpp`). Configurations
-that failed are listed in `results_final/failures.txt`.
+Every program appends one CSV row per timed repetition (columns defined in `src/common/graph.hpp`). Every configuration
+used in the report has its full set of repetitions. The 576/720-rank configurations that failed in `f3` were rerun
+successfully by `f4`; their failed attempts wrote no rows. The E9 runs (MPI over InfiniBand verbs) cannot start on
+Vanda and produced no rows, so their empty CSV files are not included; the report explains why.
 
 ## Rebuilding the report
 

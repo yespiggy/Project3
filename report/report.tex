@@ -567,10 +567,14 @@ a shared buffer.
 
 The node's RDMA network adapters are Intel \code{irdma} devices (iWARP/RoCE). The OpenMPI 4.1.8 module on Vanda is
 built without UCX, and its \code{openib} BTL is disabled for these devices by default. We forced it on
-(\code{--mca btl self,vader,openib --mca btl\_openib\_allow\_ib 1}, experiment E9). Every such run failed at start-up
-on 2--10 nodes with ``No OpenFabrics connection schemes reported that they were able to be used'' followed by
-``unable to reach each other''. Inter-node MPI messages on Vanda therefore go through the kernel TCP stack
-(\code{btl tcp}), with its per-message latency and per-connection socket buffers.
+(\code{--mca btl self,vader,openib --mca btl\_openib\_allow\_ib 1}, experiment E9). Every such run, pure MPI and
+hybrid on 2--10 nodes, stopped at start-up with ``No OpenFabrics connection schemes reported that they were able to be
+used'' followed by ``unable to reach each other'', so E9 produced no timings. A separate two-node probe
+(\code{jobs/final/f5\_ibprobe.pbs}) found the reason. Each node has four \code{irdma} ports, of which only one is up,
+and its link layer is Ethernet (RoCE). The \code{udcm} connection scheme of \code{openib} does not support Ethernet
+ports, and the \code{rdmacm} scheme reports itself unavailable on this port, also when selected explicitly. RDMA would
+need an MPI built with UCX or libfabric, which Vanda does not provide. Inter-node MPI messages on Vanda therefore go
+through the kernel TCP stack (\code{btl tcp}), with its per-message latency and per-connection socket buffers.
 
 With TCP, the cost of the ghost exchange depends strongly on the number of messages, not only on the bytes. In a
 random-like graph almost every rank has ghost vertices on almost every other rank, so the exchange consists of about

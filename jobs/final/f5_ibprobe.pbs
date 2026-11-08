@@ -1,0 +1,32 @@
+#!/bin/bash
+# Probe: why does btl/openib (E9) fail at start-up on Vanda, and does an explicit connection scheme (CPC) fix it?
+# E9 in f3 forced openib on with btl_openib_allow_ib and the default CPC selection; every run aborted with
+# "No OpenFabrics connection schemes reported that they were able to be used". This job prints the RDMA ports of both
+# nodes and runs one small 2-rank PageRank per CPC (rdmacm, udcm), verbose.
+# Result (job 1532849, 8 Nov 2026): each node has four irdma ports, only irdma3 is up, link layer Ethernet (RoCE).
+# "rdmacm CPC unavailable for use on irdma3:1", udcm does not support Ethernet ports; both probes exit with
+# "unable to reach each other". MPI over RDMA would need an OpenMPI built with UCX or libfabric.
+# Submit: qsub -v P3_ROOT=..,P3_DATA=..,P3_RESULTS=.. f5_ibprobe.pbs
+#PBS -N p3f_ibprobe
+#PBS -l select=2:ncpus=8:mpiprocs=1:mem=32gb
+#PBS -l place=scatter
+#PBS -l walltime=00:15:00
+#PBS -j oe
+source "$P3_ROOT/jobs/final/common.sh"
+for h in "${NODES[@]}"; do
+  echo "=== $h"
+  ssh -o BatchMode=yes "$h" 'ls /sys/class/infiniband; rdma link show 2>&1; ip -br addr 2>&1;
+    ibv_devinfo 2>&1 | grep -E "hca_id|transport|state|link_layer"' 2>&1
+done
+hf=$(mktemp); printf "%s slots=1\n" "${NODES[@]}" > "$hf"
+G=$P3_DATA/rmat_p4.bin
+probe() {  # probe <label> <mca args...>
+  local label=$1; shift
+  echo "=== probe $label: $*"
+  timeout 120 $MPIRUN --hostfile "$hf" -np 2 --map-by ppr:1:node $IB_MCA "$@" \
+    $BIN/pagerank_mpi_omp --graph $G --part edge --comm ghost --iters 5 --tol 0 --reps 1 --exp probe 2>&1 | tail -40
+  echo "=== probe $label exit ${PIPESTATUS[0]}"
+}
+export OMP_NUM_THREADS=1
+probe rdmacm --mca btl_openib_cpc_include rdmacm --mca btl_base_verbose 30
+probe udcm --mca btl_openib_cpc_include udcm --mca btl_base_verbose 30
