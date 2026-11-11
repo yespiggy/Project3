@@ -1,4 +1,7 @@
-one thread per row & 5.42 & 187 & 27\% \\
-one warp per row & 22.40 & 45 & 7\% \\
-degree buckets (thread / warp / block) & 6.74 & 151 & 22\% \\
-cuSPARSE SpMV (reference only) & 4.76 & 213 & 31\% \\
+CUDA & one thread per row & 5.42 & 187 \\
+CUDA & one warp per row & 22.40 & 45 \\
+CUDA & degree buckets & 6.74 & 151 \\
+CUDA & \texttt{cusparseSpMV} (reference) & 4.76 & 213 \\
+\addlinespace[2pt]
+MPI+CUDA, 1 GPU & one thread per row & 5.58 & 185 \\
+MPI+CUDA, 1 GPU & degree buckets & 4.74 & 219 \\

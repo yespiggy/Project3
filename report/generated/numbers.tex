@@ -1,146 +1,577 @@
-\newcommand{\dzFRbyteA}{150637}
-\newcommand{\dzFRbyteG}{15450}
-\newcommand{\dzFRcompE}{194.26}
-\newcommand{\dzFRcompV}{262.16}
+\newcommand{\baseFR}{2}
+\newcommand{\baseLJ}{5}
+\newcommand{\cmALLrateMax}{2.4}
+\newcommand{\cmALLrateMin}{1.3}
+\newcommand{\cmFRedgesPerGhost}{34}
+\newcommand{\cmFRghostFrac}{34}
+\expandafter\def\csname cmFRhyComm144\endcsname{106}
+\expandafter\def\csname cmFRhyComm288\endcsname{111}
+\expandafter\def\csname cmFRhyComm432\endcsname{113}
+\expandafter\def\csname cmFRhyComm576\endcsname{100}
+\expandafter\def\csname cmFRhyComm72\endcsname{69}
+\expandafter\def\csname cmFRhyComm720\endcsname{136}
+\expandafter\def\csname cmFRhyComp144\endcsname{194}
+\expandafter\def\csname cmFRhyComp288\endcsname{96}
+\expandafter\def\csname cmFRhyComp432\endcsname{67}
+\expandafter\def\csname cmFRhyComp576\endcsname{49}
+\expandafter\def\csname cmFRhyComp72\endcsname{371}
+\expandafter\def\csname cmFRhyComp720\endcsname{41}
+\expandafter\def\csname cmFRhyPer144\endcsname{215}
+\expandafter\def\csname cmFRhyPer288\endcsname{215}
+\expandafter\def\csname cmFRhyPer432\endcsname{203}
+\expandafter\def\csname cmFRhyPer576\endcsname{191}
+\expandafter\def\csname cmFRhyPer72\endcsname{162}
+\expandafter\def\csname cmFRhyPer720\endcsname{181}
+\expandafter\def\csname cmFRhyRate144\endcsname{2.0}
+\expandafter\def\csname cmFRhyRate288\endcsname{1.9}
+\expandafter\def\csname cmFRhyRate432\endcsname{1.8}
+\expandafter\def\csname cmFRhyRate576\endcsname{1.9}
+\expandafter\def\csname cmFRhyRate72\endcsname{2.4}
+\expandafter\def\csname cmFRhyRate720\endcsname{1.3}
+\expandafter\def\csname cmFRhyVol144\endcsname{862}
+\expandafter\def\csname cmFRhyVol288\endcsname{1722}
+\expandafter\def\csname cmFRhyVol432\endcsname{2433}
+\expandafter\def\csname cmFRhyVol576\endcsname{3057}
+\expandafter\def\csname cmFRhyVol72\endcsname{324}
+\expandafter\def\csname cmFRhyVol720\endcsname{3617}
+\newcommand{\cmFRhyVolGB}{3.6}
+\expandafter\def\csname cmFRmpComm144\endcsname{534}
+\expandafter\def\csname cmFRmpComm288\endcsname{903}
+\expandafter\def\csname cmFRmpComm432\endcsname{1330}
+\expandafter\def\csname cmFRmpComm576\endcsname{1889}
+\expandafter\def\csname cmFRmpComm72\endcsname{326}
+\expandafter\def\csname cmFRmpComm720\endcsname{2180}
+\expandafter\def\csname cmFRmpComp144\endcsname{470}
+\expandafter\def\csname cmFRmpComp288\endcsname{199}
+\expandafter\def\csname cmFRmpComp432\endcsname{110}
+\expandafter\def\csname cmFRmpComp576\endcsname{83}
+\expandafter\def\csname cmFRmpComp72\endcsname{703}
+\expandafter\def\csname cmFRmpComp720\endcsname{65}
+\newcommand{\cmFRmpPer}{28}
+\newcommand{\cmFRmpRate}{13}
+\expandafter\def\csname cmFRmpVol144\endcsname{11699}
+\expandafter\def\csname cmFRmpVol288\endcsname{15450}
+\expandafter\def\csname cmFRmpVol432\endcsname{17614}
+\expandafter\def\csname cmFRmpVol576\endcsname{19079}
+\expandafter\def\csname cmFRmpVol72\endcsname{8259}
+\expandafter\def\csname cmFRmpVol720\endcsname{20154}
+\newcommand{\cmFRmpVolGB}{20}
+\newcommand{\cmFRrateMax}{2.4}
+\newcommand{\cmFRrateMin}{1.3}
+\newcommand{\cmFRvolMax}{25}
+\newcommand{\cmFRvolMin}{6}
+\newcommand{\cmLJedgesPerGhost}{10}
+\newcommand{\cmLJghostFrac}{20}
+\expandafter\def\csname cmLJhyComm144\endcsname{7.53}
+\expandafter\def\csname cmLJhyComm288\endcsname{8.68}
+\expandafter\def\csname cmLJhyComm432\endcsname{6.99}
+\expandafter\def\csname cmLJhyComm576\endcsname{5.95}
+\expandafter\def\csname cmLJhyComm72\endcsname{5.50}
+\expandafter\def\csname cmLJhyComm720\endcsname{5.57}
+\expandafter\def\csname cmLJhyComp144\endcsname{2.81}
+\expandafter\def\csname cmLJhyComp288\endcsname{1.83}
+\expandafter\def\csname cmLJhyComp432\endcsname{1.31}
+\expandafter\def\csname cmLJhyComp576\endcsname{0.87}
+\expandafter\def\csname cmLJhyComp72\endcsname{3.81}
+\expandafter\def\csname cmLJhyComp720\endcsname{0.70}
+\expandafter\def\csname cmLJhyPer144\endcsname{14.2}
+\expandafter\def\csname cmLJhyPer288\endcsname{12.2}
+\expandafter\def\csname cmLJhyPer432\endcsname{10.3}
+\expandafter\def\csname cmLJhyPer576\endcsname{8.8}
+\expandafter\def\csname cmLJhyPer72\endcsname{12.0}
+\expandafter\def\csname cmLJhyPer720\endcsname{7.8}
+\expandafter\def\csname cmLJhyRate144\endcsname{1.9}
+\expandafter\def\csname cmLJhyRate288\endcsname{1.4}
+\expandafter\def\csname cmLJhyRate432\endcsname{1.5}
+\expandafter\def\csname cmLJhyRate576\endcsname{1.5}
+\expandafter\def\csname cmLJhyRate72\endcsname{2.2}
+\expandafter\def\csname cmLJhyRate720\endcsname{1.4}
+\expandafter\def\csname cmLJhyVol144\endcsname{57}
+\expandafter\def\csname cmLJhyVol288\endcsname{97}
+\expandafter\def\csname cmLJhyVol432\endcsname{123}
+\expandafter\def\csname cmLJhyVol576\endcsname{141}
+\expandafter\def\csname cmLJhyVol72\endcsname{24}
+\expandafter\def\csname cmLJhyVol720\endcsname{157}
+\newcommand{\cmLJhyVolGB}{0.2}
+\expandafter\def\csname cmLJmpComm144\endcsname{9.38}
+\expandafter\def\csname cmLJmpComm288\endcsname{34}
+\expandafter\def\csname cmLJmpComm432\endcsname{393}
+\expandafter\def\csname cmLJmpComm576\endcsname{445}
+\expandafter\def\csname cmLJmpComm72\endcsname{8.68}
+\expandafter\def\csname cmLJmpComm720\endcsname{317}
+\expandafter\def\csname cmLJmpComp144\endcsname{7.88}
+\expandafter\def\csname cmLJmpComp288\endcsname{10}
+\expandafter\def\csname cmLJmpComp432\endcsname{1.21}
+\expandafter\def\csname cmLJmpComp576\endcsname{1.49}
+\expandafter\def\csname cmLJmpComp72\endcsname{7.91}
+\expandafter\def\csname cmLJmpComp720\endcsname{2.00}
+\newcommand{\cmLJmpPer}{0.4}
+\newcommand{\cmLJmpRate}{1}
+\expandafter\def\csname cmLJmpVol144\endcsname{263}
+\expandafter\def\csname cmLJmpVol288\endcsname{291}
+\expandafter\def\csname cmLJmpVol432\endcsname{306}
+\expandafter\def\csname cmLJmpVol576\endcsname{315}
+\expandafter\def\csname cmLJmpVol72\endcsname{229}
+\expandafter\def\csname cmLJmpVol720\endcsname{322}
+\newcommand{\cmLJmpVolGB}{0.32}
+\newcommand{\cmLJrateMax}{2.2}
+\newcommand{\cmLJrateMin}{1.4}
+\newcommand{\cmLJvolMax}{10}
+\newcommand{\cmLJvolMin}{2}
+\newcommand{\dzFRcompE}{194}
+\newcommand{\dzFRcompV}{262}
+\newcommand{\dzFRgbA}{151}
 \newcommand{\dzFRimbE}{1.00}
 \newcommand{\dzFRimbV}{1.79}
-\newcommand{\dzLJbyteA}{11130}
-\newcommand{\dzLJbyteG}{291}
-\newcommand{\dzLJcompE}{5.27}
-\newcommand{\dzLJcompV}{4.38}
+\newcommand{\dzFRmbG}{15450}
+\newcommand{\dzFRtEA}{682}
+\newcommand{\dzFRtEG}{1045}
+\newcommand{\dzFRtVG}{1013}
+\newcommand{\dzFRvolRatio}{10}
+\newcommand{\dzLJcompE}{5.3}
+\newcommand{\dzLJcompV}{4.4}
+\newcommand{\dzLJgbA}{11}
 \newcommand{\dzLJimbE}{1.05}
 \newcommand{\dzLJimbV}{8.62}
+\newcommand{\dzLJmbG}{291}
+\newcommand{\dzLJtEA}{57}
+\newcommand{\dzLJtEG}{48}
+\newcommand{\dzLJtVG}{25}
+\newcommand{\dzLJvolRatio}{38}
+\newcommand{\ggMaxRel}{809}
+\newcommand{\ggMinRel}{0.22}
+\newcommand{\ggOddDeg}{12}
+\newcommand{\ggOddRank}{2}
+\newcommand{\ggOverlap}{88}
+\newcommand{\ggRate}{0.848}
+\newcommand{\ggSpear}{0.85}
+\newcommand{\ggTopA}{11.4}
+\newcommand{\ggTopB}{27.1}
+\newcommand{\ggTopC}{56.8}
+\newcommand{\ggZero}{161{,}168}
+\newcommand{\ggZeroPct}{18}
 \newcommand{\gpuCopy}{565}
 \newcommand{\gpuCusp}{4.76}
 \newcommand{\gpuCuspbw}{213}
+\newcommand{\gpuFRbw}{79}
+\newcommand{\gpuFRvsNode}{1.4}
 \newcommand{\gpuGather}{113}
+\newcommand{\gpuGatherRatio}{4.8}
 \newcommand{\gpuHyb}{6.74}
 \newcommand{\gpuHybbw}{151}
+\newcommand{\gpuMHyb}{4.74}
+\newcommand{\gpuMHybbw}{219}
+\newcommand{\gpuMThr}{5.58}
+\newcommand{\gpuMThrbw}{185}
 \newcommand{\gpuThr}{5.42}
 \newcommand{\gpuThrbw}{187}
 \newcommand{\gpuTriad}{542}
-\newcommand{\gpuVsNode}{1.2}
-\newcommand{\gpuVsSerial}{24}
-\newcommand{\gpuVsSocket}{0.9}
+\newcommand{\gpuVsCpuTriad}{1.3}
+\newcommand{\gpuVsNode}{1.07}
+\newcommand{\gpuVsSerial}{33}
+\newcommand{\gpuVsSocket}{1.3}
 \newcommand{\gpuWarp}{22.40}
+\newcommand{\gpuWarpSlow}{4}
 \newcommand{\gpuWarpbw}{45}
+\newcommand{\mgFRE}{0.84}
 \newcommand{\mgFRS}{1.68}
 \newcommand{\mgFRSx}{1.59}
-\newcommand{\mgFRcommone}{48}
-\newcommand{\mgFRcommtwo}{68}
-\newcommand{\mgFRcomp}{297}
-\newcommand{\mgFRcompone}{584}
-\newcommand{\mgFRgbps}{79}
 \newcommand{\mgFRone}{584}
-\newcommand{\mgFRstage}{13}
+\newcommand{\mgFRonecomm}{0.00}
+\newcommand{\mgFRonecomp}{584}
+\newcommand{\mgFRonestage}{0.01}
 \newcommand{\mgFRtwo}{348}
+\newcommand{\mgFRtwocomm}{48}
+\newcommand{\mgFRtwocomp}{297}
+\newcommand{\mgFRtwostage}{13}
+\newcommand{\mgFRvol}{324}
 \newcommand{\mgFRxn}{368}
+\newcommand{\mgFRxncomm}{68}
+\newcommand{\mgFRxncomp}{297}
+\newcommand{\mgFRxnstage}{13}
+\newcommand{\mgLJE}{0.37}
 \newcommand{\mgLJS}{0.75}
 \newcommand{\mgLJSx}{0.62}
 \newcommand{\mgLJone}{4.74}
+\newcommand{\mgLJonecomm}{0.00}
+\newcommand{\mgLJonecomp}{4.72}
+\newcommand{\mgLJonestage}{0.01}
 \newcommand{\mgLJtwo}{6.32}
+\newcommand{\mgLJtwocomm}{3.56}
+\newcommand{\mgLJtwocomp}{3.08}
+\newcommand{\mgLJtwostage}{0.99}
+\newcommand{\mgLJvol}{24}
 \newcommand{\mgLJxn}{7.63}
+\newcommand{\mgLJxncomm}{4.88}
+\newcommand{\mgLJxncomp}{3.08}
+\newcommand{\mgLJxnstage}{1.00}
+\newcommand{\mpLJvarMax}{156}
+\newcommand{\mpLJvarMin}{34}
+\newcommand{\mpLJvarN}{5}
+\expandafter\def\csname prFRbw36\endcsname{64}
 \expandafter\def\csname prFRbw72\endcsname{110}
+\newcommand{\prFRbwOne}{1.8}
+\newcommand{\prFRshare}{26}
 \expandafter\def\csname prLJbw36\endcsname{170}
-\newcommand{\serEFhi}{2.38}
-\newcommand{\serEFlo}{3.42}
+\newcommand{\prLJbwOne}{6.2}
+\newcommand{\prLJshare}{54}
+\newcommand{\serEFicept}{4}
+\newcommand{\serEFmax}{3.4}
+\newcommand{\serEFmin}{2.3}
+\newcommand{\serEFmratio}{15}
+\newcommand{\serEFslope}{2.3}
+\newcommand{\serEFthi}{145}
+\newcommand{\serEFtlo}{14}
+\newcommand{\serEFtratio}{10}
+\newcommand{\serFRns}{6.9}
 \newcommand{\serFRs}{24.7}
 \newcommand{\serLJms}{159}
-\newcommand{\serRMhi}{6.03}
-\newcommand{\serRMlo}{2.34}
-\expandafter\def\csname spFRcomm144\endcsname{82.52}
-\expandafter\def\csname spFRcomm72\endcsname{49.75}
-\expandafter\def\csname spFRcomm720\endcsname{104.81}
-\expandafter\def\csname spFRcomp144\endcsname{190.88}
-\expandafter\def\csname spFRcomp72\endcsname{371.33}
-\expandafter\def\csname spFRcomp720\endcsname{39.11}
-\expandafter\def\csname spFRwait144\endcsname{21.89}
-\expandafter\def\csname spFRwait72\endcsname{19.96}
-\expandafter\def\csname spFRwait720\endcsname{15.16}
+\newcommand{\serLJns}{2.3}
+\newcommand{\serPone}{4.5}
+\newcommand{\serRMhi}{6.0}
+\newcommand{\serRMlo}{2.3}
+\newcommand{\serRMmratio}{770}
+\newcommand{\serRMthi}{9.0}
+\newcommand{\serRMtlo}{4.5}
+\newcommand{\serRMtratio}{1984}
+\expandafter\def\csname spFRcomm144\endcsname{83}
+\expandafter\def\csname spFRcomm288\endcsname{94}
+\expandafter\def\csname spFRcomm432\endcsname{93}
+\expandafter\def\csname spFRcomm576\endcsname{102}
+\expandafter\def\csname spFRcomm72\endcsname{50}
+\expandafter\def\csname spFRcomm720\endcsname{105}
+\expandafter\def\csname spFRcomp144\endcsname{191}
+\expandafter\def\csname spFRcomp288\endcsname{96}
+\expandafter\def\csname spFRcomp432\endcsname{64}
+\expandafter\def\csname spFRcomp576\endcsname{49}
+\expandafter\def\csname spFRcomp72\endcsname{371}
+\expandafter\def\csname spFRcomp720\endcsname{39}
+\expandafter\def\csname spFRwait144\endcsname{22}
+\expandafter\def\csname spFRwait288\endcsname{18}
+\expandafter\def\csname spFRwait432\endcsname{20}
+\expandafter\def\csname spFRwait576\endcsname{13}
+\expandafter\def\csname spFRwait72\endcsname{20}
+\expandafter\def\csname spFRwait720\endcsname{15}
+\newcommand{\spFRwaitMax}{22}
+\newcommand{\spFRwaitMin}{13}
 \expandafter\def\csname spLJcomm144\endcsname{6.02}
+\expandafter\def\csname spLJcomm288\endcsname{6.88}
+\expandafter\def\csname spLJcomm432\endcsname{6.42}
+\expandafter\def\csname spLJcomm576\endcsname{6.16}
 \expandafter\def\csname spLJcomm72\endcsname{4.19}
 \expandafter\def\csname spLJcomm720\endcsname{5.40}
 \expandafter\def\csname spLJcomp144\endcsname{2.49}
+\expandafter\def\csname spLJcomp288\endcsname{1.49}
+\expandafter\def\csname spLJcomp432\endcsname{1.06}
+\expandafter\def\csname spLJcomp576\endcsname{0.86}
 \expandafter\def\csname spLJcomp72\endcsname{3.78}
 \expandafter\def\csname spLJcomp720\endcsname{0.85}
 \expandafter\def\csname spLJwait144\endcsname{1.32}
+\expandafter\def\csname spLJwait288\endcsname{1.09}
+\expandafter\def\csname spLJwait432\endcsname{0.94}
+\expandafter\def\csname spLJwait576\endcsname{0.91}
 \expandafter\def\csname spLJwait72\endcsname{1.28}
 \expandafter\def\csname spLJwait720\endcsname{0.96}
+\newcommand{\spLJwaitMax}{1.3}
+\newcommand{\spLJwaitMin}{0.9}
 \newcommand{\stFRbest}{139}
+\newcommand{\stFRbestE}{0.32}
 \newcommand{\stFRbestS}{183}
 \newcommand{\stFRbestc}{576}
+\newcommand{\stFReffHi}{1.06}
+\newcommand{\stFReffLo}{1.02}
+\expandafter\def\csname stFRhy1\endcsname{25335}
 \expandafter\def\csname stFRhy144\endcsname{278}
+\expandafter\def\csname stFRhy16\endcsname{1495}
+\expandafter\def\csname stFRhy2\endcsname{12370}
 \expandafter\def\csname stFRhy288\endcsname{193}
 \expandafter\def\csname stFRhy36\endcsname{722}
+\expandafter\def\csname stFRhy4\endcsname{6084}
+\expandafter\def\csname stFRhy432\endcsname{159}
+\expandafter\def\csname stFRhy576\endcsname{139}
 \expandafter\def\csname stFRhy72\endcsname{421}
 \expandafter\def\csname stFRhy720\endcsname{162}
+\expandafter\def\csname stFRhy8\endcsname{2980}
+\expandafter\def\csname stFRhyE1\endcsname{1.00}
 \expandafter\def\csname stFRhyE144\endcsname{0.63}
+\expandafter\def\csname stFRhyE16\endcsname{1.06}
+\expandafter\def\csname stFRhyE2\endcsname{1.02}
 \expandafter\def\csname stFRhyE288\endcsname{0.46}
 \expandafter\def\csname stFRhyE36\endcsname{0.97}
+\expandafter\def\csname stFRhyE4\endcsname{1.04}
+\expandafter\def\csname stFRhyE432\endcsname{0.37}
+\expandafter\def\csname stFRhyE576\endcsname{0.32}
 \expandafter\def\csname stFRhyE72\endcsname{0.84}
 \expandafter\def\csname stFRhyE720\endcsname{0.22}
+\expandafter\def\csname stFRhyE8\endcsname{1.06}
+\expandafter\def\csname stFRhyS1\endcsname{1.0}
 \expandafter\def\csname stFRhyS144\endcsname{91.3}
-\expandafter\def\csname stFRhyS288\endcsname{131.3}
+\expandafter\def\csname stFRhyS16\endcsname{16.9}
+\expandafter\def\csname stFRhyS2\endcsname{2.0}
+\expandafter\def\csname stFRhyS288\endcsname{131}
 \expandafter\def\csname stFRhyS36\endcsname{35.1}
+\expandafter\def\csname stFRhyS4\endcsname{4.2}
+\expandafter\def\csname stFRhyS432\endcsname{159}
+\expandafter\def\csname stFRhyS576\endcsname{183}
 \expandafter\def\csname stFRhyS72\endcsname{60.2}
-\expandafter\def\csname stFRhyS720\endcsname{156.1}
+\expandafter\def\csname stFRhyS720\endcsname{156}
+\expandafter\def\csname stFRhyS8\endcsname{8.5}
+\expandafter\def\csname stFRmp1\endcsname{25335}
 \expandafter\def\csname stFRmp144\endcsname{745}
+\expandafter\def\csname stFRmp16\endcsname{2313}
+\expandafter\def\csname stFRmp2\endcsname{14181}
 \expandafter\def\csname stFRmp288\endcsname{1004}
 \expandafter\def\csname stFRmp36\endcsname{1340}
+\expandafter\def\csname stFRmp4\endcsname{7940}
+\expandafter\def\csname stFRmp432\endcsname{1391}
+\expandafter\def\csname stFRmp576\endcsname{1934}
 \expandafter\def\csname stFRmp72\endcsname{772}
 \expandafter\def\csname stFRmp720\endcsname{2215}
+\expandafter\def\csname stFRmp8\endcsname{4194}
+\expandafter\def\csname stFRmpE1\endcsname{1.00}
+\expandafter\def\csname stFRmpE144\endcsname{0.24}
+\expandafter\def\csname stFRmpE16\endcsname{0.68}
+\expandafter\def\csname stFRmpE2\endcsname{0.89}
+\expandafter\def\csname stFRmpE288\endcsname{0.088}
+\expandafter\def\csname stFRmpE36\endcsname{0.53}
+\expandafter\def\csname stFRmpE4\endcsname{0.80}
+\expandafter\def\csname stFRmpE432\endcsname{0.042}
+\expandafter\def\csname stFRmpE576\endcsname{0.023}
+\expandafter\def\csname stFRmpE72\endcsname{0.46}
+\expandafter\def\csname stFRmpE720\endcsname{0.016}
+\expandafter\def\csname stFRmpE8\endcsname{0.76}
+\expandafter\def\csname stFRmpS1\endcsname{1.0}
 \expandafter\def\csname stFRmpS144\endcsname{34.0}
+\expandafter\def\csname stFRmpS16\endcsname{11.0}
+\expandafter\def\csname stFRmpS2\endcsname{1.8}
 \expandafter\def\csname stFRmpS288\endcsname{25.2}
 \expandafter\def\csname stFRmpS36\endcsname{18.9}
+\expandafter\def\csname stFRmpS4\endcsname{3.2}
+\expandafter\def\csname stFRmpS432\endcsname{18.2}
+\expandafter\def\csname stFRmpS576\endcsname{13.1}
 \expandafter\def\csname stFRmpS72\endcsname{32.8}
 \expandafter\def\csname stFRmpS720\endcsname{11.4}
+\expandafter\def\csname stFRmpS8\endcsname{6.0}
+\newcommand{\stFRmpbest}{745}
+\newcommand{\stFRmpbestS}{34}
+\newcommand{\stFRmpbestc}{144}
+\newcommand{\stFRmultimax}{421}
+\newcommand{\stFRmultimin}{139}
+\newcommand{\stFRnodeS}{3.0}
 \newcommand{\stFRone}{25335}
+\newcommand{\stFRones}{25.3}
 \newcommand{\stFRratio}{14}
+\newcommand{\stFRratioc}{576}
 \newcommand{\stLJbest}{5.83}
+\newcommand{\stLJbestE}{0.04}
 \newcommand{\stLJbestS}{29}
 \newcommand{\stLJbestc}{720}
+\newcommand{\stLJeffHi}{0.97}
+\newcommand{\stLJeffLo}{0.93}
+\expandafter\def\csname stLJhy1\endcsname{166}
 \expandafter\def\csname stLJhy144\endcsname{8.88}
+\expandafter\def\csname stLJhy16\endcsname{11.16}
+\expandafter\def\csname stLJhy2\endcsname{85.52}
 \expandafter\def\csname stLJhy288\endcsname{9.42}
 \expandafter\def\csname stLJhy36\endcsname{6.10}
+\expandafter\def\csname stLJhy4\endcsname{43.24}
+\expandafter\def\csname stLJhy432\endcsname{7.35}
+\expandafter\def\csname stLJhy576\endcsname{6.24}
 \expandafter\def\csname stLJhy72\endcsname{8.03}
 \expandafter\def\csname stLJhy720\endcsname{5.83}
+\expandafter\def\csname stLJhy8\endcsname{21.65}
+\expandafter\def\csname stLJhyE1\endcsname{1.00}
 \expandafter\def\csname stLJhyE144\endcsname{0.13}
+\expandafter\def\csname stLJhyE16\endcsname{0.93}
+\expandafter\def\csname stLJhyE2\endcsname{0.97}
 \expandafter\def\csname stLJhyE288\endcsname{0.06}
 \expandafter\def\csname stLJhyE36\endcsname{0.76}
+\expandafter\def\csname stLJhyE4\endcsname{0.96}
+\expandafter\def\csname stLJhyE432\endcsname{0.05}
+\expandafter\def\csname stLJhyE576\endcsname{0.05}
 \expandafter\def\csname stLJhyE72\endcsname{0.29}
 \expandafter\def\csname stLJhyE720\endcsname{0.04}
+\expandafter\def\csname stLJhyE8\endcsname{0.96}
+\expandafter\def\csname stLJhyS1\endcsname{1.0}
 \expandafter\def\csname stLJhyS144\endcsname{18.8}
+\expandafter\def\csname stLJhyS16\endcsname{14.9}
+\expandafter\def\csname stLJhyS2\endcsname{1.9}
 \expandafter\def\csname stLJhyS288\endcsname{17.7}
 \expandafter\def\csname stLJhyS36\endcsname{27.3}
+\expandafter\def\csname stLJhyS4\endcsname{3.9}
+\expandafter\def\csname stLJhyS432\endcsname{22.6}
+\expandafter\def\csname stLJhyS576\endcsname{26.7}
 \expandafter\def\csname stLJhyS72\endcsname{20.7}
 \expandafter\def\csname stLJhyS720\endcsname{28.6}
+\expandafter\def\csname stLJhyS8\endcsname{7.7}
+\expandafter\def\csname stLJmp1\endcsname{166}
 \expandafter\def\csname stLJmp144\endcsname{9.84}
+\expandafter\def\csname stLJmp16\endcsname{27.38}
+\expandafter\def\csname stLJmp2\endcsname{101}
 \expandafter\def\csname stLJmp288\endcsname{34.22}
 \expandafter\def\csname stLJmp36\endcsname{17.12}
+\expandafter\def\csname stLJmp4\endcsname{70.95}
+\expandafter\def\csname stLJmp432\endcsname{394}
+\expandafter\def\csname stLJmp576\endcsname{446}
 \expandafter\def\csname stLJmp72\endcsname{10.20}
 \expandafter\def\csname stLJmp720\endcsname{317}
+\expandafter\def\csname stLJmp8\endcsname{45.74}
+\expandafter\def\csname stLJmpE1\endcsname{1.00}
+\expandafter\def\csname stLJmpE144\endcsname{0.12}
+\expandafter\def\csname stLJmpE16\endcsname{0.38}
+\expandafter\def\csname stLJmpE2\endcsname{0.82}
+\expandafter\def\csname stLJmpE288\endcsname{0.017}
+\expandafter\def\csname stLJmpE36\endcsname{0.27}
+\expandafter\def\csname stLJmpE4\endcsname{0.59}
+\expandafter\def\csname stLJmpE432\endcsname{0.00098}
+\expandafter\def\csname stLJmpE576\endcsname{0.00065}
+\expandafter\def\csname stLJmpE72\endcsname{0.23}
+\expandafter\def\csname stLJmpE720\endcsname{0.00073}
+\expandafter\def\csname stLJmpE8\endcsname{0.45}
+\expandafter\def\csname stLJmpS1\endcsname{1.0}
 \expandafter\def\csname stLJmpS144\endcsname{16.9}
+\expandafter\def\csname stLJmpS16\endcsname{6.1}
+\expandafter\def\csname stLJmpS2\endcsname{1.6}
 \expandafter\def\csname stLJmpS288\endcsname{4.9}
 \expandafter\def\csname stLJmpS36\endcsname{9.7}
+\expandafter\def\csname stLJmpS4\endcsname{2.3}
+\expandafter\def\csname stLJmpS432\endcsname{0.4}
+\expandafter\def\csname stLJmpS576\endcsname{0.4}
 \expandafter\def\csname stLJmpS72\endcsname{16.3}
 \expandafter\def\csname stLJmpS720\endcsname{0.5}
-\newcommand{\stLJone}{166.5}
-\newcommand{\stLJratio}{54}
+\expandafter\def\csname stLJmpS8\endcsname{3.6}
+\newcommand{\stLJmpbest}{9.84}
+\newcommand{\stLJmpbestS}{17}
+\newcommand{\stLJmpbestc}{144}
+\newcommand{\stLJmpfast}{317}
+\newcommand{\stLJmpslow}{446}
+\newcommand{\stLJmultimax}{9.4}
+\newcommand{\stLJmultimin}{5.8}
+\newcommand{\stLJnodeS}{1.4}
+\newcommand{\stLJone}{166}
+\newcommand{\stLJratio}{71}
+\newcommand{\stLJratioc}{576}
+\newcommand{\streamDrop}{3.1}
 \newcommand{\streamFull}{424}
 \newcommand{\streamHalf}{316}
 \newcommand{\streamOne}{18}
+\newcommand{\streamPerCore}{5.9}
+\expandafter\def\csname swFRfour16\endcsname{215}
+\expandafter\def\csname swFRfour288\endcsname{1048}
+\expandafter\def\csname swFRfour32\endcsname{324}
+\expandafter\def\csname swFRfour4\endcsname{305}
+\expandafter\def\csname swFRfour72\endcsname{524}
+\expandafter\def\csname swFRfour8\endcsname{194}
+\newcommand{\swFRfourWorst}{5.4}
+\newcommand{\swFRnuma}{1.5}
+\expandafter\def\csname swFRone1\endcsname{634}
+\expandafter\def\csname swFRone18\endcsname{646}
+\expandafter\def\csname swFRone2\endcsname{421}
+\expandafter\def\csname swFRone4\endcsname{516}
+\expandafter\def\csname swFRone72\endcsname{772}
+\expandafter\def\csname swFRone8\endcsname{580}
+\expandafter\def\csname swLJfour16\endcsname{6.61}
+\expandafter\def\csname swLJfour288\endcsname{84.11}
+\expandafter\def\csname swLJfour32\endcsname{10.08}
+\expandafter\def\csname swLJfour4\endcsname{10.59}
+\expandafter\def\csname swLJfour72\endcsname{16.70}
+\expandafter\def\csname swLJfour8\endcsname{8.15}
+\newcommand{\swLJfourWorst}{13}
+\newcommand{\swLJnuma}{1.6}
+\expandafter\def\csname swLJone1\endcsname{5.07}
+\expandafter\def\csname swLJone18\endcsname{10.39}
+\expandafter\def\csname swLJone2\endcsname{7.99}
+\expandafter\def\csname swLJone4\endcsname{9.88}
+\expandafter\def\csname swLJone72\endcsname{10.25}
+\expandafter\def\csname swLJone8\endcsname{10.10}
+\newcommand{\valGGallg}{3.04}
+\newcommand{\valGGgain}{15}
+\newcommand{\valGGghost}{2.57}
+\newcommand{\valGoogleLone}{$3.6\times10^{-15}$}
 \newcommand{\valIters}{118}
-\newcommand{\valMaxLone}{1.7e-14}
+\newcommand{\valMaxLone}{$1.7\times10^{-14}$}
+\newcommand{\valNxLone}{$1.3\times10^{-10}$}
+\newcommand{\valRows}{719}
 \newcommand{\valScaleMax}{720}
+\newcommand{\valSumErr}{$6.7\times10^{-10}$}
+\newcommand{\wkEpcMax}{2.08}
+\newcommand{\wkEpcMin}{1.94}
+\expandafter\def\csname wkHy144\endcsname{23.9}
+\expandafter\def\csname wkHy16\endcsname{6.5}
+\expandafter\def\csname wkHy2\endcsname{3.4}
+\expandafter\def\csname wkHy288\endcsname{37.3}
 \expandafter\def\csname wkHy36\endcsname{8.0}
+\expandafter\def\csname wkHy4\endcsname{3.8}
+\expandafter\def\csname wkHy432\endcsname{45.1}
+\expandafter\def\csname wkHy576\endcsname{54.9}
 \expandafter\def\csname wkHy72\endcsname{13.2}
 \expandafter\def\csname wkHy720\endcsname{73.8}
+\expandafter\def\csname wkHy8\endcsname{4.9}
+\expandafter\def\csname wkHyComm144\endcsname{13.1}
+\expandafter\def\csname wkHyComm16\endcsname{0.0}
+\expandafter\def\csname wkHyComm2\endcsname{0.0}
+\expandafter\def\csname wkHyComm288\endcsname{23.3}
+\expandafter\def\csname wkHyComm36\endcsname{0.0}
+\expandafter\def\csname wkHyComm4\endcsname{0.0}
+\expandafter\def\csname wkHyComm432\endcsname{33.5}
+\expandafter\def\csname wkHyComm576\endcsname{42.9}
+\expandafter\def\csname wkHyComm72\endcsname{4.8}
+\expandafter\def\csname wkHyComm720\endcsname{61.0}
+\expandafter\def\csname wkHyComm8\endcsname{0.0}
+\expandafter\def\csname wkHyComp144\endcsname{11.1}
+\expandafter\def\csname wkHyComp16\endcsname{6.5}
+\expandafter\def\csname wkHyComp2\endcsname{3.3}
+\expandafter\def\csname wkHyComp288\endcsname{14.6}
+\expandafter\def\csname wkHyComp36\endcsname{8.0}
+\expandafter\def\csname wkHyComp4\endcsname{3.8}
+\expandafter\def\csname wkHyComp432\endcsname{15.2}
+\expandafter\def\csname wkHyComp576\endcsname{15.9}
+\expandafter\def\csname wkHyComp72\endcsname{8.4}
+\expandafter\def\csname wkHyComp720\endcsname{16.2}
+\expandafter\def\csname wkHyComp8\endcsname{4.9}
+\expandafter\def\csname wkHyE144\endcsname{0.12}
+\expandafter\def\csname wkHyE16\endcsname{0.42}
+\expandafter\def\csname wkHyE2\endcsname{0.82}
+\expandafter\def\csname wkHyE288\endcsname{0.074}
 \expandafter\def\csname wkHyE36\endcsname{0.34}
+\expandafter\def\csname wkHyE4\endcsname{0.73}
+\expandafter\def\csname wkHyE432\endcsname{0.061}
+\expandafter\def\csname wkHyE576\endcsname{0.05}
 \expandafter\def\csname wkHyE72\endcsname{0.21}
-\expandafter\def\csname wkHyE720\endcsname{0.04}
+\expandafter\def\csname wkHyE720\endcsname{0.037}
+\expandafter\def\csname wkHyE8\endcsname{0.56}
 \expandafter\def\csname wkMp144\endcsname{38.6}
+\expandafter\def\csname wkMp16\endcsname{6.7}
+\expandafter\def\csname wkMp2\endcsname{3.1}
 \expandafter\def\csname wkMp288\endcsname{754}
+\expandafter\def\csname wkMp36\endcsname{13.7}
+\expandafter\def\csname wkMp4\endcsname{3.6}
+\expandafter\def\csname wkMp432\endcsname{988}
+\expandafter\def\csname wkMp576\endcsname{1707}
+\expandafter\def\csname wkMp72\endcsname{18.8}
+\expandafter\def\csname wkMp720\endcsname{2161}
+\expandafter\def\csname wkMp8\endcsname{4.8}
+\expandafter\def\csname wkMpE720\endcsname{0.0013}
 \newcommand{\wkOne}{2.76}
+\expandafter\def\csname wkSerS288\endcsname{83}
+\expandafter\def\csname wkSerS720\endcsname{122}
+\expandafter\def\csname wkSerT720\endcsname{9.0}
+\newcommand{\cmFRhyComm}[1]{\csname cmFRhyComm#1\endcsname}
+\newcommand{\cmFRhyComp}[1]{\csname cmFRhyComp#1\endcsname}
+\newcommand{\cmFRhyPer}[1]{\csname cmFRhyPer#1\endcsname}
+\newcommand{\cmFRhyRate}[1]{\csname cmFRhyRate#1\endcsname}
+\newcommand{\cmFRhyVol}[1]{\csname cmFRhyVol#1\endcsname}
+\newcommand{\cmFRmpComm}[1]{\csname cmFRmpComm#1\endcsname}
+\newcommand{\cmFRmpComp}[1]{\csname cmFRmpComp#1\endcsname}
+\newcommand{\cmFRmpVol}[1]{\csname cmFRmpVol#1\endcsname}
+\newcommand{\cmLJhyComm}[1]{\csname cmLJhyComm#1\endcsname}
+\newcommand{\cmLJhyComp}[1]{\csname cmLJhyComp#1\endcsname}
+\newcommand{\cmLJhyPer}[1]{\csname cmLJhyPer#1\endcsname}
+\newcommand{\cmLJhyRate}[1]{\csname cmLJhyRate#1\endcsname}
+\newcommand{\cmLJhyVol}[1]{\csname cmLJhyVol#1\endcsname}
+\newcommand{\cmLJmpComm}[1]{\csname cmLJmpComm#1\endcsname}
+\newcommand{\cmLJmpComp}[1]{\csname cmLJmpComp#1\endcsname}
+\newcommand{\cmLJmpVol}[1]{\csname cmLJmpVol#1\endcsname}
 \newcommand{\prFRbw}[1]{\csname prFRbw#1\endcsname}
 \newcommand{\prLJbw}[1]{\csname prLJbw#1\endcsname}
 \newcommand{\spFRcomm}[1]{\csname spFRcomm#1\endcsname}
@@ -153,12 +584,23 @@
 \newcommand{\stFRhyE}[1]{\csname stFRhyE#1\endcsname}
 \newcommand{\stFRhyS}[1]{\csname stFRhyS#1\endcsname}
 \newcommand{\stFRmp}[1]{\csname stFRmp#1\endcsname}
+\newcommand{\stFRmpE}[1]{\csname stFRmpE#1\endcsname}
 \newcommand{\stFRmpS}[1]{\csname stFRmpS#1\endcsname}
 \newcommand{\stLJhy}[1]{\csname stLJhy#1\endcsname}
 \newcommand{\stLJhyE}[1]{\csname stLJhyE#1\endcsname}
 \newcommand{\stLJhyS}[1]{\csname stLJhyS#1\endcsname}
 \newcommand{\stLJmp}[1]{\csname stLJmp#1\endcsname}
+\newcommand{\stLJmpE}[1]{\csname stLJmpE#1\endcsname}
 \newcommand{\stLJmpS}[1]{\csname stLJmpS#1\endcsname}
+\newcommand{\swFRfour}[1]{\csname swFRfour#1\endcsname}
+\newcommand{\swFRone}[1]{\csname swFRone#1\endcsname}
+\newcommand{\swLJfour}[1]{\csname swLJfour#1\endcsname}
+\newcommand{\swLJone}[1]{\csname swLJone#1\endcsname}
 \newcommand{\wkHy}[1]{\csname wkHy#1\endcsname}
+\newcommand{\wkHyComm}[1]{\csname wkHyComm#1\endcsname}
+\newcommand{\wkHyComp}[1]{\csname wkHyComp#1\endcsname}
 \newcommand{\wkHyE}[1]{\csname wkHyE#1\endcsname}
 \newcommand{\wkMp}[1]{\csname wkMp#1\endcsname}
+\newcommand{\wkMpE}[1]{\csname wkMpE#1\endcsname}
+\newcommand{\wkSerS}[1]{\csname wkSerS#1\endcsname}
+\newcommand{\wkSerT}[1]{\csname wkSerT#1\endcsname}

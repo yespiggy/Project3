@@ -1,5 +1,5 @@
 \documentclass[11pt,a4paper]{article}
-\usepackage[margin=2.2cm,headheight=14pt]{geometry}
+\usepackage[margin=2.2cm]{geometry}
 \usepackage[T1]{fontenc}
 \usepackage{lmodern}
 \usepackage{microtype}
@@ -7,39 +7,21 @@
 \usepackage{graphicx}
 \usepackage{booktabs}
 \usepackage{tabularx}
-\usepackage{multirow}
-\usepackage[table]{xcolor}
+\usepackage{xcolor}
 \usepackage{enumitem}
 \usepackage{caption}
 \usepackage[section]{placeins}
+\usepackage{flafter}
 \usepackage{titlesec}
-\usepackage{fancyhdr}
-\usepackage[most]{tcolorbox}
-\usepackage[colorlinks,linkcolor=accent,citecolor=accent,urlcolor=accent]{hyperref}
+\usepackage{tikz}
+\usepackage[colorlinks,linkcolor=linkblue,citecolor=linkblue,urlcolor=linkblue]{hyperref}
 
-\definecolor{accent}{HTML}{1F4E8C}
-\definecolor{accentbg}{HTML}{EEF3FA}
-
-% Headings
-\titleformat{\section}{\Large\sffamily\bfseries\color{accent}}{\thesection}{0.6em}{}
-\titleformat{\subsection}{\large\sffamily\bfseries\color{accent}}{\thesubsection}{0.6em}{}
-\titleformat{\paragraph}[runin]{\normalsize\bfseries}{}{}{}
+\definecolor{linkblue}{HTML}{1F4E8C}
 \titlespacing*{\section}{0pt}{14pt plus 3pt minus 2pt}{6pt plus 2pt}
 \titlespacing*{\subsection}{0pt}{10pt plus 2pt minus 2pt}{4pt plus 1pt}
-\titlespacing*{\paragraph}{0pt}{6pt plus 2pt minus 1pt}{0.6em}
-
-% Header and footer
-\pagestyle{fancy}
-\fancyhf{}
-\fancyhead[L]{\small\sffamily\color{gray}DSA5208 Project 3 \textperiodcentered\ Distributed PageRank}
-\fancyhead[R]{\small\sffamily\color{gray}\nouppercase{\leftmark}}
-\fancyfoot[C]{\small\sffamily\thepage}
-\renewcommand{\headrulewidth}{0.4pt}
-\renewcommand{\sectionmark}[1]{\markboth{\thesection\quad #1}{}}
-\fancypagestyle{plain}{\fancyhf{}\renewcommand{\headrulewidth}{0pt}\fancyfoot[C]{\small\sffamily\thepage}}
-
-% Captions, lists, floats
-\captionsetup{font=small,labelfont={bf,sf,color=accent},labelsep=period,skip=5pt}
+\titleformat{\paragraph}[runin]{\normalsize\bfseries}{}{}{}
+\titlespacing*{\paragraph}{0pt}{7pt plus 2pt minus 1pt}{0.6em}
+\captionsetup{font=small,labelfont=bf,labelsep=period,skip=5pt}
 \setlist{itemsep=1pt,topsep=3pt}
 \setlength{\textfloatsep}{12pt plus 3pt minus 3pt}
 \setlength{\floatsep}{10pt plus 3pt minus 2pt}
@@ -50,266 +32,374 @@
 \renewcommand{\floatpagefraction}{0.75}
 \setcounter{topnumber}{3}
 \setcounter{totalnumber}{4}
-
-% Key-result boxes at the end of the results sections
-\newtcolorbox{takeaway}{enhanced,colback=accentbg,colframe=accent,boxrule=0pt,leftrule=2.5pt,arc=0pt,
-  left=7pt,right=7pt,top=4pt,bottom=4pt,before skip=8pt,after skip=8pt,fontupper=\small}
+\emergencystretch=1em
 
 \input{generated/numbers.tex}
 \newcommand{\code}[1]{\texttt{#1}}
 \makeatletter\newcommand{\tabinput}[1]{\@@input #1 }\makeatother
 
-\begin{document}
+\title{\textbf{Parallel PageRank with MPI+OpenMP and MPI+CUDA}\\[4pt]\large DSA5208 Project 3}
+\author{Ma Xiaoxiao\\\small A0259173X \and Ye Sifan\\\small A0262394Y \and Chen Yuda\\\small A0353182H}
+\date{November 2026}
 
-% ---------------------------------------------------------------------------------------------- title
-\thispagestyle{plain}
-\begin{center}
-{\sffamily\bfseries\color{accent}\LARGE Distributed PageRank\\[3pt] with MPI+OpenMP and MPI+CUDA\par}
-\vspace{6pt}
-{\sffamily\large DSA5208 Project 3 \textperiodcentered\ November 2026\par}
-\vspace{8pt}
-\begin{tabular}{ccc}
-Ma Xiaoxiao & Ye Sifan & Chen Yuda \\
-\small A0259173X & \small A0262394Y & \small A0353182H
-\end{tabular}
-\end{center}
-\vspace{2pt}
+\begin{document}
+\maketitle
 
 \begin{abstract}
 \noindent
-We parallelise the PageRank power iteration on sparse directed graphs of up to 65.6 million vertices and 3.6 billion
-edges. The main implementation is MPI+OpenMP: one MPI rank per NUMA domain, OpenMP threads inside the rank, a 1D
-partition of the in-edge matrix and a ghost-vertex exchange with \code{MPI\_Neighbor\_alltoallv}. A CUDA single-GPU
-version and an MPI+CUDA multi-GPU version complete the study. All timings were measured on the NUS Vanda cluster on
-up to 10 nodes (720 CPU cores) and on NVIDIA A40 GPUs. On com-friendster the MPI+OpenMP code reaches a strong-scaling
-speedup of \stFRbestS\ on \stFRbestc\ cores (\stFRone~ms $\rightarrow$ \stFRbest~ms per iteration). On the smaller
-soc-LiveJournal1 graph, communication stops scaling at one node. Pure MPI with one rank per core breaks down above
-144 ranks because inter-node traffic on Vanda goes over TCP: at 432 cores it is \stLJratio$\times$ slower than the
-hybrid code. One A40 GPU is about as fast as one 36-core CPU socket, because both are limited by random memory
-accesses and not by arithmetic.
+We implement the PageRank power iteration for sparse directed graphs as a serial C++ program, an MPI+OpenMP program,
+a CUDA program for one GPU and an MPI+CUDA program for several GPUs. The parallel programs split the in-edge matrix
+of the graph into contiguous row blocks with equal numbers of edges. Each MPI rank owns one block and, in every
+iteration, receives from the other ranks exactly the vector entries that its edges refer to. All programs are
+measured on the NUS Vanda cluster with graphs of up to 65.6 million vertices and 3.6 billion edges, on up to 720 CPU
+cores and two NVIDIA A40 GPUs. With one MPI rank per NUMA domain and 36 OpenMP threads per rank, one iteration on
+com-friendster takes \stFRbest~ms on \stFRbestc\ cores instead of \stFRones~s on one core, a speedup of \stFRbestS.
+With one rank per core, the same program is fastest on 144 cores: beyond that, the exchange between ranks consists
+of up to $P(P-1)$ messages per iteration for $P$ ranks, and over TCP its cost follows the number of messages, not the
+amount of data. One A40 GPU is as fast as a 72-core node on soc-LiveJournal1, and two GPUs run com-friendster
+\mgFRS\ times faster than one. Every parallel variant reproduces the serial PageRank vector to rounding error.
 \end{abstract}
 
-\begin{table}[h]
-\centering\small
-\caption{Where each grading item is addressed, and the main results.}
-\label{tab:map}
-\begin{tabularx}{\textwidth}{@{}>{\raggedright\arraybackslash}p{5.6cm} >{\raggedright\arraybackslash}X@{}}
-\toprule
-\textbf{Requirement} & \textbf{Section and main result} \\
-\midrule
-Algorithm explanation & \S\ref{sec:alg}: pull-based PageRank as an SpMV on an in-edge CSR, its 1D-partitioned
-  MPI+OpenMP version and the CUDA kernels. \\
-Serial runtime vs.\ edges and vertices & \S\ref{sec:serial}: time is linear in $M$ (4.5~ms to 9.0~s); 2.3--7~ns per
-  edge depending on whether $x$ fits in cache. \\
-MPI strong and weak scaling ($\ge$256 cores), speedup, efficiency, communication & \S\ref{sec:mpi}: up to 720 cores;
-  com-friendster speedup \stFRbestS\ on \stFRbestc\ cores; weak efficiency \wkHyE{720} at 720 cores; the ghost
-  exchange over TCP limits scaling, and pure MPI is \stLJratio$\times$ slower than hybrid at 432 cores. \\
-MPI+X with OpenMP and a GPU & \S\ref{sec:mpix}: OpenMP reaches \prLJbw{36}~GB/s on one socket; one A40 GPU
-  (\gpuThr~ms) is about as fast as one 36-core socket; MPI+CUDA on two GPUs gives \mgFRS$\times$ on com-friendster. \\
-Discussion & \S\ref{sec:disc}: findings on web-Google, how the work was parallelised, which parts communicate most,
-  limitations. \\
-Terminology, sparsity, synthetic data, validation & \S\ref{sec:terms} (Table~\ref{tab:terms}), \S\ref{sec:data},
-  \S\ref{sec:val}: every parallel variant matches the serial program to rounding error. \\
-\bottomrule
-\end{tabularx}
-\end{table}
-
-
 % =====================================================================================================
-\section{Problem and terminology}
-\label{sec:terms}
+\section{Introduction}
 
-PageRank assigns every vertex $v$ of a directed graph $G=(V,E)$, $N=|V|$, $M=|E|$, the stationary probability of
-a random surfer. With probability $d=0.85$ the surfer follows a random out-edge, and otherwise it jumps to a uniformly
-random vertex. A \emph{dangling} vertex has no out-edges; its probability mass is spread uniformly over all
-vertices. One iteration computes
-\begin{equation}
-  r^{(k+1)}_v \;=\; \frac{1-d}{N} \;+\; d\,\frac{\sum_{u \in D} r^{(k)}_u}{N} \;+\; d \sum_{(u,v)\in E}
-  \frac{r^{(k)}_u}{\mathrm{outdeg}(u)},
-  \label{eq:pr}
-\end{equation}
-starting from $r^{(0)}_v = 1/N$, where $D$ is the set of dangling vertices. The iteration stops when the residual
-$\lVert r^{(k+1)}-r^{(k)}\rVert_1$ falls below a tolerance, or after a fixed number of iterations.
+PageRank~\cite{pagerank} assigns to every vertex of a directed graph the long-run probability that a random walk
+visits it. It is computed by a power iteration whose step is a sparse matrix--vector product with the adjacency
+matrix of the graph. The arithmetic is simple, one addition per edge, so the run time is set by how fast vector
+entries can be fetched from memory and, in a distributed program, from other processes. Which entries a process needs
+is decided by the graph, and in the power-law graphs studied here almost every process needs entries from almost
+every other process. PageRank is therefore not embarrassingly parallel, and its scaling depends on how the graph is
+partitioned and how the processes communicate.
 
-The problem is not embarrassingly parallel. Every iteration needs values $r_u$ owned by other processes, and two
-global sums (the dangling mass and the residual) on which every process must agree before the next iteration.
-
-The terms used in the rest of the report are defined in Table~\ref{tab:terms}.
-
-\begin{table}[tb]
-\centering\small
-\caption{Terminology and notation.}
-\label{tab:terms}
-\rowcolors{2}{accentbg}{white}
-\begin{tabularx}{\textwidth}{@{}>{\raggedright\arraybackslash\bfseries}p{3.4cm} >{\raggedright\arraybackslash}X@{}}
-\toprule
-\rowcolor{white}\normalfont\textbf{Term} & \textbf{Meaning} \\
-\midrule
-CSR / in-edge CSR & The graph as the sparse $N\times N$ matrix $A$ with $A_{vu}=1$ for each edge $u\!\to\!v$. An
-  offset array \code{off} ($N{+}1$ entries) says where the in-edges of each vertex start in an index array \code{src}
-  ($M$ entries) of source vertices. Equation~\eqref{eq:pr} is then a sparse matrix--vector product (\emph{SpMV})
-  $y=Ax$ with $x_u=r_u/\mathrm{outdeg}(u)$. \\
-Pull formulation & Each vertex reads (``pulls'') the contributions $x_u$ of its in-neighbours and writes only its own
-  $r_v$, so no atomic updates are needed (unlike a push formulation). \\
-Rank, thread, core & An MPI \emph{rank} is one process; it runs OpenMP \emph{threads}, each pinned to one CPU
-  \emph{core}. ``$p$ cores'' always means ranks $\times$ threads $=p$. \\
-NUMA domain & One CPU socket of a Vanda node and its local memory (2 domains of 36 cores per node). \\
-Pure MPI / hybrid & \emph{Pure MPI}: one rank per core, one thread each. \emph{Hybrid} (MPI+OpenMP): one rank per
-  NUMA domain with 36 threads; below 36 cores, one rank with $p$ threads. \\
-Partition & The rows of $A$ are split into $P$ contiguous blocks, one per rank (\emph{1D row partition}).
-  \emph{Vertex} partition: equal vertex counts. \emph{Edge} partition: equal in-edge counts. \\
-Owned / ghost vertex & A rank \emph{owns} the vertices of its block. A \emph{ghost} is a vertex owned by another rank
-  that is the source of an in-edge of the block; its $x_u$ must be received every iteration. \\
-Allgather / ghost exchange & Two ways to deliver remote $x$ values: \code{MPI\_Allgatherv} gives every rank all of $x$;
-  the ghost exchange sends only the ghost entries with \code{MPI\_Neighbor\_alltoallv}. \\
-Load imbalance & $\max_i m_i/\bar m$, with $m_i$ the in-edges of rank $i$ and $\bar m=M/P$. \\
-Strong / weak scaling & Strong: fixed graph, more cores. Weak: the graph grows with the core count (about 2 million
-  edges per core). \\
-Speedup, efficiency & $S_p=T_1/T_p$ and $E_p=S_p/p$, with $T_p$ the time per iteration on $p$ cores and $T_1$ the
-  MPI+OpenMP program on one core (within 5\% of the serial program). Weak-scaling efficiency: $T_1/T_p$. \\
-$t_{comp}$, $t_{comm}$, $t_{wait}$ & Time in local computation and in MPI calls, each summed over iterations and
-  maximised over ranks (so they need not add up to $T_p$). In \code{--split} runs a barrier precedes every MPI call;
-  its time is $t_{wait}$ (imbalance and synchronisation), and $t_{comm}$ is then pure data movement. \\
-Effective bandwidth & $B=(12M+44N)/T_p$: the minimum bytes one iteration reads and writes (4-byte index and 8-byte
-  $x$ value per edge; offsets, $r$, $x$, outdegree and output per vertex). \\
-BTL, TCP, RDMA & OpenMPI's \emph{byte transfer layer}: \code{vader} (shared memory), \code{tcp} (kernel sockets) or
-  \code{openib} (RDMA, remote direct memory access by the network card without the operating system). \\
-R-MAT & Recursive-matrix random graph generator with power-law degrees (Section~\ref{sec:data}). \\
-\bottomrule
-\end{tabularx}
-\end{table}
+Section~\ref{sec:alg} describes the algorithm and its serial implementation, and Section~\ref{sec:design} the design
+of the MPI+OpenMP, CUDA and MPI+CUDA versions. Section~\ref{sec:setup} introduces the graphs and the measurement
+setup, and Section~\ref{sec:val} the validation. The results follow: serial run time against problem size
+(Section~\ref{sec:serial}), strong and weak scaling of the MPI program and the role of communication
+(Section~\ref{sec:mpi}), and the two MPI+X combinations (Section~\ref{sec:mpix}). Section~\ref{sec:disc} discusses
+the data sets and the design as a whole. The source code, the job scripts and the raw results are available at
+\url{https://github.com/yespiggy/Project3/tree/submission}.
 
 % =====================================================================================================
 \section{Algorithm}
 \label{sec:alg}
 
-\paragraph{Serial algorithm.} The graph is read once from a binary in-edge CSR file. Each iteration then performs
-\begin{enumerate}
-\item \textbf{Contributions.} $x_u = r_u/\mathrm{outdeg}(u)$ for every vertex; the dangling mass
-  $\delta=\sum_{u\in D} r_u$ is accumulated at the same time ($O(N)$).
-\item \textbf{SpMV.} For every vertex $v$: $s_v=\sum_{e=\mathrm{off}_v}^{\mathrm{off}_{v+1}-1} x_{\mathrm{src}_e}$ and
-  $r'_v=(1-d)/N + d\,\delta/N + d\,s_v$ ($O(M)$). The residual $\sum_v |r'_v-r_v|$ is accumulated in the same loop.
-\item \textbf{Swap} $r\leftarrow r'$ and test the residual against the tolerance.
-\end{enumerate}
-The work per iteration is $\Theta(N+M)$ with about two floating-point operations per edge. The SpMV reads
-$x_{\mathrm{src}_e}$ in the order of the edge list, which for a power-law graph is close to random. Each such read
-moves a whole 64-byte cache line (CPU) or a 32-byte sector (GPU) to deliver 8 useful bytes. PageRank is therefore
-limited by memory bandwidth and latency, not by floating-point throughput: an iteration does 0.17 floating-point
-operations per byte. Every analysis below is phrased in those terms.
+\subsection{PageRank}
 
-\paragraph{Distributed iteration (MPI+OpenMP).} Rank $i$ owns rows $[\ell_i,h_i)$ of $A$ and the matching entries of
-$r$. One iteration is
-\begin{enumerate}
-\item compute the owned $x_u$ and the local dangling mass (OpenMP \code{parallel for}, static schedule);
-\item \textbf{communication 1:} deliver the remote $x$ values, either with \code{MPI\_Allgatherv} (all of $x$) or with
-  the ghost exchange (pack the entries that other ranks need, then \code{MPI\_Neighbor\_alltoallv});
-\item \textbf{communication 2:} \code{MPI\_Allreduce} of the dangling mass (one double);
-\item local SpMV over the owned rows (OpenMP \code{parallel for}, \code{schedule(dynamic,512)}, because row lengths
-  follow a power law);
-\item \textbf{communication 3:} \code{MPI\_Allreduce} of the residual (one double).
-\end{enumerate}
-The ghost plan is built once during setup. Each rank collects the distinct source vertices of its in-edges that lie
-outside its block, groups them by owner, and renumbers the column indices into a local index space
-$[\text{owned} \mid \text{ghosts}]$, so the SpMV loop is identical for both exchange methods. Only rank 0 reads the
-offset array to compute the partition bounds; every rank then reads its own slice of the CSR file. MPI is initialised
-with \code{MPI\_THREAD\_FUNNELED}: only the master thread calls MPI, outside the OpenMP regions.
+Let $G=(V,E)$ be a directed graph with $N=|V|$ vertices and $M=|E|$ edges. A random surfer at vertex $u$ follows one
+of the $\mathrm{outdeg}(u)$ out-edges of $u$ with probability $d$, and jumps to a vertex chosen uniformly at random
+with probability $1-d$; we use the usual damping factor $d=0.85$. A vertex without out-edges is called
+\emph{dangling}, and from a dangling vertex the surfer always jumps. The PageRank vector $r$ is the stationary
+distribution of this walk. It is the limit of the iteration
+\begin{equation}
+  r^{(k+1)}_v \;=\; \frac{1-d}{N} \;+\; \frac{d}{N}\sum_{u \in D} r^{(k)}_u \;+\; d \sum_{(u,v)\in E}
+  \frac{r^{(k)}_u}{\mathrm{outdeg}(u)}, \qquad r^{(0)}_v = \frac{1}{N},
+  \label{eq:pr}
+\end{equation}
+where $D$ is the set of dangling vertices. The three terms are the random jump, the rank of the dangling vertices
+spread evenly over all vertices, and the rank arriving along the in-edges of $v$. The iteration stops when the
+residual $\rho_k=\lVert r^{(k+1)}-r^{(k)}\rVert_1$ falls below a tolerance, or after a fixed number of iterations.
 
-\paragraph{GPU algorithm (CUDA).} The CSR, $r$, $x$ and the outdegrees stay in GPU memory for the whole run. One
-iteration launches a contribution kernel, an SpMV kernel and a CUB block reduction for $\delta$ and the residual. Only
-the residual scalar returns to the host. Four SpMV variants were written:
-\begin{itemize}
-\item \emph{thread per row}: one thread loops over one vertex's in-edges;
-\item \emph{warp per row}: 32 threads split the in-edges of a vertex and combine them with a warp shuffle reduction;
-\item \emph{degree buckets}: vertices are sorted once into three buckets by in-degree, then handled by one thread
-  ($\le 16$ in-edges), one warp ($\le 1024$) or one 256-thread block ($>1024$);
-\item \code{cusparseSpMV}, used only as a reference for what a vendor library achieves. It is not part of our method,
-  in line with the rule against relying on numerical libraries; no BLAS or LAPACK routine is used anywhere.
-\end{itemize}
-The single-GPU program stores offsets as 32-bit integers (required by the cuSPARSE reference), so it cannot load
-graphs with more than $2^{31}$ edges. The \textbf{MPI+CUDA} program uses one rank per GPU, the same edge partition and
-ghost plan as the CPU code, and 64-bit offsets, so it runs com-friendster (3.6G edges) on one or more GPUs. Its
-iteration is: contribution and pack kernels on the GPU; copy the packed send buffer to the host;
-\code{MPI\_Neighbor\_alltoallv} and \code{MPI\_Allreduce} on the host; copy the received ghosts to the GPU; SpMV
-kernel; residual \code{MPI\_Allreduce}.
+Iteration~\eqref{eq:pr} applies a column-stochastic matrix scaled by $d$, so $\rho_{k+1}\le d\,\rho_k$: the
+residual shrinks by at least 15\% per iteration on any graph. Since $\rho_0\le 2$, a tolerance of $10^{-10}$ is reached
+after at most 147 iterations.
+
+\subsection{Serial implementation}
+
+The graph is stored as the sparse $N\times N$ matrix $A$ with $A_{vu}=1$ for every edge $u\to v$, in compressed
+sparse row (CSR) format: an offset array \code{off} with $N+1$ entries and an index array \code{src} with $M$
+entries, such that \code{src[off[v]]}, \ldots, \code{src[off[v+1]-1]} are the sources of the in-edges of $v$. We call
+this the \emph{in-edge CSR}. A third array holds the out-degrees. With $x_u=r_u/\mathrm{outdeg}(u)$, and $x_u=0$ for
+dangling $u$, the last sum in~\eqref{eq:pr} is the sparse matrix--vector product (SpMV) $y=Ax$.
+
+This is the \emph{pull} formulation: every vertex reads the contributions of its in-neighbours and writes only its
+own entry of $r$. Rows can be processed in any order and by different threads without atomic updates. In the
+alternative push formulation, every vertex adds its contribution to the entries of its out-neighbours, and concurrent
+writes to the same entry must be protected.
+
+One iteration of the serial program (\code{src/serial/pagerank\_serial.cpp}) consists of three steps.
+\begin{enumerate}
+\item \textbf{Contributions.} Compute $x_u$ for every vertex and accumulate the dangling mass
+  $\delta=\sum_{u\in D} r_u$.
+\item \textbf{SpMV and update.} For every vertex $v$, compute
+  $s_v=\sum_{e=\mathtt{off}[v]}^{\mathtt{off}[v+1]-1} x_{\mathtt{src}[e]}$ and
+  $r'_v=(1-d)/N + d\,\delta/N + d\,s_v$, and accumulate the residual $\sum_v |r'_v-r_v|$.
+\item \textbf{Swap} $r$ and $r'$ and test the residual.
+\end{enumerate}
+One iteration takes $\Theta(N+M)$ time and the program $\Theta(N+M)$ memory. The arithmetic is one addition per edge
+and about five operations per vertex. The memory traffic is larger: per edge, a 4-byte index is read in sequence and
+an 8-byte entry of $x$ is read at the position given by that index. In a graph whose vertex numbering has no
+locality, consecutive reads of $x$ fall on unrelated cache lines, and each of them loads a 64-byte line to use 8
+bytes. The arithmetic intensity, the number of floating-point operations per byte moved, is about $1/12$. The
+performance of every version in this report is therefore governed by memory and network traffic, not by arithmetic.
 
 % =====================================================================================================
-\section{Data sets}
-\label{sec:data}
+\section{Parallel design}
+\label{sec:design}
+
+\subsection{Partitioning}
+
+The parallel programs distribute the rows of $A$, that is, the vertices together with their in-edges, over $P$ MPI
+ranks (processes). The partition is one-dimensional and contiguous: rank $i$ \emph{owns} the vertices
+$[\ell_i,h_i)$, their entries of $r$ and $x$, and their part of the index array (Figure~\ref{fig:partition}). The
+boundaries are chosen in one of two ways:
+\begin{itemize}
+\item \emph{vertex partition}: every rank owns $N/P$ vertices;
+\item \emph{edge partition}: a binary search in the offset array places the boundaries such that every rank owns
+  $M/P$ in-edges, to within one row.
+\end{itemize}
+The work of a rank in the SpMV is proportional to its number of in-edges $m_i$. We measure how evenly the work is
+spread by the \emph{load imbalance} $\max_i m_i/(M/P)$, which is 1 for a perfect partition. Rank 0 reads the offset
+array, computes the boundaries and broadcasts them; every rank then reads its own slice of the graph file, so no
+rank ever holds the whole graph.
+
+\begin{figure}[tb]
+\centering
+\begin{tikzpicture}[x=0.42cm,y=0.42cm,font=\footnotesize]
+  % row blocks of A: equal numbers of in-edges, unequal numbers of rows
+  \fill[blue!9]   (0,0)  rectangle (9,-2);
+  \fill[orange!16] (0,-2) rectangle (9,-6);
+  \fill[green!12] (0,-6) rectangle (9,-9);
+  \draw[gray!45,very thin] (0,0) grid (9,-9);
+  \draw[thick] (0,0) rectangle (9,-9);
+  \draw[thick] (0,-2) -- (9,-2) (0,-6) -- (9,-6);
+  % entries (column, row) of rank 0 and rank 2
+  \foreach \u/\v in {1/0,3/0,6/0,0/1,4/1,7/1,1/6,7/6,4/7,8/7,5/8,6/8}
+    \fill (\u+0.5,-\v-0.5) circle (0.16);
+  % rank 1: sources it owns (filled) and ghost sources (rings)
+  \foreach \u/\v in {3/2,5/3,2/4}
+    \fill (\u+0.5,-\v-0.5) circle (0.16);
+  \foreach \u/\v in {0/3,8/4,7/5}
+    \draw[red!75!black,very thick] (\u+0.5,-\v-0.5) circle (0.2);
+  \foreach \u in {0,...,8} \node[gray] at (\u+0.5,0.55) {\scriptsize\u};
+  \foreach \v in {0,...,8} \node[gray] at (-0.5,-\v-0.5) {\scriptsize\v};
+  \node at (4.5,1.55) {source $u$};
+  \node[rotate=90] at (-1.6,-4.5) {target $v$ (row of $A$)};
+  \node[anchor=west] at (9.3,-1)   {rank 0: rows 0--1, 6 in-edges};
+  \node[anchor=west] at (9.3,-4)   {rank 1: rows 2--5, 6 in-edges};
+  \node[anchor=west] at (9.3,-7.5) {rank 2: rows 6--8, 6 in-edges};
+  % local x array of rank 1
+  \begin{scope}[shift={(21.3,-2.6)}]
+    \node[anchor=west] at (0,1.5) {array $x$ on rank 1};
+    \foreach \i/\l in {0/2,1/3,2/4,3/5}
+      { \fill[orange!16] (\i*1.3,0) rectangle (\i*1.3+1.3,-1.3); \draw (\i*1.3,0) rectangle (\i*1.3+1.3,-1.3);
+        \node at (\i*1.3+0.65,-0.65) {$x_{\l}$}; }
+    \foreach \i/\l/\c in {4/0/blue!9,5/7/green!12,6/8/green!12}
+      { \fill[\c] (\i*1.3,0) rectangle (\i*1.3+1.3,-1.3);
+        \draw[red!75!black,thick] (\i*1.3,0) rectangle (\i*1.3+1.3,-1.3);
+        \node at (\i*1.3+0.65,-0.65) {$x_{\l}$}; }
+    \draw[thick] (5.2,0.25) -- (5.2,-1.55);
+    \node at (2.6,-2.1) {owned};
+    \node at (7.15,-2.1) {ghosts};
+    \node[anchor=west] at (0,-3.6) {received in every iteration:};
+    \node[anchor=west] at (0,-4.7) {$x_0$ from rank 0,};
+    \node[anchor=west] at (0,-5.8) {$x_7$ and $x_8$ from rank 2};
+  \end{scope}
+\end{tikzpicture}
+\caption{Edge partition of a graph with 9 vertices and 18 edges over three ranks. Each dot is an edge $u\to v$,
+stored in row $v$. The blocks hold equal numbers of in-edges and therefore different numbers of rows. Rank~1 owns
+$x_2,\ldots,x_5$; the three ringed edges refer to vertices owned by other ranks, its ghost vertices.}
+\label{fig:partition}
+\end{figure}
+
+\subsection{Communication}
+
+To process its rows, rank $i$ needs $x_u$ for every source $u$ of its in-edges. Sources inside $[\ell_i,h_i)$ are
+local. The others are owned by other ranks; we call them the \emph{ghost vertices} of rank $i$. They play the role
+of the halo cells of a stencil code, except that the graph, not a regular grid, decides which they are. Two ways of
+obtaining the ghost values are implemented.
+\begin{itemize}
+\item \emph{Allgather.} Every rank receives the complete vector $x$ with \code{MPI\_Allgatherv}, that is
+  $8(N-n_i)$ bytes per iteration for a rank that owns $n_i$ vertices, whatever it needs.
+\item \emph{Ghost exchange.} Every rank receives exactly its ghost values. During setup, each rank collects the
+  distinct ghost vertices of its in-edges in sorted order and sends every owner the list of vertices it needs from
+  it (\code{MPI\_Alltoallv}). It then renumbers its column indices into the local index space
+  $[\,\text{owned} \mid \text{ghosts}\,]$, so that the SpMV loop addresses a single local array
+  (Figure~\ref{fig:partition}). The ranks that exchange data are joined in a neighbourhood communicator
+  (\code{MPI\_Dist\_graph\_create\_adjacent}). In every iteration, a rank packs the requested entries into a send
+  buffer, and one call of \code{MPI\_Neighbor\_alltoallv} delivers all ghost values.
+\end{itemize}
+Every iteration also needs two global sums: the dangling mass before the SpMV and the residual after it. Each is an
+\code{MPI\_Allreduce} of a single number. One iteration on rank $i$ is therefore
+\begin{enumerate}
+\item compute $x_u$ for the owned vertices and the local dangling mass;
+\item pack and exchange the ghost values (or allgather $x$);
+\item \code{MPI\_Allreduce} of the dangling mass;
+\item SpMV over the owned rows, new $r$, local residual;
+\item \code{MPI\_Allreduce} of the residual.
+\end{enumerate}
+Steps 1 and 4 and the packing are computation; the three MPI calls are communication. The exchange plan is built
+once and reused in every iteration.
+
+\subsection{MPI+OpenMP}
+
+Inside a rank, step 1, the packing and step 4 are loops over the owned vertices, and OpenMP shares them among the
+threads of the rank (\code{src/cpu/pagerank\_mpi\_omp.cpp}). Step 1 and the packing use a static schedule, because
+every vertex costs the same. The SpMV loop uses a dynamic schedule with chunks of 512 rows
+(\code{schedule(dynamic,512)}): the cost of a row is its in-degree, which varies by three orders of magnitude, and
+with a dynamic schedule a thread that meets long rows does not hold up the others. The dangling mass and the residual are OpenMP reductions. MPI is initialised with
+\code{MPI\_THREAD\_FUNNELED}: only the master thread calls MPI, between the parallel loops. The threads of a rank
+share its arrays, including the ghost values, so a value that several threads need is received once.
+
+The same executable runs with any number of ranks and threads. Two layouts are used throughout the report.
+\begin{itemize}
+\item \emph{Pure MPI}: one single-threaded rank per core, $p$ ranks on $p$ cores. This is the MPI-only program.
+\item \emph{Hybrid}: one rank per NUMA domain with 36 threads. A NUMA domain is one CPU socket with the memory
+  attached to it; a Vanda node has two domains of 36 cores. Up to 36 cores the hybrid layout is a single rank with
+  $p$ threads and involves no communication.
+\end{itemize}
+In both layouts every thread is pinned to its own core, and ``$p$ cores'' always means that ranks $\times$ threads
+$=p$.
+
+\subsection{CUDA and MPI+CUDA}
+
+The single-GPU program (\code{src/gpu/pagerank\_cuda.cu}) keeps the CSR arrays and the vectors in GPU memory for the
+whole run. One iteration launches a kernel for the contributions and a kernel for the SpMV and update. The dangling
+mass and the residual are summed on the GPU by a reduction in every thread block (\code{BlockReduce} of the CUB
+primitives shipped with CUDA) followed by one atomic addition per block, and only the residual is copied to the host. Four SpMV kernels are provided:
+\begin{itemize}
+\item \emph{one thread per row}: a GPU thread loops over the in-edges of one vertex;
+\item \emph{one warp per row}: the 32 threads of a warp (the group of threads that the GPU executes in lockstep)
+  share the in-edges of one vertex and combine their partial sums with a shuffle reduction;
+\item \emph{degree buckets}: the vertices are sorted once into three lists by in-degree and processed by one thread
+  (at most 16 in-edges), one warp (17 to 1024) or one block of 256 threads (more than 1024);
+\item \code{cusparseSpMV} from NVIDIA's cuSPARSE library, as a reference point for our own kernels. No BLAS,
+  LAPACK or sparse-matrix library is used in any other kernel or program.
+\end{itemize}
+
+The MPI+CUDA program (\code{src/gpu/pagerank\_mpi\_cuda.cu}) runs one rank per GPU and reuses the edge partition and
+the ghost exchange of the CPU program. In every iteration, the GPU computes the contributions and packs the send
+buffer; the buffer is copied to pinned host memory; the host calls \code{MPI\_Neighbor\_alltoallv} and
+\code{MPI\_Allreduce}; the received ghost values are copied to the GPU; and the GPU runs the SpMV with the
+thread-per-row or the degree-bucket kernel. The offsets are 64-bit integers, so that a graph with more than $2^{31}$
+edges fits on one or several GPUs; the single-GPU program uses the 32-bit offsets that cuSPARSE requires. The
+kernels of the two programs differ in one more detail: the single-GPU kernels read $\delta$ from GPU memory and
+compute the constant term of~\eqref{eq:pr} for every row, whereas the MPI+CUDA program computes it once on the host
+after the reduction and passes it to the kernel.
+
+Table~\ref{tab:terms} collects the terms and symbols used in the following sections.
+
+\begin{table}[tb]
+\centering\small
+\caption{Terms and notation.}
+\label{tab:terms}
+\begin{tabularx}{\textwidth}{@{}>{\raggedright\arraybackslash}p{3.5cm} >{\raggedright\arraybackslash}X@{}}
+\toprule
+Term & Meaning \\
+\midrule
+$N$, $M$, $P$, $p$ & Vertices, edges, MPI ranks, CPU cores (ranks $\times$ threads). \\
+In-edge CSR & Sparse matrix $A$ with one row per vertex that lists the sources of its in-edges. \\
+Rank, thread, core & An MPI \emph{rank} is one process. It runs one or more OpenMP \emph{threads}, each pinned to
+  one CPU \emph{core}. \\
+Pure MPI, hybrid & The two layouts of the MPI+OpenMP program: one rank per core, or one rank per NUMA domain with
+  36 threads. \\
+Owned, ghost vertex & A rank owns the vertices of its row block. A ghost vertex of a rank is owned by another rank
+  and is the source of one of the rank's in-edges. \\
+Ghost exchange & Delivery of the ghost values with \code{MPI\_Neighbor\_alltoallv}; the alternative is the
+  allgather of the whole vector $x$. \\
+Load imbalance & Largest number of in-edges of a rank divided by the average $M/P$. \\
+$T_p$ & Time per iteration on $p$ cores: wall time of the iteration loop, maximum over ranks, divided by the number
+  of iterations. \\
+Speedup, efficiency & $S_p=T_1/T_p$ and $E_p=S_p/p$ on a fixed graph (strong scaling), where $T_1$ is the
+  MPI+OpenMP program on one core. \\
+Weak scaling & The graph grows with the core count such that the number of edges per core, $M/p$ after duplicate
+  removal, stays constant. Weak-scaling efficiency: $T_1/T_p$. \\
+$t_{comp}$, $t_{comm}$ & Time per iteration in local computation and in MPI calls. Each is the maximum over ranks,
+  so the two need not add up to $T_p$. $t_{comm}$ includes waiting for other ranks inside an MPI call. \\
+$t_{wait}$ & In runs with the option \code{-{}-split}, a barrier precedes every MPI call. The time in the barriers is
+  $t_{wait}$, the wait for the slowest rank, and $t_{comm}$ is then the data movement alone. \\
+Effective bandwidth & $B=(12M+44N)/T_p$: the bytes one iteration must read and write (a 4-byte index and an 8-byte
+  value per edge; offset, out-degree, $r$, $x$ and $r'$ per vertex) divided by its time. The single-GPU program has
+  4-byte offsets and counts $40N$. \\
+STREAM triad & The loop $a_i=b_i+3c_i$ over arrays much larger than the cache~\cite{stream}; it measures the memory
+  bandwidth for sequential access. \\
+R-MAT, edge factor & Random graph generator with a power-law degree distribution~\cite{rmat}; the edge factor is
+  the number of generated edges per vertex. \\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+% =====================================================================================================
+\section{Data sets and experimental setup}
+\label{sec:setup}
 
 \begin{table}[tb]
 \centering\footnotesize
-\setlength{\tabcolsep}{4pt}
-\caption{Graphs after preprocessing (duplicate edges and self-loops removed). Density is $M/N^2$, the fraction of
-nonzero entries of $A$.}
+\setlength{\tabcolsep}{5pt}
+\caption{Graphs after preprocessing. The density $M/N^2$ is the fraction of nonzero entries of $A$. For the R-MAT
+family the smallest and the largest graph are listed.}
 \label{tab:graphs}
 \begin{tabular}{lrrrrrrr}
 \toprule
-graph & $N$ & $M$ & $M/N$ & density & dangling & max in-deg & max out-deg \\
+graph & $N$ & $M$ & $M/N$ & density & dangling & max in-deg. & max out-deg. \\
 \midrule
 web-Google        & 875,713    & 5,105,039     & 5.8  & $6.7\times10^{-6}$ & 15.6\% & 6,326  & 456 \\
 soc-LiveJournal1  & 4,847,571  & 68,475,391    & 14.1 & $2.9\times10^{-6}$ & 11.4\% & 13,905 & 20,292 \\
 com-friendster    & 65,608,366 & 3,612,134,270 & 55.1 & $8.4\times10^{-7}$ & 0\%    & 5,214  & 5,214 \\
-R-MAT \code{rmat\_p}$k$ & $131{,}072\,k$ & $\approx 15.6\,N$ & 14.8--15.8 & $10^{-4}$--$1.7\times10^{-7}$ & 41--59\% & & \\
+\addlinespace[2pt]
+\code{rmat\_p1}   & 131,072    & 1,942,879     & 14.8 & $1.1\times10^{-4}$ & 41\% & -- & -- \\
+\code{rmat\_p720} & 94,371,840 & 1,495,592,066 & 15.8 & $1.7\times10^{-7}$ & 59\% & -- & -- \\
 \bottomrule
 \end{tabular}
 \end{table}
 
-\paragraph{Real graphs (SNAP).} \emph{web-Google}: a web graph released by Google; small, used for validation and
-for the data findings. \emph{soc-LiveJournal1}: the friendship graph of an online community, directed; 518,382
-self-loops were removed. \emph{com-friendster}: the friendship graph of an online gaming network. It is undirected,
-so each undirected edge is stored in both directions, every vertex has equal in- and out-degree and there are no
-dangling vertices. Preprocessing (\code{tools/preprocess.cpp}) skips comment lines, renumbers vertex identifiers to
-$0..N-1$, removes self-loops and duplicate edges, and writes the binary in-edge CSR (64-bit offsets, 32-bit indices)
-with the outdegree array.
+\paragraph{Real graphs.} We use three graphs from the SNAP collection~\cite{snap}. \emph{web-Google} is a graph of
+web pages and the hyperlinks between them; it is small and serves for validation and for the analysis of the
+PageRank values. \emph{soc-LiveJournal1} is the directed friendship graph of the LiveJournal community.
+\emph{com-friendster} is the friendship graph of the Friendster network. It is undirected, so every friendship is
+stored as two directed edges, every vertex has the same in- and out-degree, and no vertex is dangling.
+\code{tools/preprocess.cpp} reads the SNAP edge lists, renumbers the vertices to $0,\ldots,N-1$ in the order of their
+original identifiers, removes self-loops and duplicate edges, and writes the in-edge CSR as a binary file with
+64-bit offsets and 32-bit indices. soc-LiveJournal1 contained 518,382 self-loops; no graph contained duplicate
+edges.
 
-\paragraph{Synthetic graphs (R-MAT).} \code{tools/rmat\_gen.cpp} implements the R-MAT generator with the Graph500
-parameters $(a,b,c,d)=(0.57,0.19,0.19,0.05)$. For each edge it descends $\lceil\log_2 N\rceil$ levels of the
-adjacency matrix and at each level picks one of the four quadrants with those probabilities. Edges whose source or
-target is $\ge N$ are redrawn. Vertex labels are then randomly permuted, so that high-degree vertices are not
-clustered at small identifiers (which would make a contiguous partition easier than on real data). Self-loops and
-duplicates are removed. The edges are generated in parallel with one \code{mt19937\_64} generator per OpenMP thread,
-seeded from the graph seed and the thread number, so a graph is reproducible from (seed, thread count). All graphs
-were generated with 32 threads. Two families were generated:
+\paragraph{Synthetic graphs.} \code{tools/rmat\_gen.cpp} implements the R-MAT generator~\cite{rmat} with the
+quadrant probabilities 0.57, 0.19, 0.19 and 0.05 of the Graph500 benchmark~\cite{graph500}. For every edge it
+descends $\lceil\log_2 N\rceil$ levels of the adjacency matrix; at each level it picks one of the four quadrants
+with these probabilities, which fixes one bit of the source and one bit of the target. Edges with an endpoint $\ge N$ are
+drawn again. The vertex labels are then permuted at random, so that the high-degree vertices, which R-MAT places at
+small identifiers, are spread over the whole range. Self-loops and duplicate edges are removed. The edges are
+generated by 32 OpenMP threads, each with its own \code{mt19937\_64} generator seeded from the graph seed and the
+thread number, so a graph is reproducible from its seed and the number of threads. Two families are used:
 \begin{itemize}
-\item \code{rmat\_p}$k$ for weak scaling: $N=131{,}072\,k$ vertices and 16 edges per vertex before deduplication,
-  for $k\in\{1,2,4,8,16,36,72,144,288,432,576,720\}$, i.e.\ about 2 million edges per core when run on $k$ cores
-  (seed $k$);
-\item \code{rmat\_n20\_ef}$f$ for the serial size study: fixed $N=2^{20}$ and edge factor $f\in\{4,8,16,32,64\}$.
+\item \code{rmat\_p}$k$ has $N=131{,}072\,k$ vertices and edge factor 16, for $k=1$, 2, 4, 8, 16, 36, 72, 144, 288,
+  432, 576 and 720. Run on $k$ cores, these graphs have about 2 million edges per core. They are used for weak
+  scaling and for the serial study.
+\item \code{rmat\_n20\_ef}$f$ has $N=2^{20}$ vertices and edge factor $f=4$, 8, 16, 32 and 64. They are used for
+  the serial study.
 \end{itemize}
 
-\paragraph{Sparsity.} All graphs are extremely sparse: fewer than 7 nonzeros per million entries of $A$, and the
-density falls as the graph grows, because the average degree is bounded while $N^2$ grows. Sparsity has three
-consequences used throughout the report:
-\begin{enumerate}
-\item the work per iteration is $\Theta(N+M)$, not $\Theta(N^2)$, and is dominated by irregular reads of $x$;
-\item the degree distributions are heavy-tailed (max in-degree is thousands of times the mean), so equal vertex
-  counts do not give equal work. A vertex partition of soc-LiveJournal1 over 288 ranks has an edge imbalance of
-  \dzLJimbV, while the edge partition reaches \dzLJimbE\ (Table~\ref{tab:design});
-\item there is no locality to exploit after the random relabelling. The in-edges of a block come from all over the
-  graph, so almost every pair of ranks shares edges and the ghost set of a rank grows with the total $N$, not only
-  with the size of its own block. This is what limits scaling in Section~\ref{sec:mpi}.
-\end{enumerate}
+\paragraph{Sparsity.} All graphs are very sparse: fewer than 7 of every million entries of $A$ are nonzero for the
+real graphs, and the density falls as a graph grows, because the average degree stays bounded while $N^2$ grows
+(Table~\ref{tab:graphs}). Sparsity shapes the computation in three ways. First, the work per iteration is
+$\Theta(N+M)$ and not $\Theta(N^2)$, and it consists of irregular reads of $x$ rather than of arithmetic. Second,
+the nonzeros are spread unevenly: the largest in-degree is hundreds to thousands of times the average, so blocks
+with equal numbers of vertices contain very different numbers of edges. Third, the nonzeros of a row block are
+scattered over all columns, so a rank needs values from most other ranks, and its number of ghost vertices grows
+with the size of the whole graph, not only with the size of its own block. The second point motivates the edge
+partition (Section~\ref{sec:design-eval}) and the third limits the scaling (Section~\ref{sec:comm}).
 
-% =====================================================================================================
-\section{Experimental setup}
-\label{sec:setup}
+\paragraph{Platform.} All measurements were made on the NUS Vanda cluster. A CPU node has two Intel Xeon Platinum
+8452Y processors, i.e.\ two NUMA domains of 36 cores, each with 2~MB of L2 cache per core and 67.5~MB of shared L3
+cache, and 503~GB of memory. A GPU node has the same processors and two NVIDIA A40 GPUs with 48~GB of memory each.
+The programs were compiled with GCC 13.1 (\code{-O3 -march=x86-64-v3}), OpenMPI 4.1.8 and CUDA 12.4 (\code{nvcc
+-O3}). CPU jobs requested whole 72-core nodes, up to 10 nodes (720 cores). GPU jobs used one or two GPUs, either on
+one node or one on each of two nodes. Ranks were placed and bound with \code{-{}-map-by ppr:$k$:node:PE=$t$ -{}-bind-to
+core} for $k$ ranks per node with $t$ threads, and threads were pinned with \code{OMP\_PROC\_BIND=close} and
+\code{OMP\_PLACES=cores}.
 
-\paragraph{Hardware and software.} All runs used the NUS Vanda cluster. A CPU node (\code{cn}) has two Intel Xeon
-Platinum 8452Y processors (2$\times$36 cores, 2 NUMA domains, 2$\times$67.5~MB L3 cache) and 503~GB of memory. A GPU
-node has the same CPUs and two NVIDIA A40 GPUs (48~GB, 696~GB/s peak memory bandwidth, 6~MB L2 cache). Software: GCC
-13.1 (\code{-O3 -march=x86-64-v3}), OpenMPI 4.1.8, CUDA 12.4 (\code{nvcc -O3 -arch=sm\_86}). The nodes' RDMA-capable network adapters are Intel
-\code{irdma} devices. Section~\ref{sec:transport} shows that this OpenMPI build cannot use them for MPI, so inter-node
-messages go over TCP. Jobs were submitted without naming a queue (Vanda routes them), always requesting whole 72-core
-nodes. Threads were pinned with \code{OMP\_PROC\_BIND=close}, \code{OMP\_PLACES=cores} and ranks with
-\code{--map-by ppr:$k$:node:PE=$t$ --bind-to core}.
+MPI messages within a node use OpenMPI's shared-memory transport, in which a message is copied into a shared buffer
+and out again. Messages between nodes use TCP. The OpenMPI installation on Vanda has no UCX support, and its
+InfiniBand-verbs transport cannot open connections on the Ethernet-based RDMA adapters of the nodes; we tested both
+of its connection schemes in a two-node job (\code{jobs/final/f5\_ibprobe.pbs}).
 
-\paragraph{Measurement.} Performance runs execute a fixed number of iterations with tolerance 0: 50 iterations for
-soc-LiveJournal1 and R-MAT, 10 for com-friendster (one com-friendster iteration takes 25~s serially). Every
-configuration is run as 1 warm-up and 5 timed repetitions (3 for com-friendster) inside one \code{mpirun}, after a
-barrier. The reported time is the median over repetitions of $(\max_{\text{ranks}}\text{wall time})/\text{iterations}$.
-Graph loading, partitioning, ghost-plan construction and host-to-GPU copies are excluded from the iteration time and
-reported separately. Speedups and efficiencies always compare runs of the same graph and iteration count. Every
-number, table and figure in this report is generated from the raw CSV files by \code{tools/make\_report.py}.
+\paragraph{Measurement.} Performance runs execute a fixed number of iterations with the tolerance set to zero: 50
+iterations for soc-LiveJournal1 and the R-MAT graphs, and 10 for com-friendster, where one iteration takes 25~s on
+one core. The parallel programs run one warm-up repetition and then 5 timed repetitions (3 for the CPU runs on
+com-friendster) inside the same \code{mpirun}, each started after a barrier. The serial program runs 3 repetitions of 10
+iterations, is not pinned and has no warm-up. The time per iteration $T_p$ of a configuration is the median over its
+repetitions. Loading the graph, building the partition and the exchange plan, and copying the graph to the GPU are
+not part of $T_p$. All figures, tables and numbers in this report are produced from the raw result files by
+\code{tools/make\_report.py}.
 
 % =====================================================================================================
 \section{Validation}
@@ -317,95 +407,100 @@ number, table and figure in this report is generated from the raw CSV files by \
 
 \begin{table}[tb]
 \centering\small
-\caption{Validation against the serial C++ program. $L_1$ and $L_\infty$ are the norms of the difference of the two
-PageRank vectors. web-Google: run to convergence (residual $<10^{-10}$, \valIters\ iterations for every implementation).
-soc-LiveJournal1: exactly 50 iterations. MPI+OpenMP on web-Google: 4 ranks $\times$ 4 threads.}
+\setlength{\tabcolsep}{4pt}
+\caption{Difference between the PageRank vector of each parallel variant and that of the serial program. web-Google
+is run to convergence (residual below $10^{-10}$, \valIters\ iterations in every variant); the MPI+OpenMP variants
+use 4 ranks with 4 threads each. soc-LiveJournal1 is run for exactly 50 iterations. $L_1$ and $L_\infty$ are the
+norms of the difference; the last column says whether the 100 highest-ranked vertices appear in the same order.}
 \label{tab:val}
 \begin{tabular}{llccc}
 \toprule
-graph & implementation & $L_1$ & $L_\infty$ & same top-100 order \\
+graph & variant & $L_1$ & $L_\infty$ & same top 100 \\
 \midrule
 \tabinput{generated/tab_val.tex}
 \bottomrule
 \end{tabular}
 \end{table}
 
-Correctness was checked at three levels.
-\begin{enumerate}
-\item \textbf{Against an independent implementation.} \code{tools/smoke.py} compares the serial program and the MPI
-  program (4 ranks, all partition and exchange combinations) with NetworkX \code{pagerank} on hand-made graphs that
-  contain the corner cases: a cycle, dangling vertices, isolated vertices, a graph with no edges (all mass
-  dangling), and partitions with empty blocks. All 52 comparisons pass with $L_1<10^{-10}$ and $|\sum_v r_v - 1|<10^{-12}$. On web-Google the converged serial
-  vector agrees with NetworkX to $L_1=1.3\times10^{-10}$, with the same top-100 order.
-\item \textbf{Every parallel variant against the serial program} on web-Google run to convergence
-  (Table~\ref{tab:val}). All four MPI+OpenMP variants, all four CUDA kernels and MPI+CUDA on one and two GPUs need
-  the same \valIters\ iterations and differ from the serial vector by $L_1\approx3\times10^{-15}$, i.e.\ by
-  floating-point rounding only (the summation order differs). The top-100 vertices are identical and in the same
-  order, and the rank vector sums to 1 within $10^{-11}$.
-\item \textbf{At scale.} PageRank vectors of soc-LiveJournal1 after exactly 50 iterations, computed with up to
-  \valScaleMax\ pure-MPI ranks on several nodes, were written to disk and compared with the serial vector
-  (\code{tools/compare\_vec.py}). This checks the ghost plan under the communication patterns used in the scaling
-  runs: the difference is at most $L_1=\valMaxLone$.
-\end{enumerate}
-Every timed run additionally reports the final residual and $\sum_v r_v$. Rows with a wrong sum or a different
-residual would have been visible in the CSV files; none occurred.
+The implementations are checked at three levels.
 
-\begin{takeaway}
-\textbf{Key result.} Every MPI+OpenMP, CUDA and MPI+CUDA variant reproduces the serial vector up to floating-point
-rounding ($L_1\approx3\times10^{-15}$ on web-Google), and the multi-node runs stay within $L_1=\valMaxLone$ on up to
-\valScaleMax\ ranks.
-\end{takeaway}
+\paragraph{Small graphs against NetworkX.} \code{tools/smoke.py} builds four small graphs that contain the special
+cases of the algorithm: a directed cycle, a graph with dangling and isolated vertices, a graph without any edge
+(all rank is dangling mass), and a graph with a single edge. It compares the serial program and the MPI program
+with the \code{pagerank} function of NetworkX. The MPI program is run with 1, 2 and 4 ranks, both partitions and
+both exchange methods; with 4 ranks on these graphs some ranks own no vertex or no edge. All 52 comparisons agree to
+$L_1<10^{-10}$, and the ranks sum to 1 within $10^{-12}$.
+
+\paragraph{Every variant against the serial program.} On web-Google, run to convergence, the serial vector agrees
+with NetworkX to $L_1=\,$\valNxLone, with the 100 highest-ranked vertices in the same order. Every parallel variant
+is then compared with the serial vector (Table~\ref{tab:val}): the four combinations of partition and exchange
+method of the MPI+OpenMP program, the four kernels of the CUDA program, and the MPI+CUDA program on one and on two
+GPUs. All of them converge in the same \valIters\ iterations, differ from the serial vector by at most
+$L_1=\,$\valGoogleLone, and give the same order of the top 100 vertices. Differences of this size are rounding
+errors: the variants add the same numbers in different orders.
+
+\paragraph{At scale.} The configurations with the most ranks and the most complex exchange pattern are tested
+directly. soc-LiveJournal1 is run for exactly 50 iterations with pure MPI on 144 to \valScaleMax\ ranks (2 to 10
+nodes), the vectors are written to disk and compared with the serial vector after 50 iterations
+(\code{tools/compare\_vec.py}). The difference is at most $L_1=\,$\valMaxLone.
+
+\paragraph{Every timed run.} Each timed repetition writes its final residual and the sum of its rank vector to the
+result file. Over all \valRows\ repetitions the sum differs from 1 by at most \valSumErr, and all runs of the
+same graph and iteration count report the same residual to the four digits that are recorded, whatever the program,
+the layout and the number of nodes.
 
 % =====================================================================================================
-\section{Serial runtime and problem size}
+\section{Serial run time and problem size}
 \label{sec:serial}
 
 \begin{figure}[tb]
 \centering
 \includegraphics[width=\textwidth]{figures/serial_scaling.pdf}
-\caption{Serial program, one core. (a)~Time per iteration against the number of edges for three families. (b)~The
-same time divided by $M$.}
+\caption{Serial program on one core. (a)~Time per iteration against the number of edges. (b)~The same time divided
+by the number of edges.}
 \label{fig:serial}
 \end{figure}
 
 \begin{table}[tb]
 \centering\small
-\caption{Serial time per iteration (median of 3 repetitions of 10 iterations).}
+\setlength{\tabcolsep}{5pt}
+\caption{Serial time per iteration. $8N$ is the size of the vector $x$.}
 \label{tab:serial}
-\begin{tabular}{llrrrrr}
+\begin{tabular}{llrrrrrr}
 \toprule
-family & graph & $N$ (M) & $M$ (M) & $M/N$ & ms / iteration & ns / edge \\
+family & graph & $N$ ($10^6$) & $M$ ($10^6$) & $M/N$ & $8N$ (MB) & ms / iteration & ns / edge \\
 \midrule
 \tabinput{generated/tab_serial.tex}
 \bottomrule
 \end{tabular}
 \end{table}
 
-To vary both dimensions of the sparse matrix, we vary the number of edges $M$ at a fixed number of vertices $N$
-(edge factor 4 to 64), and grow $N$ and $M$ together over three orders of magnitude (R-MAT \code{rmat\_p}$k$, 1.9M
-to 1.5G edges). The real graphs are also included (Figure~\ref{fig:serial}, Table~\ref{tab:serial}).
+The problem size is varied in two ways with R-MAT graphs: the number of edges at a fixed number of vertices
+(\code{rmat\_n20\_ef}$f$, $N=2^{20}$, $M$ from 4.1 to 60.7 million), and vertices and edges together at a fixed
+ratio $M/N\approx15.6$ (\code{rmat\_p}$k$, $N$ from 0.13 to 94 million and $M$ from 1.9 million to 1.5 billion). The
+three real graphs are measured as well (Figure~\ref{fig:serial}, Table~\ref{tab:serial}).
 
-The run time grows linearly with $M$, as the $\Theta(N+M)$ analysis predicts: all points lie close to the slope-1 line
-in Figure~\ref{fig:serial}a, from 4.5~ms to 9.0~s. The constant, however, depends on where $x$ fits in the memory
-hierarchy:
-\begin{itemize}
-\item At fixed $N=2^{20}$ (an 8~MB $x$ vector that fits in the L3 cache), the time per edge \emph{falls} from
-  \serEFlo\ to \serEFhi~ns as the edge factor grows from 4 to 64. The per-vertex part of the work (the $44N$ bytes of
-  the bandwidth model) is spread over more edges.
-\item When $N$ and $M$ grow together, the time per edge \emph{rises} from \serRMlo\ to \serRMhi~ns. Up to about
-  $N=10^6$ the $x$ vector fits in cache. Beyond $N\approx 1.7\times10^7$ ($8N > 135$~MB, the total L3) almost every
-  $x_{\mathrm{src}}$ read goes to DRAM.
-\item The real graphs follow the same rule. soc-LiveJournal1 ($x$ = 39~MB, fits in L3) runs at 2.3~ns per edge,
-  com-friendster ($x$ = 525~MB) at 6.9~ns per edge, i.e.\ \serFRs~s per iteration.
-\end{itemize}
-The serial model is therefore $T \approx M \cdot t_e(N) + c\,N$, with $t_e$ between 2.3 and 7~ns depending on whether
-$8N$ bytes fit in the cache. This also explains the cache-related effects seen in the parallel runs: splitting a graph
-over more ranks shrinks the part of $x$ each rank touches.
+\paragraph{More edges on the same vertices.} At $N=2^{20}$ the time per iteration grows from \serEFtlo\ to
+\serEFthi~ms while $M$ grows by a factor of \serEFmratio. A least-squares line through the five graphs has a slope
+of \serEFslope~ns per edge and an intercept of \serEFicept~ns per vertex. The time is linear in $M$, and the cost of
+an edge, between \serEFmin\ and \serEFmax~ns, does not grow with $M$: the vector $x$ of these graphs occupies 8~MB
+and stays in the L3 cache however many edges read it.
 
-\begin{takeaway}
-\textbf{Key result.} Serial time grows linearly with the number of edges; the number of vertices sets the constant,
-through whether the $8N$-byte vector $x$ fits in the 135~MB L3 cache (2.3~ns per edge) or not (up to 7~ns).
-\end{takeaway}
+\paragraph{More vertices and edges.} From \code{rmat\_p1} to \code{rmat\_p720} the number of edges grows by a factor
+of \serRMmratio\ and the time by a factor of \serRMtratio, from \serRMtlo~ms to \serRMthi~s. The time per edge rises
+from \serRMlo\ to \serRMhi~ns. The number of edges per vertex is the same in all these graphs, so the increase comes
+from $N$: the vector $x$ grows from 1~MB to 755~MB. It outgrows the 2~MB L2 cache of the core at $N=0.26$ million and
+the 67.5~MB L3 cache of the socket at $N=8.4$ million, and a growing share of the reads of $x$ is served from main
+memory.
+
+\paragraph{Real graphs.} The real graphs fit the same picture. soc-LiveJournal1, whose $x$ occupies 39~MB, runs at
+\serLJns~ns per edge. com-friendster, whose $x$ occupies 525~MB, runs at \serFRns~ns per edge and needs \serFRs~s
+per iteration.
+
+The serial run time is thus $T\approx t_e(N)\,M+t_v\,N$: linear in the number of edges, with a cost per edge
+$t_e$ that the number of vertices raises from about 2.3~ns, when $x$ fits in the cache, to 6--7~ns, when it does
+not. The same effect appears in the parallel results. A large graph has a slow one-core baseline per edge, and
+dividing it among more cores also divides $x$ among more caches.
 
 % =====================================================================================================
 \section{MPI scaling}
@@ -416,31 +511,32 @@ through whether the $8N$-byte vector $x$ fits in the 135~MB L3 cache (2.3~ns per
 \begin{figure}[tb]
 \centering
 \includegraphics[width=\textwidth]{figures/strong_time.pdf}
-\caption{Strong scaling, 1 to 720 cores (10 nodes). Time per iteration of the hybrid layout (one rank per NUMA domain,
-36 threads per rank) and of pure MPI (one rank per core) on (a)~soc-LiveJournal1 and (b)~com-friendster. The dotted
-line marks one full node.}
+\caption{Strong scaling from 1 to 720 cores (10 nodes): time per iteration of the MPI+OpenMP program in the pure-MPI
+layout and in the hybrid layout.}
 \label{fig:strong}
 \end{figure}
 
 \begin{figure}[tb]
 \centering
 \includegraphics[width=\textwidth]{figures/strong_speedup.pdf}
-\caption{Strong-scaling speedup and parallel efficiency, relative to the same program on one core. Filled markers:
-soc-LiveJournal1, open markers: com-friendster.}
+\caption{Speedup and parallel efficiency of the runs in Figure~\ref{fig:strong}. Filled markers: soc-LiveJournal1;
+open markers: com-friendster.}
 \label{fig:speedup}
 \end{figure}
 
 \begin{table}[tb]
 \centering\footnotesize
-\setlength{\tabcolsep}{3.6pt}
-\caption{Strong scaling: time per iteration $T_p$ (ms), speedup $S_p$ and efficiency $E_p$.}
+\setlength{\tabcolsep}{3.4pt}
+\caption{Strong scaling: time per iteration $T_p$ (ms), speedup $S_p$ and efficiency $E_p$. Up to 72 cores the
+runs use one node; 144 to 720 cores are 2 to 10 nodes.}
 \label{tab:strong}
 \begin{tabular}{r rrr rrr rrr rrr}
 \toprule
 & \multicolumn{6}{c}{soc-LiveJournal1} & \multicolumn{6}{c}{com-friendster} \\
 \cmidrule(lr){2-7}\cmidrule(lr){8-13}
-& \multicolumn{3}{c}{MPI+OpenMP} & \multicolumn{3}{c}{pure MPI} & \multicolumn{3}{c}{MPI+OpenMP} &
+& \multicolumn{3}{c}{hybrid} & \multicolumn{3}{c}{pure MPI} & \multicolumn{3}{c}{hybrid} &
 \multicolumn{3}{c}{pure MPI} \\
+\cmidrule(lr){2-4}\cmidrule(lr){5-7}\cmidrule(lr){8-10}\cmidrule(lr){11-13}
 cores & $T_p$ & $S_p$ & $E_p$ & $T_p$ & $S_p$ & $E_p$ & $T_p$ & $S_p$ & $E_p$ & $T_p$ & $S_p$ & $E_p$ \\
 \midrule
 \tabinput{generated/tab_strong.tex}
@@ -448,353 +544,426 @@ cores & $T_p$ & $S_p$ & $E_p$ & $T_p$ & $S_p$ & $E_p$ & $T_p$ & $S_p$ & $E_p$ & 
 \end{tabular}
 \end{table}
 
-Figures~\ref{fig:strong}--\ref{fig:speedup} and Table~\ref{tab:strong} show strong scaling from one core to 10 nodes
-for both large real graphs. Within one NUMA domain (up to 36 cores) the hybrid code is close to ideal. com-friendster
-reaches $S_{36}=\stFRhyS{36}$ ($E=\stFRhyE{36}$); the slight superlinearity at 2--16 cores is a cache effect (the
-threads together hold more of $x$ in their caches). soc-LiveJournal1 reaches $S_{36}=\stLJhyS{36}$. Beyond one node
-the two graphs behave differently:
-\begin{itemize}
-\item \textbf{com-friendster} keeps scaling: \stFRhy{72}~ms on one node, \stFRhy{144}~ms on 2 nodes, \stFRhy{288}~ms
-  on 4 nodes and \stFRbest~ms on \stFRbestc\ cores, a speedup of \stFRbestS\ over one core and of 3.0$\times$ over one
-  node. Efficiency falls from \stFRhyE{72} (72 cores) to \stFRhyE{288} (288) and \stFRhyE{720} (720). At 720 cores the
-  time rises again to \stFRhy{720}~ms: the computation per rank keeps shrinking, but the exchange does not
-  (Section~\ref{sec:comm}).
-\item \textbf{soc-LiveJournal1} is too small to profit from more than one socket. One iteration takes only
-  \stLJhy{36}~ms on 36 cores, which is less than one exchange of its ghost values between nodes. The time stays
-  between 6 and 9~ms from 36 to 720 cores. The best value, \stLJbest~ms on \stLJbestc\ cores, is only slightly better
-  than one socket.
-\end{itemize}
+The two large real graphs are run on 1 to 720 cores with the edge partition and the ghost exchange
+(Figures~\ref{fig:strong} and~\ref{fig:speedup}, Table~\ref{tab:strong}). The baseline $T_1$ is the MPI+OpenMP
+program on one core. It is within \baseLJ\% of the serial program on both graphs (\stLJone\ against \serLJms~ms, and
+\stFRones\ against \serFRs~s).
 
-\textbf{Pure MPI} is slower than hybrid at every core count above one, and it collapses on several nodes. On
-soc-LiveJournal1 it reaches \stLJmp{144}~ms at 144 ranks but \stLJmp{288}~ms at 288, and 0.3--0.45~s per iteration
-at 432--720 ranks: \stLJratio$\times$ slower than hybrid at 432 cores and slower than one core. On com-friendster pure
-MPI is fastest at 144 ranks (\stFRmp{144}~ms) and then slows down again, reaching \stFRmp{720}~ms at 720 ranks,
-\stFRratio$\times$ the hybrid time. The reasons are analysed next.
+\paragraph{Pure MPI.} On one node, pure MPI reaches a speedup of \stLJmpS{72} on 72 cores for soc-LiveJournal1
+($E=\stLJmpE{72}$) and of \stFRmpS{72} for com-friendster ($E=\stFRmpE{72}$). It is fastest on \stLJmpbestc\ cores for
+both graphs: \stLJmpbest~ms for soc-LiveJournal1 ($S=\stLJmpbestS$) and \stFRmpbest~ms for com-friendster
+($S=\stFRmpbestS$). With more ranks the time rises again. soc-LiveJournal1 needs \stLJmp{288}~ms on 288 ranks and
+\stLJmpfast\ to \stLJmpslow~ms on 432 to 720 ranks, which is slower than on one core. com-friendster needs
+\stFRmp{720}~ms on 720 ranks, a speedup of \stFRmpS{720} and an efficiency of \stFRmpE{720}. The MPI-only program
+therefore scales to two nodes on this cluster. Section~\ref{sec:comm} shows that the limit is the exchange between
+the ranks and not the computation.
+
+\paragraph{MPI+OpenMP.} The hybrid layout is faster than pure MPI at every core count above one. Up to 36 cores it
+is a single rank, and it scales almost ideally: the speedup on 36 cores is \stFRhyS{36} for com-friendster
+($E=\stFRhyE{36}$) and \stLJhyS{36} for soc-LiveJournal1 ($E=\stLJhyE{36}$). For com-friendster the efficiency is
+even slightly above one from 2 to 16 cores (\stFReffLo\ to \stFReffHi); every additional core brings its own 2~MB
+of L2 cache. Beyond one node, the two graphs behave differently.
+\begin{itemize}
+\item \emph{com-friendster} keeps scaling: \stFRhy{72}~ms on one node, \stFRhy{144}~ms on two, \stFRhy{288}~ms on
+  four, and \stFRbest~ms on \stFRbestc\ cores. This is a speedup of \stFRbestS\ over one core ($E=\stFRbestE$) and of
+  \stFRnodeS\ over one node. On 720 cores the time is \stFRhy{720}~ms.
+\item \emph{soc-LiveJournal1} stops at one socket. One iteration takes \stLJhy{36}~ms on 36 cores, which is less
+  than one exchange of ghost values between nodes costs. From 72 to 720 cores the time stays between \stLJmultimin\
+  and \stLJmultimax~ms; the best value, \stLJbest~ms on \stLJbestc\ cores, is a speedup of \stLJbestS, against
+  \stLJhyS{36} on 36 cores.
+\end{itemize}
+On several nodes the hybrid layout is up to \stFRratio\ times faster than pure MPI for com-friendster and up to
+\stLJratio\ times for soc-LiveJournal1 (both on \stLJratioc\ cores).
 
 \subsection{Weak scaling}
+\label{sec:weak}
 
 \begin{figure}[tb]
 \centering
 \includegraphics[width=\textwidth]{figures/weak.pdf}
-\caption{Weak scaling on R-MAT graphs with $\approx$2M edges per core (\code{rmat\_p}$k$ on $k$ cores; 1.9M edges on 1
-core, 1.5G edges on 720 cores). Ideal weak scaling is a constant time.}
+\caption{Weak scaling: \code{rmat\_p}$k$ on $k$ cores, about 2 million edges per core, from 1.9 million edges on one
+core to 1.5 billion edges on 720 cores.}
 \label{fig:weak}
 \end{figure}
 
 \begin{table}[tb]
-\centering\small
-\caption{Weak scaling on \code{rmat\_p}$k$: time per iteration (ms) and weak efficiency $T_1/T_p$.}
+\centering\footnotesize
+\setlength{\tabcolsep}{4.2pt}
+\caption{Weak scaling on \code{rmat\_p}$k$. $M/p$ is the number of edges per core after duplicate removal. Times in
+ms per iteration.}
 \label{tab:weak}
-\begin{tabular}{rrr rr rr}
+\begin{tabular}{rrrr rrrr rrr}
 \toprule
-& & & \multicolumn{2}{c}{MPI+OpenMP} & \multicolumn{2}{c}{pure MPI} \\
-\cmidrule(lr){4-5}\cmidrule(lr){6-7}
-cores & $N$ (M) & $M$ (M) & $T_p$ & $T_1/T_p$ & $T_p$ & $T_1/T_p$ \\
+& & & & \multicolumn{4}{c}{hybrid} & \multicolumn{3}{c}{pure MPI} \\
+\cmidrule(lr){5-8}\cmidrule(lr){9-11}
+cores & $N$ ($10^6$) & $M$ ($10^6$) & $M/p$ ($10^6$) & $T_p$ & $t_{comp}$ & $t_{comm}$ & $T_1/T_p$ & $T_p$ &
+$t_{comm}$ & $T_1/T_p$ \\
 \midrule
 \tabinput{generated/tab_weak.tex}
 \bottomrule
 \end{tabular}
 \end{table}
 
-For weak scaling the graph grows with the core count (Figure~\ref{fig:weak}, Table~\ref{tab:weak}), from 1.9 million
-edges on one core to 1.5 billion edges on 720 cores. The hybrid time per iteration grows from \wkOne~ms to
-\wkHy{720}~ms, a weak efficiency of \wkHyE{720}. Three effects cause the growth, and they can be separated:
-\begin{enumerate}
-\item \textbf{Memory bandwidth within a node} (1--72 cores, efficiency down to \wkHyE{72}). One core draws
-  \streamOne~GB/s from memory but 36 cores together only \streamHalf~GB/s (STREAM triad, Figure~\ref{fig:bw}): the
-  bandwidth per core drops by half when the socket is full. A bandwidth-bound kernel cannot weak-scale inside a node.
-\item \textbf{Cache capacity.} The per-core share of edges is constant, but a rank reads $x$ entries from the whole
-  graph. The $x$ vector of \code{rmat\_p}36 (38~MB) still fits in L3; that of \code{rmat\_p}144 (151~MB) does not.
-  This is the same effect that raises the serial time per edge (Section~\ref{sec:serial}).
-\item \textbf{Communication across nodes} (72--720 cores). After the random relabelling, each rank's ghost set grows
-  with the total $N$, so the bytes and the number of partners per rank grow even though the edges per rank stay fixed.
-  From 72 to 720 cores the communication time of the hybrid runs grows from 4.8 to 61~ms per iteration while the
-  computation time stays at 8--16~ms.
-\end{enumerate}
-Pure MPI stays within a factor of two of the hybrid code up to 144 ranks (\wkMp{144}~ms). It then jumps to
-\wkMp{288}~ms at 288 ranks, the same breakdown as in strong scaling.
+For weak scaling, \code{rmat\_p}$k$ is run on $k$ cores, so the numbers of vertices and edges grow in proportion to
+the core count (Figure~\ref{fig:weak}, Table~\ref{tab:weak}). Every core has between \wkEpcMin\ and \wkEpcMax\
+million edges; the number rises slightly with $k$, because R-MAT produces fewer duplicate edges in larger graphs.
+With ideal weak scaling the time per iteration would stay at $T_1=\,$\wkOne~ms, the one-core time of the MPI+OpenMP
+program on \code{rmat\_p1}. (The unpinned serial program needs \serPone~ms on this graph.)
+
+The time of the hybrid layout grows from \wkOne~ms to \wkHy{720}~ms on 720 cores, a weak-scaling efficiency of
+\wkHyE{720}. Pure MPI follows the hybrid layout up to 144 cores (\wkMp{144} against \wkHy{144}~ms), jumps to
+\wkMp{288}~ms on 288 ranks and reaches \wkMp{720}~ms on 720 ranks. The columns $t_{comp}$ and $t_{comm}$ of
+Table~\ref{tab:weak} separate two causes.
+\begin{itemize}
+\item \emph{Within one node} (1 to 72 cores) the time grows from \wkOne\ to \wkHy{72}~ms, an efficiency of
+  \wkHyE{72}, although no message leaves the node. The computation itself becomes slower, from \wkOne\ to
+  \wkHyComp{72}~ms, for the two reasons seen so far. The graph outgrows the caches: $x$ occupies 1~MB for
+  \code{rmat\_p1} and 75~MB for \code{rmat\_p72}, and the serial time per edge on the same graphs rises from 2.3 to
+  3.9~ns (Table~\ref{tab:serial}). And the cores share the memory bandwidth of the node: the STREAM triad delivers
+  \streamOne~GB/s to one core but \streamFull~GB/s to 72 cores, \streamPerCore~GB/s each (Section~\ref{sec:openmp}).
+\item \emph{On several nodes} (144 to 720 cores) the computation stays between \wkHyComp{144} and
+  \wkHyComp{720}~ms, as intended with a constant number of edges per core, but the communication grows from
+  \wkHyComm{144} to \wkHyComm{720}~ms. The in-edges of a rank come from all over the graph, so its number of ghost
+  vertices grows with the graph even though its number of edges is fixed.
+\end{itemize}
+Compared with the serial program on the same 1.5-billion-edge graph, the 720-core run is \wkSerS{720} times faster
+(\wkSerT{720}~s against \wkHy{720}~ms).
 
 \subsection{Impact of communication}
 \label{sec:comm}
 
 \begin{figure}[tb]
 \centering
-\includegraphics[width=\textwidth]{figures/comm_volume.pdf}
-\caption{(a)~Total ghost data sent per iteration, summed over ranks (MB). (b)~Share of the time spent in MPI
-calls, $t_{comm}/(t_{comm}+t_{comp})$, from the strong-scaling runs.}
-\label{fig:commvol}
-\end{figure}
-
-\begin{figure}[tb]
-\centering
-\includegraphics[width=\textwidth]{figures/split_breakdown.pdf}
-\caption{Diagnostic \code{--split} runs of the hybrid code: computation, barrier wait (load imbalance and
-synchronisation) and pure communication per iteration, from 1 to 10 nodes, for (a)~soc-LiveJournal1 and
-(b)~com-friendster.}
-\label{fig:split}
-\end{figure}
-
-Communication is the part of the problem that limits scaling. The three MPI operations per iteration have very
-different costs:
-\begin{itemize}
-\item the two \code{MPI\_Allreduce} calls move one double each. They cost only latency, and they act as global
-  synchronisation points;
-\item the \textbf{ghost exchange} moves all the data. Its volume (Figure~\ref{fig:commvol}a) is set by the
-  number of ghost vertices. The hybrid layout sends fewer bytes than pure MPI at the same core count: 2--10$\times$ fewer for
-  soc-LiveJournal1 and 6--26$\times$ fewer for com-friendster.
-  With 36 threads per rank, the 36 cores share one copy of each ghost value, whereas 36 separate ranks would each
-  receive their own copy. Allgather would be far worse: on 288 ranks it moves 11~GB per iteration for
-  soc-LiveJournal1, against \dzLJbyteG~MB with the ghost exchange (Table~\ref{tab:design}).
-\end{itemize}
-
-The share of time spent in MPI calls (Figure~\ref{fig:commvol}b) grows with the number of ranks and exceeds
-one half for every multi-node configuration of soc-LiveJournal1. The \code{--split} runs (Figure~\ref{fig:split})
-separate waiting from moving data. For com-friendster on 72 cores, an iteration spends \spFRcomp{72}~ms computing,
-\spFRwait{72}~ms waiting at barriers and \spFRcomm{72}~ms moving data. On 720 cores computation has dropped to
-\spFRcomp{720}~ms, roughly in proportion to the cores, but the data exchange has \emph{grown} to \spFRcomm{720}~ms.
-The crossover is at about 288 cores, which matches where the strong-scaling efficiency drops below 0.5. The barrier
-wait stays small (13--22~ms) because the edge partition balances the work: load imbalance is not the limit,
-communication is.
-
-Even within one node, going from one rank (36 cores) to two ranks (72 cores) makes soc-LiveJournal1 slower
-(\stLJhy{36} $\rightarrow$ \stLJhy{72}~ms). The two ranks exchange their ghost values through shared memory, and this
-costs \spLJcomm{72}~ms per iteration, more than the \spLJcomp{72}~ms of computation it saves. On Vanda the
-single-copy (CMA) mechanism of the shared-memory transport is not permitted, so every message is copied twice through
-a shared buffer.
-
-\subsection{Why pure MPI breaks down: TCP between nodes}
-\label{sec:transport}
-
-The node's RDMA network adapters are Intel \code{irdma} devices (iWARP/RoCE). The OpenMPI 4.1.8 module on Vanda is
-built without UCX, and its \code{openib} BTL is disabled for these devices by default. We forced it on
-(\code{--mca btl self,vader,openib --mca btl\_openib\_allow\_ib 1}, experiment E9). Every such run, pure MPI and
-hybrid on 2--10 nodes, stopped at start-up with ``No OpenFabrics connection schemes reported that they were able to be
-used'' followed by ``unable to reach each other'', so E9 produced no timings. A separate two-node probe
-(\code{jobs/final/f5\_ibprobe.pbs}) found the reason. Each node has four \code{irdma} ports, of which only one is up,
-and its link layer is Ethernet (RoCE). The \code{udcm} connection scheme of \code{openib} does not support Ethernet
-ports, and the \code{rdmacm} scheme reports itself unavailable on this port, also when selected explicitly. RDMA would
-need an MPI built with UCX or libfabric, which Vanda does not provide. Inter-node MPI messages on Vanda therefore go
-through the kernel TCP stack (\code{btl tcp}), with its per-message latency and per-connection socket buffers.
-
-With TCP, the cost of the ghost exchange depends strongly on the number of messages, not only on the bytes. In a
-random-like graph almost every rank has ghost vertices on almost every other rank, so the exchange consists of about
-$P(P-1)$ messages per iteration: 380 for the 20 ranks of hybrid on 10 nodes, but about 83,000 for 288 pure-MPI ranks
-and 518,000 for 720. This is what we see:
-\begin{itemize}
-\item at 288 ranks on 4 nodes, the allgather (a ring/recursive-doubling collective with $O(P)$ messages per rank)
-  beats the ghost exchange on com-friendster (682 vs 1045~ms with the edge partition) despite sending 10$\times$
-  more bytes
-  (Table~\ref{tab:design});
-\item pure MPI on soc-LiveJournal1 jumps from 10~ms (144 ranks) to 34~ms (288) and 0.3--0.45~s (432--720): almost all
-  of it is $t_{comm}$ (about 20~s of the 20~s total at 432 ranks);
-\item with 576 and 720 ranks, every rank opens a TCP connection to almost every rank on another node, about
-  $72\times504\approx36{,}000$ connections per node at 576 ranks. A run that started less than 60~s after the
-  previous large run failed with ``\code{bind on local address ... Address already in use}'': the sockets of the
-  previous run were still in the TCP \code{TIME\_WAIT} state, so the node had no free local port. The same
-  configurations succeeded when started a few minutes later. The failed runs were repeated in a separate job that
-  waits for these sockets to drain before every large run (\code{scripts/final\_lib.sh}); with this wait every
-  configuration completed.
-\end{itemize}
-The hybrid layout avoids the problem because it uses 36$\times$ fewer ranks. It sends fewer bytes, and above all it
-sends about $36^2$ times fewer messages and opens 1,300$\times$ fewer TCP connections. On this cluster the
-MPI+OpenMP design is therefore not just faster but the only one that scales beyond a few nodes. An MPI library with
-RDMA support (e.g.\ an HPC-X/UCX build) would lower the per-message cost, but it would not change the $P^2$ growth of
-the message count.
-
-\begin{takeaway}
-\textbf{Key result.} The hybrid code scales com-friendster to a speedup of \stFRbestS\ on \stFRbestc\ cores, while
-soc-LiveJournal1 is too small to gain beyond one socket. Weak efficiency at 720 cores is \wkHyE{720}. In both cases the
-ghost exchange is what grows, and over TCP its cost follows the number of messages ($\approx P^2$), so pure MPI
-collapses above 144 ranks.
-\end{takeaway}
-
-% =====================================================================================================
-\section{MPI+X}
-\label{sec:mpix}
-
-\subsection{X = OpenMP: threads, ranks and design choices}
-
-\begin{figure}[tb]
-\centering
-\includegraphics[width=0.52\textwidth]{figures/bandwidth.pdf}
-\caption{Memory bandwidth on one node: STREAM triad and the effective bandwidth of the PageRank iteration (hybrid code)
-for 1 to 72 cores.}
-\label{fig:bw}
-\end{figure}
-
-\begin{figure}[tb]
-\centering
-\includegraphics[width=\textwidth]{figures/design.pdf}
-\caption{(a)~The four partition and exchange combinations on 288 pure-MPI ranks (4 nodes), relative to the vertex
-partition with allgather; the bar labels give ms per iteration. (b)~288 cores split into different numbers of
-ranks and threads.}
-\label{fig:design}
+\includegraphics[width=\textwidth]{figures/comm_time.pdf}
+\caption{Computation time $t_{comp}$ (filled markers) and communication time $t_{comm}$ (open markers) per
+iteration in the strong-scaling runs. The hybrid layout has a single rank, and no communication, up to 36 cores.}
+\label{fig:comm}
 \end{figure}
 
 \begin{table}[tb]
+\centering\footnotesize
+\setlength{\tabcolsep}{3.3pt}
+\caption{Strong-scaling runs on one to ten nodes: computation time $t_{comp}$ and communication time $t_{comm}$ per
+iteration (ms), and ghost data $V$ received per iteration, summed over all ranks (MB).}
+\label{tab:comm}
+\begin{tabular}{r rrr rrr rrr rrr}
+\toprule
+& \multicolumn{6}{c}{soc-LiveJournal1} & \multicolumn{6}{c}{com-friendster} \\
+\cmidrule(lr){2-7}\cmidrule(lr){8-13}
+& \multicolumn{3}{c}{hybrid} & \multicolumn{3}{c}{pure MPI} & \multicolumn{3}{c}{hybrid} &
+\multicolumn{3}{c}{pure MPI} \\
+\cmidrule(lr){2-4}\cmidrule(lr){5-7}\cmidrule(lr){8-10}\cmidrule(lr){11-13}
+cores & $t_{comp}$ & $t_{comm}$ & $V$ & $t_{comp}$ & $t_{comm}$ & $V$ & $t_{comp}$ & $t_{comm}$ & $V$ & $t_{comp}$ &
+$t_{comm}$ & $V$ \\
+\midrule
+\tabinput{generated/tab_comm.tex}
+\bottomrule
+\end{tabular}
+\end{table}
+
+An iteration makes three MPI calls. The two \code{MPI\_Allreduce} calls carry one number each. The ghost exchange
+carries all the data. Figure~\ref{fig:comm} and Table~\ref{tab:comm} show the time spent in computation and in MPI
+calls separately.
+
+The computation time falls in proportion to the number of cores in both layouts. For com-friendster in the hybrid
+layout it is \cmFRhyComp{72}~ms on 72 cores and \cmFRhyComp{720}~ms on 720. The communication time does not fall: it
+is \cmFRhyComm{72}~ms on 72 cores and \cmFRhyComm{720}~ms on 720. From 288 cores on, an iteration spends more time
+in MPI calls than in computation (\cmFRhyComm{288} against \cmFRhyComp{288}~ms), and this is where the efficiency
+falls below 0.5. For soc-LiveJournal1 the communication exceeds the computation as soon as there is more than one
+rank (\cmLJhyComm{72} against \cmLJhyComp{72}~ms on 72 cores). Both the volume of the exchange and its number of
+messages matter, in different layouts.
+
+\paragraph{Volume.} The ghost data per iteration grows with the number of ranks (column $V$), because a value that
+several ranks need is sent to each of them. At the same core count the hybrid layout moves \cmLJvolMin\ to
+\cmLJvolMax\ times less data than pure MPI for soc-LiveJournal1, and \cmFRvolMin\ to \cmFRvolMax\ times less for
+com-friendster: the 36 threads of a rank share one copy of each ghost value, whereas 36 separate ranks each receive
+their own. In the hybrid layout the time of the exchange follows this volume. A rank receives between
+\cmFRhyPer{720} and \cmFRhyPer{144}~MB per iteration for com-friendster, and between \cmLJhyPer{720} and
+\cmLJhyPer{144}~MB for soc-LiveJournal1, at a rate of \cmALLrateMin\ to \cmALLrateMax~GB/s in all multi-rank runs
+of both graphs. The volume per rank hardly changes with the number of ranks: a rank that owns 5\% of the edges of
+com-friendster still needs the values of \cmFRghostFrac\% of all vertices from other ranks. The communication time per iteration of
+com-friendster therefore stays near 100~ms while the computation time shrinks, and this bounds the speedup.
+
+\paragraph{Number of messages.} In pure MPI, the volume per rank is small. On 720 ranks a rank receives
+\cmFRmpPer~MB per iteration for com-friendster, yet the exchange takes \cmFRmpComm{720}~ms, a rate of
+\cmFRmpRate~MB/s, more than a hundred times below the rate of the hybrid layout. Here the cost follows the number of messages.
+Almost every rank has ghost vertices on almost every other rank, so one exchange consists of up to $P(P-1)$
+messages: 380 for the 20 ranks of the hybrid layout on ten nodes, 82,656 for 288 single-threaded ranks and 517,680
+for 720. Between nodes, every pair of ranks communicates over its own TCP connection, and every message passes
+through the network stack of the operating system on both sides. On 576 ranks a node holds $72\times504\approx36{,}000$
+connections. The run times in this regime also vary from run to run: the same configuration, soc-LiveJournal1 on
+288 ranks, was launched in \mpLJvarN\ different experiments and took between \mpLJvarMin\ and \mpLJvarMax~ms per
+iteration.
+
+\paragraph{Waiting and moving data.} $t_{comm}$ contains the time a rank waits inside an MPI call for the others.
+To separate the two, the hybrid layout was also run with the option \code{-{}-split}, which puts a barrier in front of
+every MPI call. For com-friendster the barriers take \spFRwaitMin\ to \spFRwaitMax~ms per iteration at every core
+count, and the remaining communication time, which is pure data movement, grows from \spFRcomm{72}~ms on 72 cores to
+\spFRcomm{720}~ms on 720. The ranks finish their computation almost together, as the edge partition intends, and
+the time goes into moving the ghost values.
+
+\paragraph{Within one node.} Communication is costly even through shared memory. Going from one rank with 36
+threads to two ranks with 36 threads each makes soc-LiveJournal1 slower, \stLJhy{36}~ms against \stLJhy{72}~ms: the
+second rank reduces the computation to \spLJcomp{72}~ms but adds an exchange of \spLJcomm{72}~ms.
+
+\subsection{Partition and exchange method}
+\label{sec:design-eval}
+
+\begin{table}[!htb]
 \centering\small
-\caption{Partition and exchange methods on 288 ranks (4 nodes, pure MPI). Times in ms per iteration; the bytes are
-the total sent per iteration over all ranks.}
+\caption{The four combinations of partition and exchange method on 288 ranks (pure MPI, four nodes). Times in ms
+per iteration; $V$ is the data received per iteration, summed over all ranks.}
 \label{tab:design}
 \begin{tabular}{lll rrr rr}
 \toprule
-graph & partition & exchange & $T$ & $t_{comp}$ & $t_{comm}$ & imbalance & MB / iteration \\
+graph & partition & exchange & $T_p$ & $t_{comp}$ & $t_{comm}$ & imbalance & $V$ (MB) \\
 \midrule
 \tabinput{generated/tab_design.tex}
 \bottomrule
 \end{tabular}
 \end{table}
 
-\paragraph{OpenMP within a node.} OpenMP threads parallelise the two vertex loops; the SpMV loop uses a dynamic
-schedule with chunks of 512 rows, so that threads that hit long rows do not hold up the others. Figure~\ref{fig:bw}
-compares the effective bandwidth of the iteration with STREAM. For soc-LiveJournal1 the iteration reaches
-\prLJbw{36}~GB/s on one socket, more than half of STREAM (\streamHalf~GB/s): $x$ fits in the L3 cache, so most of the
-irregular reads hit cache. com-friendster reaches \prFRbw{72}~GB/s on the full node, a quarter of STREAM
-(\streamFull~GB/s), because each random $x$ read moves a full cache line from DRAM. Both curves bend where STREAM bends:
-the thread level is limited by memory bandwidth, which is why the hybrid code puts exactly one rank on each socket's
-memory.
+Table~\ref{tab:design} compares the two partitions and the two exchange methods on 288 ranks.
 
-\paragraph{Ranks $\times$ threads.} On 288 cores (Figure~\ref{fig:design}b) the best split for both graphs is
-8 to 16 ranks with 36 or 18 threads, i.e.\ one or two ranks per NUMA domain. Fewer ranks (4$\times$72 threads) put
-threads on the remote socket's memory. More ranks increase the communication, up to 13$\times$ the best time for
-soc-LiveJournal1 with 288 single-thread ranks.
+The edge partition removes the load imbalance. With equal numbers of vertices, the most loaded rank has \dzLJimbV\
+times the average number of in-edges for soc-LiveJournal1 and \dzFRimbV\ times for com-friendster; with the edge
+partition the values are \dzLJimbE\ and \dzFRimbE. For com-friendster, the computation time of the slowest rank
+falls from \dzFRcompV\ to \dzFRcompE~ms.
 
-\paragraph{Partition and exchange.} Table~\ref{tab:design} compares the four combinations on 288 ranks. The edge
-partition fixes the load imbalance (\dzLJimbV\ $\rightarrow$ \dzLJimbE\ on soc-LiveJournal1,
-\dzFRimbV\ $\rightarrow$ \dzFRimbE\ on com-friendster) and reduces the com-friendster computation time from
-\dzFRcompV\ to \dzFRcompE~ms. The ghost exchange cuts the bytes by 10--40$\times$. As discussed in
-Section~\ref{sec:transport}, with pure MPI over TCP the message count matters more than the bytes, so on
-com-friendster the allgather is faster at this rank count. With the hybrid layout the rank count stays small and the
-ghost exchange is the better choice. All scaling runs therefore use the edge partition with the ghost exchange.
+The ghost exchange reduces the volume by a factor of \dzLJvolRatio\ for soc-LiveJournal1, from \dzLJgbA~GB to
+\dzLJmbG~MB per iteration, and by a factor of \dzFRvolRatio\ for com-friendster. On 288 single-threaded ranks,
+however, the time follows the number of messages and not the volume (Section~\ref{sec:comm}). \code{MPI\_Allgatherv}
+moves the larger volume with a schedule in which each rank exchanges data with a few partners only, and for
+com-friendster it is faster than the ghost exchange (\dzFRtEA\ against \dzFRtEG~ms). For soc-LiveJournal1 the
+total times on 288 ranks vary too much between runs to rank the four combinations (Section~\ref{sec:comm}). With
+few ranks the lower volume decides. In the validation runs on web-Google with 4 ranks of 4 threads, the ghost exchange is \valGGgain\%
+faster than the allgather (\valGGghost\ against \valGGallg~ms per iteration with the edge partition), and on the 20
+ranks of the hybrid layout an allgather would deliver about 500~MB of com-friendster to every rank where the ghost
+exchange delivers \cmFRhyPer{720}~MB. All scaling runs therefore use the edge partition with the ghost exchange.
 
-\subsection{X = CUDA: one GPU}
+% =====================================================================================================
+\section{MPI+X}
+\label{sec:mpix}
+
+\subsection{X = OpenMP}
+\label{sec:openmp}
+
+\begin{figure}[tb]
+\centering
+\includegraphics[width=\textwidth]{figures/openmp.pdf}
+\caption{(a)~Memory bandwidth on one node: STREAM triad, and effective bandwidth of the PageRank iteration in the
+hybrid layout. (b), (c)~The same number of cores divided into different numbers of ranks; every rank has cores/ranks
+threads.}
+\label{fig:openmp}
+\end{figure}
+
+\paragraph{Threads and memory bandwidth.} Figure~\ref{fig:openmp}a compares the effective bandwidth $B$ of the
+iteration with the STREAM triad on one node. For com-friendster, $B$ grows from \prFRbwOne~GB/s on one core to
+\prFRbw{36}~GB/s on 36 cores and \prFRbw{72}~GB/s on the full node, which is \prFRshare\% of the \streamFull~GB/s that the
+triad reaches. This is close to what the memory of the node can deliver for this access pattern: if every read of
+$x$ loads a 64-byte cache line, an iteration on com-friendster transfers about five times the bytes it uses, so $B$
+can reach about a fifth of the bandwidth for sequential access. For soc-LiveJournal1, whose $x$ fits in the L3
+cache, $B$ reaches \prLJbw{36}~GB/s on 36 cores, more than half of the triad (\streamHalf~GB/s). OpenMP threads
+therefore speed up the iteration only until the memory bandwidth of the node is used up, which shows in the
+efficiency of \stLJhyE{36} for soc-LiveJournal1 on 36 cores and in the loss of weak-scaling efficiency within one
+node (Section~\ref{sec:weak}).
+
+\paragraph{Ranks and threads on one node.} Figure~\ref{fig:openmp}b divides the 72 cores of a node into 1 to 72
+ranks. For com-friendster, two ranks with 36 threads are fastest (\swFRone{2}~ms). One rank with 72 threads is
+\swFRnuma\ times slower (\swFRone{1}~ms): a rank reads and allocates its arrays on its master thread, so its data
+resides in the memory of one NUMA domain, and with 72 threads half of them work on the memory of the other socket.
+With more than two ranks, the communication grows, up to \swFRone{72}~ms for 72 single-threaded ranks. For
+soc-LiveJournal1 the order is different. One rank with 72 threads is fastest (\swLJone{1}~ms): its $x$ fits in the
+L3 cache of either socket, so memory placement matters little, and a single rank needs no exchange at all. Two
+ranks need \swLJone{2}~ms and 72 ranks \swLJone{72}~ms.
+
+\paragraph{Ranks and threads on four nodes.} On 288 cores (Figure~\ref{fig:openmp}c) the fastest layouts are 8 ranks
+of 36 threads for com-friendster (\swFRfour{8}~ms) and 16 ranks of 18 threads for soc-LiveJournal1
+(\swLJfour{16}~ms), that is, one or two ranks per NUMA domain. Four ranks of 72 threads are 1.6 times slower for
+both graphs, again because of memory placement. More ranks mean more ghost data and more messages: 72 ranks of 4
+threads are 2.5 to 2.7 times slower than the best layout, and 288 single-threaded ranks are \swLJfourWorst\ times
+slower for soc-LiveJournal1 and \swFRfourWorst\ times for com-friendster. One rank per NUMA domain keeps the data
+of a rank in local memory and uses the smallest number of ranks that does so, which is why it is the layout of the
+hybrid runs.
+
+\subsection{X = CUDA on one GPU}
 
 \begin{figure}[tb]
 \centering
 \includegraphics[width=\textwidth]{figures/gpu.pdf}
-\caption{(a)~soc-LiveJournal1 time per iteration on CPU cores and on one A40 GPU (four SpMV kernels). (b)~MPI+CUDA speedup with two GPUs on one node and on two nodes.}
+\caption{(a)~Time per iteration on soc-LiveJournal1 for the CPU (hybrid layout with a single rank) and for one A40
+GPU. (b)~Speedup of the MPI+CUDA program with two GPUs over one GPU.}
 \label{fig:gpu}
 \end{figure}
 
 \begin{table}[tb]
 \centering\small
-\caption{Single-GPU kernels on soc-LiveJournal1 (one A40, median of 5$\times$50 iterations): time per iteration,
-effective bandwidth $B$ and $B$ as a fraction of the 696~GB/s peak.}
+\caption{SpMV kernels on one A40 GPU, soc-LiveJournal1: time per iteration and effective bandwidth $B$.}
 \label{tab:gpu}
-\begin{tabular}{lrrr}
+\begin{tabular}{llrr}
 \toprule
-SpMV kernel & ms / iteration & $B$ (GB/s) & of peak \\
+program & SpMV kernel & ms / iteration & $B$ (GB/s) \\
 \midrule
 \tabinput{generated/tab_gpu.tex}
 \bottomrule
 \end{tabular}
 \end{table}
 
-On one A40 (Table~\ref{tab:gpu}, Figure~\ref{fig:gpu}a), the simple thread-per-row kernel is the fastest of our
-kernels (\gpuThr~ms). The warp-per-row kernel is 4$\times$ slower (\gpuWarp~ms) because the median row has only a
-handful of in-edges, so most of the 32 lanes idle. The degree-bucket kernel (\gpuHyb~ms) helps the few very long rows
-but pays for a second level of indirection through the bucket lists. cuSPARSE, used only as a reference, reaches
-\gpuCusp~ms, 12\% faster than our best kernel.
+\paragraph{Kernels.} Table~\ref{tab:gpu} and Figure~\ref{fig:gpu}a give the time per iteration on
+soc-LiveJournal1 for every kernel. In the single-GPU program the thread-per-row kernel is the fastest of our
+kernels (\gpuThr~ms), followed by the degree buckets (\gpuHyb~ms). The warp-per-row kernel is \gpuWarpSlow\ times
+slower than the thread-per-row kernel: a row of this graph has 14 in-edges on average, so most of the 32 threads
+of a warp have no edge to add. In the MPI+CUDA program on one GPU, the degree-bucket kernel takes \gpuMHyb~ms and
+the thread-per-row kernel \gpuMThr~ms. Our fastest kernel thus matches \code{cusparseSpMV} (\gpuCusp~ms).
 
-Compared with the CPU, one A40 runs soc-LiveJournal1 \gpuVsSerial$\times$ faster than one core but only about as fast
-as one 36-core socket (\gpuThr\ vs \stLJhy{36}~ms), and 1.5$\times$ faster than a full node (\stLJhy{72}~ms). For
-com-friendster (MPI+CUDA, one GPU) one iteration takes \mgFRone~ms, which is \emph{slower} than one CPU node
-(\stFRhy{72}~ms). The GPU is
-\emph{not} limited by its arithmetic. We measured its memory system with \code{tools/gpu\_bw.cu}: a device-to-device
-copy reaches \gpuCopy~GB/s and a STREAM triad \gpuTriad~GB/s, but a random gather $y_i = x_{\mathrm{idx}_i}$, the
-access pattern of the SpMV, reaches only \gpuGather~GB/s. The GPU moves memory in 32-byte sectors and its 6~MB L2 cannot
-hold the 39~MB $x$ vector, so each 8-byte random read costs a full sector from DRAM. The CPU, in contrast, keeps the
-whole $x$ of soc-LiveJournal1 in its 135~MB of L3. Our best kernel reaches \gpuThrbw~GB/s of effective bandwidth (27\% of the peak). This is above the
-random-gather probe, presumably because the in-edges of a vertex are stored sorted, so neighbouring reads sometimes
-share a sector. This is why the GPU
-gains only a small factor over a CPU socket: both are bound by irregular memory access, and here the GPU's bandwidth
-advantage over the CPU's cache is small.
+\paragraph{GPU and CPU.} On soc-LiveJournal1, one A40 is \gpuVsSerial\ times faster than the serial program,
+\gpuVsSocket\ times faster than 36 cores (\stLJhy{36}~ms) and about as fast as the full 72-core node
+(\swLJone{1}~ms). com-friendster has more than $2^{31}$ edges and runs in the MPI+CUDA program, where one GPU needs
+\mgFRone~ms per iteration. This is \gpuFRvsNode\ times slower than one CPU node (\stFRhy{72}~ms).
 
-\subsection{MPI+CUDA: multiple GPUs}
+\paragraph{Why the GPU is not faster.} The iteration is limited by memory access on both platforms, and their
+memory systems are comparable. We measured the memory of the A40 with a probe (\code{tools/gpu\_bw.cu}) on 2~GB
+arrays. A copy within GPU memory reaches \gpuCopy~GB/s and the STREAM triad \gpuTriad~GB/s, only \gpuVsCpuTriad\ times the
+\streamFull~GB/s of the triad on a CPU node. A random gather $y_i=x_{\mathrm{idx}_i}$, the access pattern of the
+SpMV, reaches \gpuGather~GB/s, \gpuGatherRatio\ times less than the triad. The PageRank kernels have an effective
+bandwidth of \gpuThrbw\ to \gpuMHybbw~GB/s on soc-LiveJournal1 and of \gpuFRbw~GB/s on com-friendster, against
+\prLJbw{36}~GB/s on one CPU socket for soc-LiveJournal1 and \prFRbw{72}~GB/s on one CPU node for com-friendster.
+The GPU has many more arithmetic units than the CPU, but the iteration performs one addition per 12 bytes of
+data and cannot use them. The two platforms move a similar number of bytes per second for this access pattern, and
+their run times differ by less than a factor of 1.5 in either direction.
 
-The MPI+CUDA program was run with two GPUs on one node and with one GPU on each of two nodes
-(Figure~\ref{fig:gpu}b). On com-friendster, two GPUs give a speedup of \mgFRS\ on one node
-(\mgFRone\ $\rightarrow$ \mgFRtwo~ms) and \mgFRSx\ across two nodes (\mgFRxn~ms). The computation halves exactly
-(\mgFRcompone\ $\rightarrow$ \mgFRcomp~ms per GPU), and the rest is the ghost exchange through the host: \mgFRcommone~ms
-of MPI on one node, \mgFRcommtwo~ms over TCP between nodes, plus \mgFRstage~ms of host--device copies. On
-soc-LiveJournal1 one GPU needs only \mgLJone~ms per iteration, less than the exchange itself, so two GPUs are
-\emph{slower} (\mgLJtwo\ and \mgLJxn~ms). This is the same lesson as on the CPU: distributing pays off only when the
-local work per iteration exceeds the cost of one exchange. Vanda's GPU queue allows at most two GPUs per job, so
-larger GPU counts could not be tested.
+\subsection{X = CUDA on two GPUs}
 
-\begin{takeaway}
-\textbf{Key result.} OpenMP inside a socket is limited by memory bandwidth, so one rank per NUMA domain is the best
-layout. One A40 GPU matches one 36-core socket on soc-LiveJournal1: its random-gather bandwidth (\gpuGather~GB/s), not
-its arithmetic, sets the speed. Two GPUs help only when the local work exceeds one exchange (com-friendster:
-\mgFRS$\times$).
-\end{takeaway}
+Figure~\ref{fig:gpu}b shows the MPI+CUDA program on two GPUs, either on the same node or on two different nodes.
+
+For com-friendster, two GPUs on one node need \mgFRtwo~ms per iteration instead of \mgFRone~ms, a speedup of
+\mgFRS\ and an efficiency of \mgFRE. With one GPU on each of two nodes the time is \mgFRxn~ms, a speedup of \mgFRSx.
+The computation is halved, from \mgFRone\ to \mgFRtwocomp~ms per GPU. The exchange of \mgFRvol~MB of ghost values
+adds \mgFRtwocomm~ms of MPI time on one node, or \mgFRxncomm~ms over TCP between two nodes, and \mgFRtwostage~ms for
+copying the buffers between GPU and host.
+
+For soc-LiveJournal1, one GPU needs \mgLJone~ms. Two GPUs reduce the computation to \mgLJtwocomp~ms, but the
+exchange costs \mgLJtwocomm~ms on one node and \mgLJxncomm~ms between two nodes, plus \mgLJtwostage~ms of copies.
+The iteration takes \mgLJtwo\ and \mgLJxn~ms and is slower than on one GPU. This is the same rule as on the CPU:
+a second device pays off when the computation it takes over is larger than the exchange it adds.
 
 % =====================================================================================================
 \section{Discussion}
 \label{sec:disc}
 
-\paragraph{Conclusions about the data.} On web-Google the PageRank is highly concentrated: the top 0.1\% of pages
-hold 11.4\% of the total rank, the top 1\% 27.1\% and the top 10\% 56.8\%. PageRank is strongly but not perfectly
-correlated with in-degree (Spearman $\rho=0.85$), and 88 of the 100 highest-ranked pages are also among the 100 pages
-with most in-links. The others rank high because they are linked from important pages, not from many pages. For
-example, the page ranked 7th has only the 23rd largest in-degree. The 161,168 pages without in-links all share the
-minimum score $(1-d)/N + d\delta/N = 2.46\times10^{-7}$, about a fifth of the uniform value $1/N$. The iteration
-converges geometrically: the residual falls by a factor of about $0.85$ per iteration, as the damping factor bounds
-it, and reaches $10^{-10}$ after \valIters\ iterations.
+\subsection{Conclusions about the data}
 
-For the computation, the properties that matter are those of Section~\ref{sec:data}. The data sets differ mainly in
-whether the $x$ vector fits in the CPU cache (web-Google and soc-LiveJournal1: yes; com-friendster and the large R-MAT
-graphs: no), and in the ratio of local work to communication. com-friendster has 55 edges per vertex: on 144 cores it processes 34 edges per received ghost value,
-against 10 for soc-LiveJournal1, which is why it keeps scaling to
-576 cores while soc-LiveJournal1 stops at one node. The heavy-tailed degree distribution makes the edge partition
-necessary: with a vertex partition, the slowest rank of soc-LiveJournal1 on 288 ranks has 8.6$\times$ the average work.
+\begin{figure}[tb]
+\centering
+\includegraphics[width=\textwidth]{figures/google.pdf}
+\caption{web-Google. (a)~Residual of the serial program in every iteration. (b)~Mean PageRank of the vertices in
+each in-degree class, relative to the uniform value $1/N$.}
+\label{fig:google}
+\end{figure}
 
-\paragraph{How the problem was parallelised.}
+\paragraph{web-Google.} The iteration converges in \valIters\ iterations. The residual falls by a factor that
+settles at \ggRate\ per iteration (Figure~\ref{fig:google}a), just below the bound $d=0.85$ of
+Section~\ref{sec:alg}. The resulting ranks are very unequal. The top 0.1\% of the pages hold
+\ggTopA\% of the total rank, the top 1\% hold \ggTopB\% and the top 10\% hold \ggTopC\%. The highest rank is
+\ggMaxRel\ times the uniform value $1/N$. The \ggZero\ pages without in-links, \ggZeroPct\% of all pages, share the
+lowest rank, \ggMinRel\ times the uniform value.
+
+The rank of a page grows steadily with its number of in-links (Figure~\ref{fig:google}b); the Spearman correlation
+between PageRank and in-degree is \ggSpear. The in-degree does not determine the rank, however. Of the 100
+highest-ranked pages, \ggOverlap\ are also among the 100 pages with the most in-links, and the page with the
+second-highest rank has only the \ggOddDeg th largest in-degree. A page ranks high when the pages that link to it
+rank high themselves.
+
+\paragraph{soc-LiveJournal1 and com-friendster.} For the two large graphs, the measurements lead to four
+conclusions about their structure.
 \begin{itemize}
-\item \emph{Between nodes and sockets (MPI):} a 1D row partition by edges, so every rank has the same SpMV work, and a
-  precomputed ghost exchange, so every rank receives only the $x$ values it needs. The partition and the
-  communication pattern are computed once and reused in every iteration.
-\item \emph{Within a socket (OpenMP):} the vertex loops are split over threads that share the rank's memory, so the
-  36 cores of a socket share one copy of the ghost values and need no messages among themselves.
-\item \emph{On the GPU (CUDA):} one thread per row for the SpMV, and the vectors stay on the GPU. Several kernels were
-  compared, and the measured memory probes explain their speed.
+\item The edges are concentrated on few vertices and in parts of the identifier range. The largest in-degree of
+  soc-LiveJournal1 is 13,905 against an average of 14, and one of 288 blocks with equal numbers of vertices holds
+  \dzLJimbV\ times the average number of in-edges. com-friendster is more even (\dzFRimbV\ times).
+\item The vertex numbering has little locality. A contiguous block with 5\% of the edges needs the values of
+  \cmFRghostFrac\% of all vertices from outside the block in com-friendster, and of \cmLJghostFrac\% in
+  soc-LiveJournal1. A partition into
+  contiguous blocks therefore cannot keep most edges inside the blocks.
+\item The size of the vertex set relative to the cache sets the cost of an edge. soc-LiveJournal1 (39~MB of $x$)
+  costs \serLJns~ns per edge in the serial program and com-friendster (525~MB) costs \serFRns~ns.
+\item The amount of local work per ghost value decides how far a graph scales. com-friendster has 55 edges per
+  vertex, and on 144 cores a rank processes \cmFRedgesPerGhost\ edges for every ghost value it receives.
+  soc-LiveJournal1 has 14 edges per vertex and processes \cmLJedgesPerGhost. The first graph scales to 576 cores and
+  the second to one socket.
 \end{itemize}
 
-\paragraph{Which parts need the most communication.} The ghost exchange of $x$ in every iteration needs by far the
-most communication: all the data volume, and $O(P^2)$ messages in a random-like graph. The two all-reduces carry only
-one number each, but they synchronise all ranks twice per iteration, which is where the barrier wait in
-Figure~\ref{fig:split} is paid. Loading and partitioning need no communication beyond a broadcast of the bounds,
-because every rank reads its own slice of the file. In our measurements the ghost exchange takes more time than the
-computation for every multi-node configuration of soc-LiveJournal1, and for com-friendster from about 288 cores.
+\subsection{How the problem was parallelised}
 
-\paragraph{Limitations.} (i)~Inter-node MPI ran over TCP; an RDMA-capable MPI would shift all multi-node curves down,
-and should help pure MPI most. (ii)~We did not reorder the vertices (e.g.\ by graph partitioning or locality-aware
-relabelling). Such reordering would reduce the number of ghost vertices and is the most promising way to improve
-scaling further. (iii)~GPU runs are limited to two GPUs per job on Vanda. (iv)~Pure MPI at 576 and 720 ranks needs tens of
-thousands of TCP connections per node, close to the port limit of a node; it ran reliably only with a pause between
-runs.
+The parallelisation is data-parallel throughout: the vertices and their in-edges are divided, and every unit
+applies the same iteration to its part. Different techniques serve different parts of the problem.
+\begin{itemize}
+\item \emph{Between nodes and between NUMA domains: MPI.} The rows of the matrix are divided into contiguous blocks
+  with equal numbers of edges, so every rank has the same amount of SpMV work, and every rank keeps its block in
+  the memory next to its cores. The ghost exchange delivers exactly the values a rank needs.
+\item \emph{Within a NUMA domain: OpenMP.} The loops over the vertices of a rank are shared among threads, with a
+  dynamic schedule for the SpMV because the rows differ in length. Threads share the arrays of the rank, so cores
+  of the same socket exchange no messages and hold one copy of each ghost value.
+\item \emph{On GPUs: CUDA.} Every row is processed by its own GPU thread, or by a warp or a block if it is long.
+  All arrays stay on the GPU, and MPI connects several GPUs in the same way as it connects NUMA domains.
+\item \emph{Global sums.} The dangling mass and the residual are reductions at every level: OpenMP reductions
+  within a rank, block reductions on the GPU, and \code{MPI\_Allreduce} across ranks.
+\item \emph{Input.} Every rank reads its own slice of the graph file, so loading needs no communication beyond the
+  broadcast of the block boundaries.
+\end{itemize}
+
+\subsection{Which parts need the most communication}
+
+The ghost exchange needs by far the most communication. It carries all the data that moves between ranks, up to
+\cmFRhyVolGB~GB per iteration for com-friendster in the hybrid layout and \cmFRmpVolGB~GB in pure MPI, in up to
+$P(P-1)$ messages. On several nodes it takes more time than the computation for soc-LiveJournal1 at every core
+count and for com-friendster from 288 cores on. The two reductions carry one number each; what they cost is
+that all ranks wait for the slowest one, \spFRwaitMin\ to \spFRwaitMax~ms per iteration for com-friendster in the
+hybrid layout. The setup
+communicates once: the block boundaries are broadcast and every rank sends its list of ghost vertices to their
+owners. In the MPI+CUDA program, the ghost values additionally cross between GPU and host memory in both
+directions, which costs a fifth to a quarter of the MPI time.
+
+\subsection{What limits the scaling}
+
+On one node the limit is memory bandwidth, and on several nodes it is the ghost exchange. The exchange takes about
+the same time per iteration however many ranks share the work, because every rank refers to a large part of the graph.
+Two changes would move this limit. Renumbering the vertices with a graph partitioner, so that most edges stay inside
+a block, would reduce both the number of ghost values and the number of ranks a rank communicates with; this
+addresses the volume in the hybrid layout and the message count in pure MPI. An MPI library with RDMA support
+would lower the cost of each message, which matters most for pure MPI, and a CUDA-aware MPI would remove the copies
+through host memory in the MPI+CUDA program.
 
 % =====================================================================================================
-\section*{Declaration of AI use}
-We used an AI assistant (Claude, by Anthropic) during this project for code review and debugging of the job scripts
-and timing code, for writing the experiment scripts (\code{jobs/final}), the bandwidth probes and the analysis and
-plotting scripts, and for drafting and editing parts of this report. All experiments were designed, run and checked by
-us on Vanda. Every number in the report comes from our own measurement files, and we reviewed all code and text.
+\section*{AI usage}
 
-\section*{Source code and reproduction}
-The repository contains the source (\code{src/}), the preprocessing and generator tools (\code{tools/}), the PBS job
-scripts used for every result (\code{jobs/final/}), the raw result files (\code{results\_final/}) and the script that
-builds all figures and tables (\code{tools/make\_report.py}). \code{README.md} describes how to build, download
-the data, submit the jobs and regenerate this report.
+We used two AI coding assistants in this project, Claude (Anthropic) and Codex (OpenAI). They were used to review
+and debug the code, to plan the final set of experiments, to write the PBS job scripts and to submit and monitor
+the jobs on Vanda, to write the memory-bandwidth probes and the analysis and plotting scripts, to diagnose failed
+runs from their logs, and to draft and edit this report. All timings and validation results in the report are the
+output of our programs on Vanda and are reproduced from the raw result files in the repository; no measurement was
+produced by an AI tool. We reviewed the code, the analysis and the text.
 
-\begin{thebibliography}{9}\small
+\section*{Source code}
+
+The code is in a public GitHub repository:
+\begin{center}
+\url{https://github.com/yespiggy/Project3/tree/submission}
+\end{center}
+The repository contains the four
+programs (\code{src/}), the preprocessing tool, the graph generator, the bandwidth probes and the validation
+scripts (\code{tools/}), the PBS job scripts of every experiment (\code{jobs/final/}), the raw result files
+(\code{results\_final/}) and \code{tools/make\_report.py}, the script that produces the figures and tables of
+this report. \code{README.md} explains how to build the programs, obtain the data, run the
+experiments and rebuild the report.
+
+\begin{thebibliography}{9}\small\sloppy
 \bibitem{pagerank} L.~Page, S.~Brin, R.~Motwani, T.~Winograd. The PageRank citation ranking: bringing order to the
-  web. Stanford InfoLab technical report, 1999.
-\bibitem{snap} J.~Leskovec, A.~Krevl. SNAP Datasets: Stanford large network dataset collection.
+  web. Technical report, Stanford InfoLab, 1999.
+\bibitem{snap} J.~Leskovec, A.~Krevl. SNAP datasets: Stanford large network dataset collection.
   \url{http://snap.stanford.edu/data}, 2014.
-\bibitem{rmat} D.~Chakrabarti, Y.~Zhan, C.~Faloutsos. R-MAT: a recursive model for graph mining. SIAM International
-  Conference on Data Mining, 2004.
-\bibitem{graph500} Graph500 benchmark specification, \url{https://graph500.org}.
+\bibitem{rmat} D.~Chakrabarti, Y.~Zhan, C.~Faloutsos. R-MAT: a recursive model for graph mining. SIAM
+  International Conference on Data Mining, 2004.
+\bibitem{graph500} Graph500 benchmark specification. \url{https://graph500.org}.
 \bibitem{stream} J.~D.~McCalpin. Memory bandwidth and machine balance in current high performance computers. IEEE
   TCCA Newsletter, 1995.
 \end{thebibliography}

@@ -1,15 +1,16 @@
-web-Google & MPI+OpenMP, vertex, allgather & 3.2e-15 & 4.8e-18 & yes \\
-web-Google & MPI+OpenMP, vertex, ghost & 3.2e-15 & 4.8e-18 & yes \\
-web-Google & MPI+OpenMP, edge, allgather & 3.3e-15 & 5.0e-18 & yes \\
-web-Google & MPI+OpenMP, edge, ghost & 3.3e-15 & 5.0e-18 & yes \\
-web-Google & CUDA, thread per row & 3.0e-15 & 4.4e-18 & yes \\
-web-Google & CUDA, warp per row & 3.4e-15 & 8.9e-18 & yes \\
-web-Google & CUDA, degree buckets & 3.4e-15 & 9.1e-18 & yes \\
-web-Google & CUDA, cuSPARSE & 3.4e-15 & 9.0e-18 & yes \\
-web-Google & MPI+CUDA, 1 GPU & 3.5e-15 & 9.1e-18 & yes \\
-web-Google & MPI+CUDA, 2 GPUs & 3.6e-15 & 9.2e-18 & yes \\
-soc-LiveJournal1 & pure MPI, 144 ranks, 2 nodes & 1.6e-14 & 4.4e-18 & yes \\
-soc-LiveJournal1 & pure MPI, 288 ranks, 4 nodes & 1.6e-14 & 4.4e-18 & yes \\
-soc-LiveJournal1 & pure MPI, 432 ranks, 6 nodes & 1.6e-14 & 4.4e-18 & yes \\
-soc-LiveJournal1 & pure MPI, 576 ranks, 8 nodes & 1.6e-14 & 4.4e-18 & yes \\
-soc-LiveJournal1 & pure MPI, 720 ranks, 10 nodes & 1.7e-14 & 4.4e-18 & yes \\
+web-Google & MPI+OpenMP, vertex partition, allgather & $3.2\times10^{-15}$ & $4.8\times10^{-18}$ & yes \\
+web-Google & MPI+OpenMP, vertex partition, ghost & $3.2\times10^{-15}$ & $4.8\times10^{-18}$ & yes \\
+web-Google & MPI+OpenMP, edge partition, allgather & $3.3\times10^{-15}$ & $5.0\times10^{-18}$ & yes \\
+web-Google & MPI+OpenMP, edge partition, ghost & $3.3\times10^{-15}$ & $5.0\times10^{-18}$ & yes \\
+web-Google & CUDA, one thread per row & $3.0\times10^{-15}$ & $4.4\times10^{-18}$ & yes \\
+web-Google & CUDA, one warp per row & $3.4\times10^{-15}$ & $8.9\times10^{-18}$ & yes \\
+web-Google & CUDA, degree buckets & $3.4\times10^{-15}$ & $9.1\times10^{-18}$ & yes \\
+web-Google & CUDA, \texttt{cusparseSpMV} & $3.4\times10^{-15}$ & $9.0\times10^{-18}$ & yes \\
+web-Google & MPI+CUDA, 1 GPU & $3.5\times10^{-15}$ & $9.1\times10^{-18}$ & yes \\
+web-Google & MPI+CUDA, 2 GPUs & $3.6\times10^{-15}$ & $9.2\times10^{-18}$ & yes \\
+\addlinespace[2pt]
+soc-LiveJournal1 & pure MPI, 144 ranks, 2 nodes & $1.6\times10^{-14}$ & $4.4\times10^{-18}$ & yes \\
+soc-LiveJournal1 & pure MPI, 288 ranks, 4 nodes & $1.6\times10^{-14}$ & $4.4\times10^{-18}$ & yes \\
+soc-LiveJournal1 & pure MPI, 432 ranks, 6 nodes & $1.6\times10^{-14}$ & $4.4\times10^{-18}$ & yes \\
+soc-LiveJournal1 & pure MPI, 576 ranks, 8 nodes & $1.6\times10^{-14}$ & $4.4\times10^{-18}$ & yes \\
+soc-LiveJournal1 & pure MPI, 720 ranks, 10 nodes & $1.7\times10^{-14}$ & $4.4\times10^{-18}$ & yes \\
