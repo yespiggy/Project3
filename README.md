@@ -3,8 +3,8 @@
 Ma Xiaoxiao (A0259173X), Ye Sifan (A0262394Y), Chen Yuda (A0353182H)
 
 The report is [`report/report.pdf`](report/report.pdf). This repository contains everything needed to reproduce it:
-the source code, the PBS job scripts that produced every measurement, the raw result files, and the script that turns
-those files into the report's figures and tables.
+the source code of the serial, MPI+OpenMP, CUDA and MPI+CUDA programs, the PBS job scripts that produced every
+measurement, the raw result files, and the script that turns those files into the report's figures and tables.
 
 ## Layout
 
@@ -37,6 +37,37 @@ export P3_ROOT=$PWD                # the repository root on Vanda
 bash scripts/build.sh              # GCC 13.1, OpenMPI 4.1.8, CUDA 12.4; binaries go to bin/
 ```
 
+## Running the programs
+
+Every program reads a graph in the binary in-edge CSR format written by `bin/preprocess` or `bin/rmat_gen` (see Data)
+and prints one CSV row per timed repetition; `--header 1` prints the column names first.
+
+```bash
+G=/scratch/$USER/p3data/soc-LiveJournal1.bin
+
+# serial program, run to convergence
+bin/pagerank_serial --graph $G --iters 200 --tol 1e-10 --header 1
+
+# MPI only (pure MPI): 72 single-threaded ranks on one node
+OMP_NUM_THREADS=1 mpirun -np 72 --bind-to core \
+  bin/pagerank_mpi_omp --graph $G --part edge --comm ghost --iters 50 --tol 0 --reps 5 --header 1
+
+# MPI+OpenMP (hybrid layout): one rank per NUMA domain, 36 threads per rank
+OMP_NUM_THREADS=36 OMP_PROC_BIND=close OMP_PLACES=cores mpirun -np 2 --map-by ppr:2:node:PE=36 --bind-to core \
+  bin/pagerank_mpi_omp --graph $G --part edge --comm ghost --iters 50 --tol 0 --reps 5 --header 1
+
+# CUDA on one GPU: all four SpMV kernels (thread, warp, hybrid = degree buckets, cusparse)
+bin/pagerank_cuda --graph $G --kernel all --iters 50 --tol 0 --reps 5 --header 1
+
+# MPI+CUDA: one rank per GPU, here two GPUs on one node
+mpirun -np 2 bin/pagerank_mpi_cuda --graph $G --kernel thread,hybrid --iters 50 --tol 0 --reps 5 --header 1
+```
+
+Options of `pagerank_mpi_omp`: `--part vertex|edge` (equal vertices or equal in-edges per rank), `--comm
+allgather|ghost` (exchange method), `--split 1` (barrier before every MPI call, reports the wait separately),
+`--out r.bin` (write the PageRank vector), `--log resid.csv` (residual of every iteration). On several nodes the job
+scripts add a host file and the rank placement (`scripts/run_lib.sh`, function `run_mpi`).
+
 ## Data
 
 ```bash
@@ -62,7 +93,7 @@ No queue is specified; Vanda routes the jobs. Every CPU job requests whole 72-co
 | `f2_node1.pbs` | 1 node | 1–72 cores: strong scaling (E1), weak scaling (E2), ranks×threads sweep (E7), `--split` (E8) |
 | `f3_nodes.pbs` | 2, 4, 6, 8, 10 nodes | 144–720 cores: E1, E2, E8, validation at scale, InfiniBand-verbs test (E9); 4 nodes: partition × exchange (E3), E7 |
 | `f4_rerun.pbs` | 8, 10 nodes | rerun of the 576/720-rank configurations that failed in `f3` (nodes out of TCP ports; see `scripts/final_lib.sh`) |
-| `f5_ibprobe.pbs` | 2 nodes | probe of why the InfiniBand-verbs transport (E9) cannot start on Vanda (Section 7.4 of the report) |
+| `f5_ibprobe.pbs` | 2 nodes | probe of why the InfiniBand-verbs transport (E9) cannot start on Vanda (Section 4 of the report, Platform) |
 | `g1_gpu1node.pbs` | 1 GPU node | GPU bandwidth probe, GPU validation, single-GPU kernels (E4), MPI+CUDA on 1–2 GPUs (E6) |
 | `g2_gpu2node.pbs` | 2 GPU nodes | MPI+CUDA with one GPU on each of two nodes (E6) |
 | `post.pbs` | 1 node | validation and aggregation after all jobs |
@@ -70,7 +101,7 @@ No queue is specified; Vanda routes the jobs. Every CPU job requests whole 72-co
 Every program appends one CSV row per timed repetition (columns defined in `src/common/graph.hpp`). Every configuration
 used in the report has its full set of repetitions. The 576/720-rank configurations that failed in `f3` were rerun
 successfully by `f4`; their failed attempts wrote no rows. The E9 runs (MPI over InfiniBand verbs) cannot start on
-Vanda and produced no rows, so their empty CSV files are not included; the report explains why.
+Vanda and produced no rows, so their empty CSV files are not included; MPI traffic between nodes uses TCP.
 
 ## Rebuilding the report
 
@@ -78,3 +109,14 @@ Vanda and produced no rows, so their empty CSV files are not included; the repor
 python3 tools/make_report.py results_final report   # figures and tables (needs matplotlib)
 cd report && tectonic report.tex                    # or: latexmk -pdf report.tex
 ```
+
+`make_report.py` reads only `results_final/`. It writes the eight figures of the report to `report/figures/`, the
+table bodies to `report/generated/tab_*.tex`, and every measured number quoted in the text to
+`report/generated/numbers.tex`, so the text, the tables and the figures always agree with the raw files.
+
+## Branches
+
+`submission` is the version to be graded. `main`, `feedback-72core-multigpu`, `final-experiments` and
+`vanda-timing-validation-720core` are earlier states of the project and are kept for their history. Their
+measurements were taken with earlier versions of the code; the same experiments were repeated with the final code
+and are the ones in `results_final/`.
