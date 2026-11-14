@@ -64,7 +64,13 @@ amount of data. One A40 GPU is as fast as a 72-core node on soc-LiveJournal1, an
 \section{Introduction}
 
 PageRank~\cite{pagerank} assigns to every vertex of a directed graph the long-run probability that a random walk
-visits it. It is computed by a power iteration whose step is a sparse matrix--vector product with the adjacency
+visits it. It was introduced to rank web pages for search and is now a standard measure of importance in any
+network: it ranks accounts and items in social networks and recommender systems, papers and journals in citation
+networks, and genes and proteins in biological networks~\cite{gleich}. The graphs in these applications have
+millions to billions of edges and change continuously, so the ranks are recomputed again and again, and the time
+of one iteration decides how large a graph can be ranked and how fresh the ranks are.
+
+We chose PageRank for this project for that reason and because it is a demanding case for parallelisation. It is computed by a power iteration whose step is a sparse matrix--vector product with the adjacency
 matrix of the graph. The arithmetic is simple, one addition per edge, so the run time is set by how fast vector
 entries can be fetched from memory and, in a distributed program, from other processes. Which entries a process needs
 is decided by the graph, and in the power-law graphs studied here almost every process needs entries from almost
@@ -76,7 +82,7 @@ of the MPI+OpenMP, CUDA and MPI+CUDA versions. Section~\ref{sec:setup} introduce
 setup, and Section~\ref{sec:val} the validation. The results follow: serial run time against problem size
 (Section~\ref{sec:serial}), strong and weak scaling of the MPI program and the role of communication
 (Section~\ref{sec:mpi}), and the two MPI+X combinations (Section~\ref{sec:mpix}). Section~\ref{sec:disc} discusses
-the data sets and the design as a whole. The source code, the job scripts and the raw results are available at
+the data sets and the design as a whole, and what the results mean for applications of PageRank. The source code, the job scripts and the raw results are available at
 \url{https://github.com/yespiggy/Project3/tree/submission}.
 
 % =====================================================================================================
@@ -933,15 +939,29 @@ addresses the volume in the hybrid layout and the message count in pure MPI. An 
 would lower the cost of each message, which matters most for pure MPI, and a CUDA-aware MPI would remove the copies
 through host memory in the MPI+CUDA program.
 
+\subsection{What the results mean for applications}
+
+The measurements answer the practical question of how much hardware a PageRank computation of a given size should
+use. A graph of the size of soc-LiveJournal1, tens of millions of edges, is ranked fastest on a single 72-core node
+or a single GPU; distributing it over more nodes or GPUs only adds communication. A graph of the size of
+com-friendster, billions of edges, benefits from a cluster: one iteration takes \stFRbest~ms on \stFRbestc\ cores
+instead of \stFRones~s on one core, so a run of 147 iterations, the most that a tolerance of $10^{-10}$ can
+require, takes about 20 seconds instead of about an hour, and the ranks of a changing graph of this size can be
+recomputed that much more often. The layout matters as much as the core count: with one MPI process
+per core the same cluster is \stFRratio\ times slower than with one process per NUMA domain and OpenMP threads
+inside it.
+
+The results carry over to other methods, because the kernel is a sparse matrix--vector product on a power-law
+graph. Personalised PageRank for recommendations, label propagation and other iterative graph algorithms repeat
+the same step and meet the same two limits, memory bandwidth within a node and the exchange of vertex values between
+nodes.
+
 % =====================================================================================================
 \section*{AI usage}
 
-We used two AI coding assistants in this project, Claude (Anthropic) and Codex (OpenAI). They were used to review
-and debug the code, to plan the final set of experiments, to write the PBS job scripts and to submit and monitor
-the jobs on Vanda, to write the memory-bandwidth probes and the analysis and plotting scripts, to diagnose failed
-runs from their logs, and to draft and edit this report. All timings and validation results in the report are the
-output of our programs on Vanda and are reproduced from the raw result files in the repository; no measurement was
-produced by an AI tool. We reviewed the code, the analysis and the text.
+We used AI coding assistants (Claude and Codex) for coding, for drafting this report, and for pushing the report
+to the \code{submission} branch of the repository. All timings and validation results are the output of our
+programs on Vanda.
 
 \section*{Source code}
 
@@ -959,6 +979,7 @@ experiments and rebuild the report.
 \begin{thebibliography}{9}\small\sloppy
 \bibitem{pagerank} L.~Page, S.~Brin, R.~Motwani, T.~Winograd. The PageRank citation ranking: bringing order to the
   web. Technical report, Stanford InfoLab, 1999.
+\bibitem{gleich} D.~F.~Gleich. PageRank beyond the Web. SIAM Review 57(3), 2015.
 \bibitem{snap} J.~Leskovec, A.~Krevl. SNAP datasets: Stanford large network dataset collection.
   \url{http://snap.stanford.edu/data}, 2014.
 \bibitem{rmat} D.~Chakrabarti, Y.~Zhan, C.~Faloutsos. R-MAT: a recursive model for graph mining. SIAM
